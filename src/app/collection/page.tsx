@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { getCollectionsAction } from '@/src/app/actions/collection';
+import { getCollectionsAction } from '@/app/actions/collection';
 
 export const dynamic = 'force-dynamic';
 

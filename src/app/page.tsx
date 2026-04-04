@@ -1,10 +1,10 @@
 export const dynamic = 'force-dynamic';
 
 import React from 'react';
-import { query } from '@/src/lib/db';
-import DashboardUploader from '@/src/components/DashboardUploader';
+import { query } from '@/lib/db';
+import DashboardUploader from '@/components/DashboardUploader';
 import Link from 'next/link';
-import QuestionsDataGrid from '@/src/components/QuestionsDataGrid';
+import QuestionsManager from '@/components/QuestionsManager';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -28,12 +28,18 @@ interface Question {
   question_type: string;
   created_at: string;
   options?: Option[];
+  lesson_name?: string;
 }
 
 interface Document {
   id: number;
   title: string;
   created_at: string;
+}
+
+interface Lesson {
+  id: number;
+  name: string;
 }
 
 function getDifficultyBadge(difficulty: string) {
@@ -56,32 +62,66 @@ export default async function DashboardPage(props: PageProps) {
   const searchParams = await props.searchParams;
   const docIdParam = searchParams?.docId ? searchParams.docId.toString() : null;
 
-  // 1. Lấy danh sách Document để render Recent File Uploads
+  // 1. Lấy danh sách Document & Lessons
   let documents: Document[] = [];
+  let lessons: Lesson[] = [];
   try {
     documents = await query<Document[]>('SELECT id, title, created_at FROM lms_documents ORDER BY created_at DESC LIMIT 5');
+    lessons = await query<Lesson[]>('SELECT id, name FROM lms_lessons ORDER BY name ASC');
   } catch (error) {
-    console.error("Failed to load documents:", error);
+    console.error("Failed to load documents or lessons:", error);
   }
 
   // Nếu không có docId trên URL, tự động chọn Document mới nhất (hàng đầu tiên)
   const activeDocId = docIdParam ? parseInt(docIdParam, 10) : (documents.length > 0 ? documents[0].id : null);
 
+  // --- LOGIC PHÂN TRANG ---
+  const PAGE_SIZE = 30;
+  const pageParam = searchParams?.page ? searchParams.page.toString() : '1';
+  const currentPage = Math.max(1, parseInt(pageParam, 10) || 1);
+  const offset = (currentPage - 1) * PAGE_SIZE;
+  let totalQuestions = 0;
+  let totalPages = 0;
+
   // 2. Lấy danh sách Question thuộc về Document được chọn
   let questions: Question[] = [];
   try {
     if (activeDocId) {
+      // Lấy tổng số lượng câu hỏi để tính phân trang
+      const countResult = await query<{ total: number }[]>(
+        'SELECT COUNT(*) as total FROM lms_questions_documents WHERE document_id = ?',
+        [activeDocId]
+      );
+      totalQuestions = countResult[0]?.total || 0;
+      totalPages = Math.ceil(totalQuestions / PAGE_SIZE);
+
       questions = await query<Question[]>(
-        `SELECT q.id, q.statement, q.grade, q.question_difficulty, q.question_type, q.created_at 
+        `SELECT q.id, q.statement, q.grade, q.question_difficulty, q.question_type, q.created_at,
+         (SELECT l.name FROM lms_lessons l 
+          JOIN lms_questions_lessons ql ON l.id = ql.lesson_id 
+          WHERE ql.question_id = q.id LIMIT 1) as lesson_name
          FROM lms_questions q
          JOIN lms_questions_documents qd ON q.id = qd.question_id
          WHERE qd.document_id = ?
-         ORDER BY q.created_at DESC`,
+         ORDER BY q.created_at DESC
+         LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
         [activeDocId]
       );
     } else {
-      // Fallback nếu không có file list nào
-      questions = await query<Question[]>('SELECT id, statement, grade, question_difficulty, question_type, created_at FROM lms_questions ORDER BY created_at DESC LIMIT 6');
+      // Fallback nếu không có file list nào (mặc định lấy file mới nhất hoặc vài câu hỏi mẫu)
+      const countResult = await query<{ total: number }[]>('SELECT COUNT(*) as total FROM lms_questions');
+      totalQuestions = countResult[0]?.total || 0;
+      totalPages = Math.ceil(totalQuestions / PAGE_SIZE);
+
+      questions = await query<Question[]>(
+        `SELECT id, statement, grade, question_difficulty, question_type, created_at,
+         (SELECT l.name FROM lms_lessons l 
+          JOIN lms_questions_lessons ql ON l.id = ql.lesson_id 
+          WHERE ql.question_id = lms_questions.id LIMIT 1) as lesson_name
+         FROM lms_questions 
+         ORDER BY created_at DESC 
+         LIMIT ${PAGE_SIZE} OFFSET ${offset}`
+      );
     }
 
     if (questions.length > 0) {
@@ -104,85 +144,26 @@ export default async function DashboardPage(props: PageProps) {
   return (
     <div className="p-8 min-h-full flex flex-col gap-5">
       {/* Welcome Header */}
-      <div>
-        <h1 className="text-3xl font-extrabold text-on-surface tracking-tight mb-1 font-headline">Xin chào, Giáp!</h1>
-        <p className="text-on-surface-variant font-body text-sm">Chào mừng trở lại. Hãy bắt đầu quản lý tài liệu học tập của bạn.</p>
-      </div>
-
-      {/* Dashboard Layout Rows */}
-      <div className="flex flex-col gap-[20px]">
-        {/* Row 1: Upload & Recent Files */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-[20px] items-stretch">
-
-          {/* Upload File Area */}
-          <DashboardUploader />
-
-          {/* Recent File Uploads Card */}
-          <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col min-h-[360px]">
-            <div className="flex justify-between items-center mb-6">
-              <h4 className="font-bold text-on-surface flex items-center gap-2 text-lg font-headline">
-                File đã tải gần đây
-              </h4>
-            </div>
-
-            <div className="space-y-4 flex-grow">
-              {documents.map((doc) => {
-                const isActive = doc.id === activeDocId;
-                const docTitle = doc.title || `Document #${doc.id}`;
-                const isPdf = docTitle.toLowerCase().endsWith('.pdf');
-                const isDocx = docTitle.toLowerCase().endsWith('.docx');
-                const isCsv = docTitle.toLowerCase().endsWith('.csv');
-
-                return (
-                  <Link href={`/?docId=${doc.id}`} key={doc.id} className="block">
-                    <div className={`flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-colors group ${isActive ? 'bg-primary/5 border border-primary/20' : ''}`}>
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className={cn(
-                          "flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center",
-                          isPdf ? "bg-error-container/30 text-error" : 
-                          isDocx ? "bg-primary-fixed/30 text-primary" : 
-                          isCsv ? "bg-secondary-container/50 text-secondary" : 
-                          "bg-surface-container-highest text-on-surface-variant"
-                        )}>
-                          <span className="material-symbols-outlined">
-                            {isPdf ? 'picture_as_pdf' : isDocx ? 'description' : isCsv ? 'table_chart' : 'description'}
-                          </span>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className={`text-sm font-semibold truncate ${isActive ? 'text-primary' : 'text-on-surface'}`} title={docTitle}>
-                            {docTitle}
-                          </p>
-                          <p className="text-[10px] text-outline font-medium" suppressHydrationWarning>
-                            {new Date(doc.created_at).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
-                          </p>
-                        </div>
-                      </div>
-                      <span className={`flex-shrink-0 ml-4 text-xs font-bold text-primary flex items-center gap-1 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                        View <span className="material-symbols-outlined text-sm">open_in_new</span>
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
-              {documents.length === 0 && (
-                <div className="py-6 text-center text-outline text-sm">
-                  Chưa có file nào được tải lên.
-                </div>
-              )}
-            </div>
-
-            <button className="w-full mt-6 py-3 text-[11px] font-extrabold uppercase tracking-[0.15em] text-primary bg-primary/5 border border-primary/30 rounded-xl hover:bg-primary/10 hover:border-primary/50 transition-all flex items-center justify-center gap-2 group">
-              Xem toàn bộ files
-              <span className="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">arrow_forward</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Row 2: Data Grid Table */}
-        <div className="mt-4">
-          <QuestionsDataGrid questions={questions} />
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-extrabold text-on-surface tracking-tight mb-1 font-headline">Xin chào, Giáp!</h1>
+          <p className="text-on-surface-variant font-body text-sm">Chào mừng trở lại. Hãy bắt đầu quản lý tài liệu học tập của bạn.</p>
         </div>
       </div>
+
+      {/* Questions Management Workflow */}
+      <QuestionsManager 
+        questions={questions} 
+        documents={documents} 
+        activeDocId={activeDocId}
+        lessons={lessons}
+        pagination={{
+          currentPage,
+          totalPages,
+          totalQuestions,
+          pageSize: PAGE_SIZE
+        }}
+      />
 
       {/* Floating Action Button (FAB) */}
       <button className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-xl shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">

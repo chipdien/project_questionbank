@@ -1,6 +1,6 @@
 'use server';
 
-import { query } from '@/src/lib/db';
+import { query } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 

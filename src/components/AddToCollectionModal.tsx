@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { createCollectionAction } from '@/src/app/actions/collection';
+import { createCollectionAction } from '@/app/actions/collection';
 import { useRouter } from 'next/navigation';
 
 interface AddToCollectionModalProps {

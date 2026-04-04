@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
 import crypto from 'crypto';
-import { IngestService } from '@/src/lib/services/ingest';
+import { IngestService } from '@/lib/services/ingest';
 
 export const maxDuration = 300; // 5 minutes
 

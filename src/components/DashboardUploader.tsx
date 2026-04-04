@@ -100,8 +100,8 @@ export default function DashboardUploader() {
       <div
         {...getRootProps()}
         className={cn(
-          "bg-surface-container-lowest rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-8 text-center transition-all h-full min-h-[360px]",
-          isUploading ? "pointer-events-none opacity-80 border-primary/20 bg-primary/5" : "cursor-pointer border-outline-variant/40 hover:border-primary/50 group",
+          "bg-surface-container-lowest rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-8 text-center transition-all h-full min-h-[400px]",
+          isUploading ? "pointer-events-none opacity-80 border-primary/20 bg-primary/5" : "cursor-pointer border-outline-variant/40 hover:border-black/10 group",
           isDragActive ? "border-primary bg-primary/10" : "",
           isDragReject ? "border-error bg-error/10" : ""
         )}
