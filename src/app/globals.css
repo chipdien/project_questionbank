@@ -29,6 +29,17 @@
   --color-error-container: #ffdad6;
   --color-on-error-container: #410002;
 
+  --color-success: #15803d;
+  --color-on-success: #ffffff;
+  --color-success-container: #dcfce7;
+  --color-on-success-container: #14532d;
+
+  --color-warning: #ca8a04;
+  --color-warning-dark: #854d0e;
+  --color-on-warning: #ffffff;
+  --color-warning-container: #fef9c3;
+  --color-on-warning-container: #713f12;
+
   --color-background: #fbfdf8;
   --color-on-background: #191d19;
 

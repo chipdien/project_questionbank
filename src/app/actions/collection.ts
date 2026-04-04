@@ -1,64 +1,68 @@
 'use server';
 
 import { query } from '@/lib/db';
-import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
-/**
- * Tạo một bộ sưu tập mới và gán các câu hỏi vào đó.
- * @param title Tên bộ sưu tập
- * @param selectedIds Danh sách ID câu hỏi được chọn
- */
-export async function createCollectionAction(title: string, selectedIds: number[]) {
-  if (!title || selectedIds.length === 0) {
-    throw new Error('Title and selected questions are required.');
+export const createCollectionAction = createCollection;
+
+export async function createCollection(title: string, questionIds: number[]) {
+  if (!title || title.trim() === '') {
+    return { success: false, error: 'Tiêu đề bộ sưu tập không được để trống.' };
+  }
+
+  if (!questionIds || questionIds.length === 0) {
+    return { success: false, error: 'Chưa chọn câu hỏi nào để lưu.' };
   }
 
   try {
-    const result = await query<any>(
-      'INSERT INTO lms_collections (title, teacher_id, created_at, updated_at) VALUES (?, ?, NOW(), NOW())',
-      [title, null]
-    );
+    const now = new Date();
+    
+    // 1. Tạo bộ sưu tập mới
+    const result = await query(
+      'INSERT INTO lms_collections (title, created_at, updated_at) VALUES (?, ?, ?)',
+      [title, now, now]
+    ) as any;
 
     const collectionId = result.insertId;
 
     if (!collectionId) {
-      throw new Error('Failed to retrieve insertId for collection.');
+      throw new Error('Không thể tạo bộ sưu tập.');
     }
 
-    // 2. Insert hàng loạt vào lms_questions_collections
-    // Nếu db hỗ trợ bulk insert:
-    const values = selectedIds.map(qId => [collectionId, qId]);
-    
-    for (const qId of selectedIds) {
-      await query(
-        'INSERT INTO lms_questions_collections (collection_id, question_id, created_at, updated_at) VALUES (?, ?, NOW(), NOW())',
-        [collectionId, qId]
-      );
-    }
+    // 2. Chèn các câu hỏi vào bảng trung gian
+    // Bulk insert: INSERT INTO lms_questions_collections (collection_id, question_id, created_at, updated_at) VALUES (?, ?, ?, ?), (?, ?, ?, ?)
+    const placeholders = questionIds.map(() => '(?, ?, ?, ?)').join(', ');
+    const values = questionIds.flatMap(qId => [collectionId, qId, now, now]);
 
-    // Sau khi thành công, revalidate
-    revalidatePath('/collection');
-    return { success: true };
-  } catch (error) {
-    console.error('Error in createCollectionAction:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    await query(
+      `INSERT INTO lms_questions_collections (collection_id, question_id, created_at, updated_at) VALUES ${placeholders}`,
+      values
+    );
+
+    revalidatePath('/collections'); // Giả sử sẽ có trang danh sách collections
+
+    return { success: true, collectionId };
+  } catch (error: any) {
+    console.error('Error saving collection:', error);
+    return { success: false, error: error.message || 'Có lỗi xảy ra khi lưu bộ sưu tập.' };
   }
 }
 
-/**
- * Lấy danh sách bộ sưu tập (cho trang collection)
- */
-export async function getCollectionsAction() {
+export const getCollectionsAction = getCollections;
+
+export async function getCollections() {
   try {
-    const collections = await query(
-      `SELECT c.*, COUNT(cq.question_id) as question_count 
-       FROM lms_collections c
-       LEFT JOIN lms_questions_collections cq ON c.id = cq.collection_id
-       GROUP BY c.id
-       ORDER BY c.created_at DESC`
-    );
-    return collections;
+    const rows = await query(`
+      SELECT 
+        c.*, 
+        COUNT(qc.question_id) as question_count 
+      FROM lms_collections c 
+      LEFT JOIN lms_questions_collections qc ON c.id = qc.collection_id 
+      GROUP BY c.id 
+      ORDER BY c.created_at DESC
+    `) as any[];
+
+    return rows;
   } catch (error) {
     console.error('Error fetching collections:', error);
     return [];

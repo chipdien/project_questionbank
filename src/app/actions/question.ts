@@ -63,3 +63,32 @@ export async function classifyQuestions(
     return { success: false, error: error.message };
   }
 }
+
+export async function getQuestionsByDocId(docId: number) {
+  try {
+    const questions = await query<any[]>(
+      `SELECT q.*, l.name as lesson_name
+       FROM lms_questions q
+       LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
+       LEFT JOIN lms_lessons l ON ql.lesson_id = l.id
+       JOIN lms_questions_documents qd ON q.id = qd.question_id
+       WHERE qd.document_id = ?
+       ORDER BY q.id ASC`,
+      [docId]
+    );
+
+    // Lấy options cho từng câu hỏi
+    for (const q of questions) {
+      const options = await query<any[]>(
+        'SELECT * FROM lms_options WHERE question_id = ? ORDER BY `order` ASC',
+        [q.id]
+      );
+      q.options = options;
+    }
+
+    return questions;
+  } catch (error) {
+    console.error('Error fetching questions for doc:', error);
+    return [];
+  }
+}

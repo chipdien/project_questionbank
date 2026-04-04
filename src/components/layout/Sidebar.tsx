@@ -23,7 +23,7 @@ export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
     { icon: FileText, label: 'Documents', href: '#' },
     { icon: LibraryBig, label: 'Collections', href: '/collection' },
-    { icon: Database, label: 'Question Bank', href: '#' },
+    { icon: Database, label: 'Question Bank', href: '/question-bank' },
     { icon: BookOpen, label: 'Syllabus', href: '#' },
     { icon: FileCheck2, label: 'Assessments', href: '#' },
     { icon: ClipboardList, label: 'Requests', href: '#' },

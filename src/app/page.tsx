@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic';
 
 import React from 'react';
 import { query } from '@/lib/db';
-import DashboardUploader from '@/components/DashboardUploader';
 import Link from 'next/link';
 import QuestionsManager from '@/components/QuestionsManager';
 import { clsx, type ClassValue } from 'clsx';
@@ -47,12 +46,12 @@ function getDifficultyBadge(difficulty: string) {
   const diff = (difficulty || 'medium').toLowerCase();
 
   if (diff.includes('hard') || diff.includes('khó')) {
-    return <span className="px-2 py-1 rounded-full bg-error/10 text-error text-[10px] font-bold uppercase">Hard</span>;
+    return <span className="px-2 py-1 rounded-full bg-error/10 text-error text-[10px] font-bold uppercase whitespace-nowrap leading-none">Khó</span>;
   }
   if (diff.includes('easy') || diff.includes('dễ')) {
-    return <span className="px-2 py-1 rounded-full bg-secondary-container/50 text-on-secondary-container text-[10px] font-bold uppercase">Easy</span>;
+    return <span className="px-2 py-1 rounded-full bg-success/10 text-success text-[10px] font-bold uppercase whitespace-nowrap leading-none">Dễ</span>;
   }
-  return <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase">Medium</span>;
+  return <span className="px-2 py-1 rounded-full bg-warning/10 text-warning text-[10px] font-bold uppercase whitespace-nowrap leading-none">Trung Bình</span>;
 }
 
 interface PageProps {
