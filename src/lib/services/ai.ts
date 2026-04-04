@@ -56,7 +56,46 @@ const QuestionSchema: Schema = {
   required: ["questions"]
 };
 
-export class AiService {
+const ClassificationSchema: Schema = {
+  type: Type.OBJECT,
+  properties: {
+    classifications: {
+      type: Type.ARRAY,
+      description: "Danh sách kết quả phân loại cho từng câu hỏi",
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          question_id: {
+            type: Type.INTEGER,
+            description: "ID của câu hỏi"
+          },
+          grade: {
+            type: Type.STRING,
+            description: "Khối lớp (chỉ điền số từ 6 đến 12 dưới dạng chuỗi)",
+            enum: ["6", "7", "8", "9", "10", "11", "12"]
+          },
+          difficulty: {
+            type: Type.STRING,
+            description: "Độ khó của câu hỏi",
+            enum: ["Dễ", "Trung Bình", "Khó"]
+          },
+          lesson_id: {
+            type: Type.INTEGER,
+            description: "ID của bài học phù hợp nhất từ danh sách được cung cấp. Nếu không có bài nào phù hợp, hãy để null.",
+            nullable: true
+          }
+        },
+        required: ["question_id", "grade", "difficulty"]
+      }
+    }
+  },
+  required: ["classifications"]
+};
+
+/**
+ * Service chuyên bóc tách câu hỏi từ văn bản LaTeX/Thô.
+ */
+export class QuestionParserService {
   /**
    * Phân tích văn bản gốc và trích xuất thành cấu trúc JSON chuẩn.
    */
@@ -100,6 +139,72 @@ Chú ý:
       return parsedData;
     } catch (e: any) {
       throw new Error("Failed to parse JSON from AI: " + e.message);
+    }
+  }
+}
+
+/**
+ * Service chuyên phân loại câu hỏi (Khối lớp, Bài học, Độ khó).
+ */
+export class QuestionClassifierService {
+  static async classify(
+    questions: { id: number; statement: string }[],
+    lessons: { id: number; name: string }[]
+  ) {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured.");
+    }
+
+    const lessonsContext = lessons.map(l => `ID: ${l.id}, Name: ${l.name}`).join('\n');
+    const questionsContext = questions.map(q => `ID: ${q.id}, Content: ${q.statement}`).join('\n---\n');
+
+    const systemInstruction = `Bạn là một chuyên gia giáo dục xuất sắc.
+Nhiệm vụ của bạn là phân loại danh sách câu hỏi được cung cấp vào Khối lớp, Độ khó và Bài học phù hợp.
+
+Dưới đây là danh sách các Bài học (ID và Tên) có sẵn trong hệ thống:
+${lessonsContext}
+
+Yêu cầu:
+1. Khối lớp: Chọn từ 6 đến 12 dựa trên nội dung kiến thức của câu hỏi.
+2. Độ khó: Phân loại 'Dễ', 'Trung Bình', hoặc 'Khó'.
+3. Bài học: Tìm trong danh sách trên bài học có nội dung sát nhất với câu hỏi. Trả về ID của bài học đó. Nếu hoàn toàn không có bài học nào liên quan, hãy trả về null.
+
+Lưu ý quan trọng:
+- Chỉ trả về dữ liệu JSON theo đúng schema được yêu cầu.
+- Không tự ý tạo ra ID bài học mới không có trong danh sách.
+- Đảm bảo ánh xạ đúng ID câu hỏi (question_id).`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: `Hãy phân loại danh sách câu hỏi sau:\n${questionsContext}` }]
+        }
+      ],
+      config: {
+        systemInstruction: systemInstruction,
+        responseMimeType: 'application/json',
+        responseSchema: ClassificationSchema,
+        temperature: 0.1,
+      }
+    });
+
+    const outputText = response.text;
+    if (!outputText) {
+      throw new Error("Không nhận được phản hồi phân loại từ AI");
+    }
+
+    try {
+      const parsedData = JSON.parse(outputText);
+      return parsedData.classifications as {
+        question_id: number;
+        grade: string;
+        difficulty: string;
+        lesson_id: number | null;
+      }[];
+    } catch (e: any) {
+      throw new Error("Failed to parse Classification JSON from AI: " + e.message);
     }
   }
 }

@@ -1,6 +1,6 @@
 import pool from '../db';
 import { ResultSetHeader } from 'mysql2';
-import { AiService } from './ai';
+import { QuestionParserService } from './ai';
 
 export class IngestService {
   /**
@@ -55,7 +55,7 @@ export class IngestService {
    * Phân tích văn bản thô bằng Gemini.
    */
   static async processAi(rawText: string) {
-     return await AiService.parseQuestions(rawText);
+     return await QuestionParserService.parseQuestions(rawText);
   }
 
   /**

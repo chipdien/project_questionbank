@@ -9,17 +9,32 @@ interface QuestionClassificationCardProps {
     lessonId?: string;
     difficulty?: string;
   }) => Promise<void>;
+  onAIClassify?: () => Promise<void>;
   lessons: { id: number; name: string }[];
+  isAiClassified?: boolean;
 }
 
 export default function QuestionClassificationCard({
   selectedCount,
   onApply,
-  lessons
+  onAIClassify: onAIAIClassify,
+  lessons,
+  isAiClassified = false
 }: QuestionClassificationCardProps) {
   const [difficulty, setDifficulty] = useState('');
   const [lessonId, setLessonId] = useState('');
   const [grade, setGrade] = useState('');
+  const [isClassifying, setIsClassifying] = useState(false);
+
+  const handleAIButtonClick = async () => {
+    if (!onAIAIClassify || isAiClassified) return;
+    setIsClassifying(true);
+    try {
+      await onAIAIClassify();
+    } finally {
+      setIsClassifying(false);
+    }
+  };
 
   return (
     <div className="bg-surface-container-lowest/80 backdrop-blur-md p-6 rounded-2xl border border-outline-variant/30 shadow-xl flex flex-col min-h-[420px] transition-all hover:shadow-2xl hover:border-primary/20 group">
@@ -121,11 +136,17 @@ export default function QuestionClassificationCard({
               <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
             </button>
             <button
-              className="flex-1 py-4 bg-surface-container-lowest text-primary border border-primary/20 rounded-2xl font-bold text-sm hover:bg-primary/5 active:scale-95 transition-all flex items-center justify-center gap-2 group/btn-ai"
+              className="flex-1 py-4 bg-surface-container-lowest text-primary border border-primary/20 rounded-2xl font-bold text-sm hover:bg-primary/5 active:scale-95 transition-all flex items-center justify-center gap-2 group/btn-ai disabled:opacity-50 disabled:cursor-not-allowed"
               type="button"
+              onClick={handleAIButtonClick}
+              disabled={isClassifying || isAiClassified}
             >
-              <span className="material-symbols-outlined text-xl text-primary animate-pulse group-hover/btn-ai:scale-110 transition-transform">auto_awesome</span>
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">AI AI AI</span>
+              <span className={`material-symbols-outlined text-xl text-primary ${isClassifying ? 'animate-spin' : ''} group-hover/btn-ai:scale-110 transition-transform`}>
+                {isClassifying ? 'progress_activity' : (isAiClassified ? 'check_circle' : 'auto_awesome')}
+              </span>
+              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                {isClassifying ? 'Đang phân loại...' : (isAiClassified ? 'Đã phân loại AI' : 'Phân loại bằng AI')}
+              </span>
             </button>
           </div>
         </div>

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import QuestionClassificationCard from './QuestionClassificationCard';
 import QuestionsDataGrid from './QuestionsDataGrid';
 import { classifyQuestions } from '@/app/actions/question';
+import { autoClassifyWithAI } from '@/app/actions/ai-classify';
 import { useRouter } from 'next/navigation';
 import DashboardUploader from './DashboardUploader';
 import Link from 'next/link';
@@ -38,6 +39,7 @@ interface Document {
   id: number;
   title: string;
   created_at: string;
+  is_ai_classified: number;
 }
 
 interface Lesson {
@@ -61,6 +63,10 @@ interface QuestionsManagerProps {
 export default function QuestionsManager({ questions, documents, activeDocId, lessons, pagination }: QuestionsManagerProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const router = useRouter();
+
+  // Xác định trạng thái đã phân loại của tài liệu hiện tại
+  const activeDoc = documents.find(d => d.id === activeDocId);
+  const isAiClassified = activeDoc?.is_ai_classified === 1;
 
   const handleSelectionChange = (newSelectedIds: Set<number>) => {
     setSelectedIds(newSelectedIds);
@@ -88,6 +94,27 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
       }
     } catch (err: any) {
       toast.error('Có lỗi xảy ra: ' + err.message);
+    }
+  };
+
+  const handleAIClassify = async () => {
+    if (!activeDocId) {
+      toast.error('Không tìm thấy tài liệu để phân loại.');
+      return;
+    }
+
+    try {
+      const result = await autoClassifyWithAI(activeDocId);
+      
+      if (result.success) {
+        toast.success(`AI đã phân loại thành công ${result.count} câu hỏi trong tài liệu này!`);
+        setSelectedIds(new Set());
+        router.refresh();
+      } else {
+        toast.error('Lỗi AI: ' + result.error);
+      }
+    } catch (err: any) {
+      toast.error('Có lỗi xảy ra khi gọi AI: ' + err.message);
     }
   };
 
@@ -163,7 +190,9 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
         <QuestionClassificationCard 
           selectedCount={selectedIds.size} 
           onApply={handleApplyClassification}
+          onAIClassify={handleAIClassify}
           lessons={lessons}
+          isAiClassified={isAiClassified}
         />
       </div>
 

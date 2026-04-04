@@ -35,6 +35,7 @@ interface Document {
   id: number;
   title: string;
   created_at: string;
+  is_ai_classified: number;
 }
 
 interface Lesson {
@@ -66,7 +67,7 @@ export default async function DashboardPage(props: PageProps) {
   let documents: Document[] = [];
   let lessons: Lesson[] = [];
   try {
-    documents = await query<Document[]>('SELECT id, title, created_at FROM lms_documents ORDER BY created_at DESC LIMIT 5');
+    documents = await query<Document[]>('SELECT id, title, created_at, is_ai_classified FROM lms_documents ORDER BY created_at DESC LIMIT 5');
     lessons = await query<Lesson[]>('SELECT id, name FROM lms_lessons ORDER BY name ASC');
   } catch (error) {
     console.error("Failed to load documents or lessons:", error);
