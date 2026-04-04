@@ -14,6 +14,7 @@ Bạn đang tìm kiếm hướng dẫn? Hãy truy cập bộ tài liệu chuyên
 - **Quy chuẩn lập trình (Coding Standards)**: [coding-standard.md]
 - **Công nghệ AI (AI Ingestion)**: [ai-ingestion.md]
 - **Phân loại AI (AI Classification)**: [ai-classification.md]
+- **Quản lý Bộ sưu tập (Collection)**: [collection-management.md]
 - **Lịch sử Database (DB Schema)**: [schema_history.md]
 - **Nghiên cứu & Quyết định (Research)**: [technology-decision.md]
 
