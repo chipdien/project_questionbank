@@ -129,3 +129,141 @@
   padding-left: 0.5rem;
   padding-right: 0.5rem;
 }
+
+/* --- PRINT MEDIA QUERIES --- */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  /* Hide UI elements */
+  .no-print,
+  #sidebar,
+  header,
+  .sidebar,
+  .filter-section,
+  .nav-bar,
+  .download-button {
+    display: none !important;
+  }
+
+  body {
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* A4 Page container for printing */
+  .a4-page {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    padding: 25mm 15mm 25mm 30mm !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    display: block !important;
+    position: relative !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+  }
+
+  .page-break {
+    page-break-after: always;
+    break-after: always;
+  }
+
+  /* Prevent elements like question groups from breaking across pages */
+  .page-break-inside-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* For textareas to show all text when printing */
+  textarea {
+    overflow: visible !important;
+    height: auto !important;
+    border: none !important;
+    resize: none !important;
+  }
+}
+
+/* --- A4 DOCUMENT INTERFACE (Web view) --- */
+.a4-page {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 25mm 15mm 25mm 30mm;
+  margin: 20px auto;
+  background: white;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+/* Thêm lớp hỗ trợ xuất PDF (html2pdf/html2canvas) */
+#pdf-content.exporting .a4-page {
+  margin: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+  overflow: visible !important;
+}
+
+#pdf-content.exporting {
+  gap: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.a4-page:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* --- MATHJAX SVG OPTIMIZATION --- */
+.mjx-container {
+  display: inline-block !important;
+  line-height: normal;
+  vertical-align: middle;
+  margin: 0 2px !important;
+  max-width: 100%;
+}
+
+.mjx-container[jax="SVG"][display="true"] {
+  display: block !important;
+  text-align: center;
+  margin: 1em 0 !important;
+  width: 100%;
+}
+
+/* Đảm bảo MathJax không bị cắt khi xuất PDF và hiển thị đúng inline */
+.exporting .mjx-container {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.exporting .mjx-container svg {
+  overflow: visible !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+.prose p, 
+.prose span {
+  display: inline !important;
+  margin: 0 !important;
+  line-height: inherit;
+  white-space: normal !important;
+}
+
+/* Ép các phần tử con trực tiếp của p hoặc span trong prose hiển thị inline-block */
+.prose p > *, .prose span > * {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.prose .mjx-container {
+  display: inline-block !important;
+  white-space: nowrap;
+}

@@ -3,12 +3,12 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
+import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
-import 'katex/dist/katex.min.css';
 import QuestionModal from './QuestionModal';
 import AddToCollectionModal from './AddToCollectionModal';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { cleanMathpixData } from '@/lib/math-utils';
 
 interface Option {
   id: number;
@@ -165,9 +165,10 @@ export default function QuestionsDataGrid({
                     <div className="line-clamp-2 prose prose-slate prose-sm max-w-none text-sm [&_p]:my-0 [&_img]:hidden">
                       <ReactMarkdown
                         remarkPlugins={[remarkMath]}
-                        rehypePlugins={[rehypeRaw, rehypeKatex]}
+                        rehypePlugins={[rehypeRaw, rehypeMathjax]}
+                        components={{ p: 'span' }}
                       >
-                         {q.statement ? q.statement.replace(/\\\\/g, '\\') : 'No statement content found'}
+                         {cleanMathpixData(q.statement)}
                       </ReactMarkdown>
                     </div>
                   </td>

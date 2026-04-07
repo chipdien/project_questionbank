@@ -4,8 +4,11 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, FileText, CheckCircle2, AlertCircle, Loader2, ArrowRight, LibraryBig } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import Latex from 'react-latex-next';
-import 'katex/dist/katex.min.css';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeMathjax from 'rehype-mathjax/browser';
+import rehypeRaw from 'rehype-raw';
+import { cleanMathpixData } from '@/lib/math-utils';
 
 interface Question {
   id: number;
@@ -205,8 +208,13 @@ export default function CollectionSaveModal({
                             <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
                               {index + 1}
                             </div>
-                            <div className="flex-1 text-xs leading-relaxed text-on-surface-variant prose-latex overflow-x-auto">
-                              <Latex>{question.statement}</Latex>
+                            <div className="flex-1 text-xs leading-relaxed text-on-surface-variant prose prose-sm max-w-none overflow-x-auto">
+                              <ReactMarkdown
+                                remarkPlugins={[remarkMath]}
+                                rehypePlugins={[rehypeRaw, rehypeMathjax]}
+                              >
+                                {cleanMathpixData(question.statement)}
+                              </ReactMarkdown>
                             </div>
                           </div>
                         </div>

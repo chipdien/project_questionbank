@@ -21,7 +21,7 @@ export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
 
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
-    { icon: FileText, label: 'Documents', href: '#' },
+    { icon: FileText, label: 'Documents', href: '/documents' },
     { icon: LibraryBig, label: 'Collections', href: '/collection' },
     { icon: Database, label: 'Question Bank', href: '/question-bank' },
     { icon: BookOpen, label: 'Syllabus', href: '#' },

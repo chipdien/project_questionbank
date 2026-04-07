@@ -24,7 +24,6 @@ export async function POST(req: NextRequest) {
     // 2. Check for duplicate in completed tasks
     const existingDocumentId = await IngestService.checkDuplicate(fileHash);
     if (existingDocumentId) {
-      console.log('Duplicate file detected, returning existing document.');
       // We can return the existing document directly
       // But we need to pretend we processed it or just return the ID
       return NextResponse.json({

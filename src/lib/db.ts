@@ -1,12 +1,15 @@
 import mysql from 'mysql2/promise';
 
-// Create a connection pool to MySQL
-const pool = mysql.createPool({
+const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306'),
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'question_bank',
+};
+
+const pool = mysql.createPool({
+  ...dbConfig,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -18,9 +21,9 @@ const pool = mysql.createPool({
  * @param params Optional parameters for the query
  * @returns The query result
  */
-export async function query<T = any>(sql: string, params?: any[]): Promise<T> {
+export async function query<T = any>(sql: string, params: any[] = []): Promise<T> {
   try {
-    const [results] = await pool.execute(sql, params);
+    const [results] = await pool.query(sql, params);
     return results as T;
   } catch (error: any) {
     console.error('Database query error:', error.message);

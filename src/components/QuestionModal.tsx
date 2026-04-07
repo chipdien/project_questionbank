@@ -4,9 +4,9 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
+import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
-import 'katex/dist/katex.min.css';
+import { cleanMathpixData } from '@/lib/math-utils';
 
 interface Option {
   id: number;
@@ -93,9 +93,10 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
               <div className="prose prose-slate max-w-none text-base [&_img]:max-w-full [&_img]:rounded-md [&_img]:border [&_img]:border-outline-variant/30 [&_img]:my-4">
                 <ReactMarkdown
                   remarkPlugins={[remarkMath]}
-                  rehypePlugins={[rehypeRaw, rehypeKatex]}
+                  rehypePlugins={[rehypeRaw, rehypeMathjax]}
+                  components={{ p: 'span' }}
                 >
-                  {question.statement ? question.statement.replace(/\\\\/g, '\\') : 'Không có mô tả cho câu hỏi này.'}
+                  {cleanMathpixData(question.statement)}
                 </ReactMarkdown>
               </div>
             </div>
@@ -129,9 +130,10 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
                         <div className={`pt-1 prose prose-slate max-w-none text-sm [&_img]:max-w-full [&_img]:rounded-md [&_img]:border [&_img]:border-outline-variant/30 [&_img]:my-2 ${isCorrect ? 'text-green-900 font-medium' : 'text-on-surface'}`}>
                           <ReactMarkdown
                             remarkPlugins={[remarkMath]}
-                            rehypePlugins={[rehypeRaw, rehypeKatex]}
+                            rehypePlugins={[rehypeRaw, rehypeMathjax]}
+                            components={{ p: 'span' }}
                           >
-                            {opt.content ? opt.content.replace(/\\\\/g, '\\') : ''}
+                            {cleanMathpixData(opt.content)}
                           </ReactMarkdown>
                         </div>
                         {isCorrect && (

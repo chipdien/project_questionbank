@@ -3,8 +3,11 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import Latex from 'react-latex-next';
-import 'katex/dist/katex.min.css';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeMathjax from 'rehype-mathjax/browser';
+import rehypeRaw from 'rehype-raw';
+import { cleanMathpixData } from '@/lib/math-utils';
 
 interface Option {
   id: number;
@@ -60,8 +63,14 @@ export default function SortableQuestionItem({ question, isOverlay = false }: So
       className={`relative bg-surface-container-low rounded-xl border border-outline-variant/30 border-l-4 ${difficultyBorderColor} p-4 transition-all shadow-sm cursor-grab active:cursor-grabbing hover:border-primary/50 hover:shadow-md ${isDragging ? 'opacity-30 shadow-none' : ''
         } ${isOverlay ? 'shadow-2xl ring-2 ring-primary/20 bg-surface-container-lowest scale-105 opacity-90' : ''}`}
     >
-      <div className="text-sm font-medium text-on-surface leading-relaxed max-w-full overflow-hidden prose prose-sm prose-slate select-none">
-        <Latex>{question.statement}</Latex>
+      <div className="text-sm font-medium text-on-surface leading-relaxed max-w-full flex-1 min-w-0 overflow-hidden prose prose-sm prose-slate select-none">
+        <ReactMarkdown
+          remarkPlugins={[remarkMath]}
+          rehypePlugins={[rehypeRaw, rehypeMathjax]}
+          components={{ p: 'span' }}
+        >
+          {cleanMathpixData(question.statement)}
+        </ReactMarkdown>
       </div>
 
       {/* Subtle indicator for dragability */}

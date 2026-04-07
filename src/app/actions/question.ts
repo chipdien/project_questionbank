@@ -92,3 +92,95 @@ export async function getQuestionsByDocId(docId: number) {
     return [];
   }
 }
+
+export async function getLibraryQuestions(
+  page: number = 1,
+  pageSize: number = 10,
+  filters: { grade?: string; difficulty?: string; lessonId?: string } = {}
+) {
+  const { grade = '', difficulty = '', lessonId = '' } = filters;
+
+  try {
+    const safePage = Math.max(1, Number(page));
+    const safePageSize = Math.max(1, Number(pageSize));
+    const offset = (safePage - 1) * safePageSize;
+
+    let baseSql = `
+      SELECT q.*, l.name as lesson_name
+      FROM lms_questions q
+      LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
+      LEFT JOIN lms_lessons l ON ql.lesson_id = l.id
+      WHERE 1=1
+    `;
+    // Count total - Sử dụng GROUP BY để tránh đếm trùng nếu câu hỏi có nhiều bài học
+    const countSql = `SELECT COUNT(DISTINCT q.id) as total FROM lms_questions q
+                      LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
+                      LEFT JOIN lms_lessons l ON ql.lesson_id = l.id
+                      WHERE 1=1 ${grade ? 'AND q.grade = ?' : ''} ${difficulty ? 'AND q.question_difficulty = ?' : ''} ${lessonId ? 'AND ql.lesson_id = ?' : ''}`;
+    
+    const countParams: any[] = [];
+    if (grade) countParams.push(grade);
+    if (difficulty) countParams.push(difficulty);
+    if (lessonId) countParams.push(lessonId);
+
+    const countResult = await query<any[]>(countSql, countParams);
+    
+    // Quan trọng: Ép kiểu Number vì MySQL có thể trả về BigInt cho COUNT
+    const total = Number(countResult[0]?.total || 0);
+    
+    // Fetch pagination
+    let paginatedSql = `
+      SELECT q.*, GROUP_CONCAT(l.name SEPARATOR ', ') as lesson_name
+      FROM lms_questions q
+      LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
+      LEFT JOIN lms_lessons l ON ql.lesson_id = l.id
+      WHERE 1=1
+    `;
+    const queryParams: any[] = [];
+    if (grade) {
+      paginatedSql += ` AND q.grade = ?`;
+      queryParams.push(grade);
+    }
+    if (difficulty) {
+      paginatedSql += ` AND q.question_difficulty = ?`;
+      queryParams.push(difficulty);
+    }
+    if (lessonId) {
+      paginatedSql += ` AND ql.lesson_id = ?`;
+      queryParams.push(lessonId);
+    }
+
+    paginatedSql += ` GROUP BY q.id ORDER BY q.id DESC LIMIT ? OFFSET ?`;
+    const questions = await query<any[]>(paginatedSql, [...queryParams, Number(safePageSize), Number(offset)]);
+
+    for (const q of questions) {
+      const options = await query<any[]>(
+        'SELECT * FROM lms_options WHERE question_id = ? ORDER BY `order` ASC',
+        [q.id]
+      );
+      q.options = options;
+    }
+
+    return {
+      data: questions,
+      total,
+      page: safePage,
+      pageSize: safePageSize,
+      totalPages: Math.ceil(total / safePageSize)
+    };
+  } catch (error: any) {
+    console.error('Error fetching library questions:', error.message);
+    return { data: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
+  }
+}
+
+export async function getLessons() {
+  try {
+    const lessons = await query<any[]>('SELECT id, name, grade FROM lms_lessons ORDER BY name ASC');
+    return lessons || [];
+  } catch (error) {
+    console.error('Error fetching lessons:', error);
+    return [];
+  }
+}
+
