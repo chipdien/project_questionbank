@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 interface QuestionClassificationCardProps {
   selectedCount: number;
@@ -10,7 +10,7 @@ interface QuestionClassificationCardProps {
     difficulty?: string;
   }) => Promise<void>;
   onAIClassify?: () => Promise<void>;
-  lessons: { id: number; name: string }[];
+  lessons: { id: number; name: string; grade?: string }[];
   isAiClassified?: boolean;
 }
 
@@ -35,6 +35,20 @@ export default function QuestionClassificationCard({
       setIsClassifying(false);
     }
   };
+
+  // Lọc danh sách chủ đề dựa trên khối lớp đã chọn
+  const filteredLessons = useMemo(() => {
+    if (!grade || grade === '0') return lessons;
+    // Chuyển đổi grade sang string để so sánh an toàn
+    return lessons.filter(l => String(l.grade) === String(grade));
+  }, [lessons, grade]);
+
+  // Reset chủ đề nếu nó không còn nằm trong danh sách đã lọc
+  useEffect(() => {
+    if (lessonId && !filteredLessons.some(l => String(l.id) === String(lessonId))) {
+      setLessonId('');
+    }
+  }, [filteredLessons, lessonId]);
 
   return (
     <div className="bg-surface-container-lowest/80 backdrop-blur-md p-6 rounded-2xl border border-outline-variant/30 shadow-xl flex flex-col min-h-[420px] transition-all hover:shadow-2xl hover:border-primary/20 group">
@@ -89,7 +103,7 @@ export default function QuestionClassificationCard({
               onChange={(e) => setLessonId(e.target.value)}
             >
               <option value="">Chọn chủ đề</option>
-              {lessons.map((lesson) => (
+              {filteredLessons.map((lesson) => (
                 <option key={lesson.id} value={lesson.id}>{lesson.name}</option>
               ))}
             </select>

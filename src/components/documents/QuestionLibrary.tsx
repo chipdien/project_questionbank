@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Loader2, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { getLibraryQuestions, getLessons } from '@/app/actions/question';
 import { ReactSortable } from 'react-sortablejs';
@@ -50,6 +50,19 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
     }
     fetchLessons();
   }, []);
+
+  // Lọc danh sách bài học dựa trên khối lớp đã chọn
+  const filteredLessons = useMemo(() => {
+    if (!filters.grade) return lessons;
+    return lessons.filter(ls => String(ls.grade) === String(filters.grade));
+  }, [lessons, filters.grade]);
+
+  // Reset bài học nếu nó không còn nằm trong danh sách đã lọc
+  useEffect(() => {
+    if (filters.lessonId && !filteredLessons.some(ls => String(ls.id) === String(filters.lessonId))) {
+      setFilters(prev => ({ ...prev, lessonId: '' }));
+    }
+  }, [filteredLessons, filters.lessonId]);
 
   // Fetch questions
   const loadQuestions = async (currentPage = 1) => {
@@ -124,7 +137,7 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
               className="w-full bg-white border border-outline-variant/50 rounded-lg px-2 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-primary outline-none disabled:opacity-50"
             >
               <option value="">Tất cả bài học</option>
-              {lessons.map(ls => (
+              {filteredLessons.map(ls => (
                 <option key={ls.id} value={ls.id}>{ls.name}</option>
               ))}
             </select>

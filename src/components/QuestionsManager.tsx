@@ -45,6 +45,7 @@ interface Document {
 interface Lesson {
   id: number;
   name: string;
+  grade?: string;
 }
 
 interface QuestionsManagerProps {
