@@ -17,6 +17,7 @@ Bạn đang tìm kiếm hướng dẫn? Hãy truy cập bộ tài liệu chuyên
 - **Quản lý Bộ sưu tập (Collection)**: [collection-management.md]
 - **Lịch sử Database (DB Schema)**: [schema_history.md]
 - **Nghiên cứu & Quyết định (Research)**: [technology-decision.md]
+- **Xuất PDF & Lịch sử (Custom Documents)**: [docs/features/custom-documents.md]
 
 ---
 

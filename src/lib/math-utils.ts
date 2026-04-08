@@ -1,19 +1,23 @@
 /**
  * Cleans Mathpix data for rendering.
- * - Converts block math \[ \] to inline math \( \)
- * - Removes extra whitespace and newlines
+ * - Converts math delimiters to standard $ and $$
+ * - Removes extra whitespace and newlines inside math blocks
  * - Handles escaped backslashes if present
+ * - Ensures tight delimiters for Pandoc compatibility
  */
 export const cleanMathpixData = (text: string | null | undefined): string => {
   if (!text) return 'N/A';
   
   const cleaned = text
     .replace(/\\\\/g, '\\')         // Normalize double backslashes
-    .replace(/\\\[/g, '$$$$')          // Convert Block Math to $$
-    .replace(/\\\]/g, '$$$$')          // Convert Block Math to $$
-    .replace(/\\\(/g, '$$')          // Convert Inline Math \( to $
-    .replace(/\\\)/g, '$$')          // Convert Inline Math \) to $
-    .replace(/\r\n/g, '\n')         // Normalize Windows newlines to Unix newlines (Do NOT remove them completely)
+    // 1. Chuyển đổi và chuẩn hóa Block Math \[ ... \] hoặc $$ ... $$
+    .replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, '$$$$$1$$$$')
+    .replace(/\$\$\s*([\s\S]*?)\s*\$\$/g, '$$$$$1$$$$')
+    // 2. Chuyển đổi và chuẩn hóa Inline Math \( ... \) hoặc $ ... $
+    .replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, '$$$1$$')
+    // Thắt chặt dấu $ đơn (không áp dụng nếu là $$)
+    .replace(/(?<!\$)\$\s*([^\$\n]+?)\s*\$(?!\$)/g, '$$$1$$')
+    .replace(/\r\n/g, '\n')         // Normalize Windows newlines
     .trim();
 
   return cleaned;
