@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Menu, Search, Plus, Bell, Calculator } from 'lucide-react';
-import UploadModal from '../UploadModal';
+import UploadModal from '@/components/documents/UploadModal';
 
 interface TopNavBarProps {
   toggleSidebar: () => void;

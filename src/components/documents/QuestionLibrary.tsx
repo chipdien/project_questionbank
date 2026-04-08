@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Loader2, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
-import { getLibraryQuestions, getLessons } from '@/app/actions/question';
+import { getLibraryQuestions, getLessons } from '@/actions/question';
 import { ReactSortable } from 'react-sortablejs';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -10,7 +10,7 @@ import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
 
-import { cleanMathpixData } from '@/lib/math-utils';
+import { cleanMathpixData } from '@/lib/utils/math-utils';
 
 interface QuestionLibraryProps {
   onSelect?: (question: any) => void;
@@ -182,7 +182,7 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
                   <div className="flex gap-2 items-center">
                     {q.question_difficulty && (
                       <span className={`text-[9px] font-bold uppercase ${q.question_difficulty === 'Khó' ? 'text-error' :
-                          q.question_difficulty === 'Trung Bình' ? 'text-warning' : 'text-success'
+                        q.question_difficulty === 'Trung Bình' ? 'text-warning' : 'text-success'
                         }`}>
                         {q.question_difficulty}
                       </span>
@@ -199,6 +199,7 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
 
                 <div className="text-xs text-on-surface line-clamp-4 prose prose-sm max-w-none [&_p]:my-1 pointer-events-none">
                   <ReactMarkdown
+                    key={q.statement}
                     remarkPlugins={[remarkMath, remarkGfm]}
                     rehypePlugins={[rehypeRaw, rehypeMathjax]}
                   >

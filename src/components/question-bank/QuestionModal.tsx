@@ -7,7 +7,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
-import { cleanMathpixData } from '@/lib/math-utils';
+import { cleanMathpixData } from '@/lib/utils/math-utils';
 
 interface Option {
   id: number;
@@ -93,6 +93,7 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
               <h3 className="text-sm font-bold uppercase tracking-widest text-outline mb-4">Mô tả (Statement)</h3>
               <div className="prose prose-slate max-w-none text-base [&_img]:max-w-full [&_img]:rounded-md [&_img]:border [&_img]:border-outline-variant/30 [&_img]:my-4">
                 <ReactMarkdown
+                  key={question.statement}
                   remarkPlugins={[remarkMath, remarkGfm]}
                   rehypePlugins={[rehypeRaw, rehypeMathjax]}
                   components={{ p: 'span' }}
@@ -115,17 +116,15 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
                     return (
                       <div
                         key={opt.id}
-                        className={`flex gap-3 p-4 rounded-xl border-2 transition-all ${
-                          isCorrect 
-                            ? 'bg-green-50 border-green-500/50 shadow-sm' 
+                        className={`flex gap-3 p-4 rounded-xl border-2 transition-all ${isCorrect
+                            ? 'bg-green-50 border-green-500/50 shadow-sm'
                             : 'bg-surface-container-low border-outline-variant/20 hover:border-outline-variant/40'
-                        }`}
+                          }`}
                       >
-                        <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm border-2 ${
-                          isCorrect 
-                            ? 'bg-green-100 text-green-700 border-green-500/50' 
+                        <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm border-2 ${isCorrect
+                            ? 'bg-green-100 text-green-700 border-green-500/50'
                             : 'bg-white text-outline border-outline-variant/30'
-                        }`}>
+                          }`}>
                           {charLabel}
                         </div>
                         <div className={`pt-1 prose prose-slate max-w-none text-sm [&_img]:max-w-full [&_img]:rounded-md [&_img]:border [&_img]:border-outline-variant/30 [&_img]:my-2 ${isCorrect ? 'text-green-900 font-medium' : 'text-on-surface'}`}>
@@ -148,7 +147,7 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
                 </div>
               </div>
             )}
-            
+
             {/* Nếu không phải câu gốc trắc nghiệm mà là tự luận */}
             {(!question.options || question.options.length === 0) && question.question_type !== 'SINGLE_CHOICE' && (
               <div className="p-4 rounded-lg bg-surface-container-low text-on-surface-variant text-center text-sm">
@@ -156,12 +155,12 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
               </div>
             )}
           </div>
-          
+
           <div className="p-4 border-t border-outline-variant/20 bg-surface-container-lowest flex justify-end gap-3">
-             <button onClick={onClose} className="px-5 py-2.5 rounded-lg text-sm font-bold text-on-surface hover:bg-surface-container-low transition-colors">Đóng</button>
-             <button className="px-5 py-2.5 rounded-lg text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">edit</span> Edit Question
-             </button>
+            <button onClick={onClose} className="px-5 py-2.5 rounded-lg text-sm font-bold text-on-surface hover:bg-surface-container-low transition-colors">Đóng</button>
+            <button className="px-5 py-2.5 rounded-lg text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm">edit</span> Edit Question
+            </button>
           </div>
         </motion.div>
       </div>

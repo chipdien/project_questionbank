@@ -23,8 +23,8 @@ import {
 } from '@dnd-kit/sortable';
 import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 import SortableQuestionItem from '@/components/question-bank/SortableQuestionItem';
-import { getQuestionsByDocId } from '@/app/actions/question';
-import { createCollection } from '@/app/actions/collection';
+import { getQuestionsByDocId } from '@/actions/question';
+import { createCollection } from '@/actions/collection';
 import CollectionSaveModal from '../collection/CollectionSaveModal';
 import { FileText, ChevronRight, Hash, Layers, Loader2, Grab, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

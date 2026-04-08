@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
-import { cleanMathpixData } from '@/lib/math-utils';
+import { cleanMathpixData } from '@/lib/utils/math-utils';
 
 interface Option {
   id: number;
@@ -48,12 +48,12 @@ export default function SortableQuestionItem({ question, isOverlay = false }: So
   };
 
   const difficulty = question.question_difficulty?.toLowerCase().trim() || '';
-  
-  const difficultyBorderColor = 
+
+  const difficultyBorderColor =
     (difficulty.includes('khó') || difficulty.includes('hard')) ? 'border-l-error' :
-    (difficulty.includes('trung bình') || difficulty.includes('vừa') || difficulty.includes('medium')) ? 'border-l-warning' :
-    (difficulty.includes('dễ') || difficulty.includes('easy')) ? 'border-l-success' :
-    'border-l-outline-variant/30';
+      (difficulty.includes('trung bình') || difficulty.includes('vừa') || difficulty.includes('medium')) ? 'border-l-warning' :
+        (difficulty.includes('dễ') || difficulty.includes('easy')) ? 'border-l-success' :
+          'border-l-outline-variant/30';
 
   return (
     <div
@@ -66,6 +66,7 @@ export default function SortableQuestionItem({ question, isOverlay = false }: So
     >
       <div className="text-sm font-medium text-on-surface leading-relaxed max-w-full flex-1 min-w-0 overflow-hidden prose prose-sm prose-slate select-none">
         <ReactMarkdown
+          key={question.statement}
           remarkPlugins={[remarkMath, remarkGfm]}
           rehypePlugins={[rehypeRaw, rehypeMathjax]}
           components={{ p: 'span' }}

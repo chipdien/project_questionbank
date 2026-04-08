@@ -6,40 +6,18 @@ import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
-import QuestionModal from './QuestionModal';
-import AddToCollectionModal from './AddToCollectionModal';
+import QuestionModal from '@/components/question-bank/QuestionModal';
+import AddToCollectionModal from '@/components/collection/AddToCollectionModal';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { cleanMathpixData } from '@/lib/math-utils';
+import { cleanMathpixData } from '@/lib/utils/math-utils';
 
-interface Option {
-  id: number;
-  question_id: number;
-  content: string;
-  order: number;
-  weight: number;
-}
-
-interface Question {
-  id: number;
-  statement: string;
-  grade: string;
-  question_difficulty: string;
-  question_type: string;
-  created_at: string;
-  options?: Option[];
-  lesson_name?: string;
-}
+import { Question, Pagination } from '@/types';
 
 interface QuestionsDataGridProps {
   questions: Question[];
   externalSelectedIds?: Set<number>;
   onSelectionChange?: (ids: Set<number>) => void;
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalQuestions: number;
-    pageSize: number;
-  };
+  pagination: Pagination;
 }
 
 function getDifficultyBadge(difficulty: string) {
@@ -165,6 +143,7 @@ export default function QuestionsDataGrid({
                   <td className="px-6 py-4 text-sm font-semibold text-on-surface">
                     <div className="line-clamp-2 prose prose-slate prose-sm max-w-none text-sm [&_p]:my-0 [&_img]:hidden">
                       <ReactMarkdown
+                        key={q.statement}
                         remarkPlugins={[remarkMath, remarkGfm]}
                         rehypePlugins={[rehypeRaw, rehypeMathjax]}
                         components={{ p: 'span' }}
@@ -185,7 +164,7 @@ export default function QuestionsDataGrid({
                     {getDifficultyBadge(q.question_difficulty)}
                   </td>
                   <td className="px-6 py-4 text-sm text-outline" suppressHydrationWarning>
-                    {new Date(q.created_at).toLocaleDateString('vi-VN', { month: 'short', day: '2-digit', year: 'numeric' })}
+                    {new Date(q.created_at || Date.now()).toLocaleDateString('vi-VN', { month: 'short', day: '2-digit', year: 'numeric' })}
                   </td>
                 </tr>
               ))}

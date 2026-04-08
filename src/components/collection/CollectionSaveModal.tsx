@@ -9,7 +9,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
-import { cleanMathpixData } from '@/lib/math-utils';
+import { cleanMathpixData } from '@/lib/utils/math-utils';
 
 interface Question {
   id: number;
@@ -168,11 +168,10 @@ export default function CollectionSaveModal({
                       }}
                       autoFocus
                       placeholder="Ví dụ: Đề thi thử Toán học kỳ I"
-                      className={`w-full px-4 py-3 rounded-2xl bg-surface-container-low border text-sm transition-all focus:outline-none focus:ring-2 ${
-                        error 
-                          ? 'border-error/50 focus:ring-error/20 bg-error/5' 
+                      className={`w-full px-4 py-3 rounded-2xl bg-surface-container-low border text-sm transition-all focus:outline-none focus:ring-2 ${error
+                          ? 'border-error/50 focus:ring-error/20 bg-error/5'
                           : 'border-outline-variant/30 focus:border-primary/50 focus:ring-primary/10'
-                      }`}
+                        }`}
                     />
                     <AnimatePresence>
                       {error && (
@@ -211,6 +210,7 @@ export default function CollectionSaveModal({
                             </div>
                             <div className="flex-1 text-xs leading-relaxed text-on-surface-variant prose prose-sm max-w-none overflow-x-auto">
                               <ReactMarkdown
+                                key={question.statement}
                                 remarkPlugins={[remarkMath, remarkGfm]}
                                 rehypePlugins={[rehypeRaw, rehypeMathjax]}
                               >
@@ -235,11 +235,10 @@ export default function CollectionSaveModal({
                   <button
                     disabled={isSaving || selectedQuestions.length === 0}
                     onClick={handleSave}
-                    className={`w-full sm:w-auto px-8 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-95 ${
-                      isSaving || selectedQuestions.length === 0
+                    className={`w-full sm:w-auto px-8 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-95 ${isSaving || selectedQuestions.length === 0
                         ? 'bg-outline-variant/50 text-on-surface/30 cursor-not-allowed'
                         : 'bg-primary text-on-primary hover:bg-primary/90'
-                    }`}
+                      }`}
                   >
                     {isSaving ? (
                       <>

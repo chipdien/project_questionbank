@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import React from 'react';
 import { query } from '@/lib/db';
 import Link from 'next/link';
-import QuestionsManager from '@/components/QuestionsManager';
+import QuestionsManager from '@/components/question-bank/QuestionsManager';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 

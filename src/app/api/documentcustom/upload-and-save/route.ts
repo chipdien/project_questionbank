@@ -17,11 +17,11 @@ export async function POST(req: NextRequest) {
     }
 
     // 10MB limit (already checked)
-    
+
     // 0. Kiểm tra trùng lặp (Title hoặc Nội dung)
     // Ưu tiên sử dụng contentHash từ client gửi lên (bao gồm cả văn bản)
     let contentHash = formData.get("contentHash") as string;
-    
+
     if (!contentHash) {
       const normalizedIds = (Array.isArray(questionIds) ? questionIds : [])
         .filter(id => id !== null && id !== undefined)
@@ -32,21 +32,17 @@ export async function POST(req: NextRequest) {
         .digest('hex');
     }
 
-    const titles = await db.query<any[]>(
-      "SELECT title FROM lms_documents_custom WHERE title = ?",
-      [title]
+    const [rows] = await db.query<any[]>(
+      "SELECT title FROM lms_documents_custom WHERE content_hash = ? AND title = ?",
+      [contentHash, title]
     );
-    if (titles.length > 0) {
-      return NextResponse.json({ error: `Tiêu đề "${title}" đã tồn tại trong lịch sử export.` }, { status: 409 });
-    }
+    const documents = rows as any[];
 
-    const contents = await db.query<any[]>(
-      "SELECT title FROM lms_documents_custom WHERE content_hash = ?",
-      [contentHash]
-    );
-    if (contents && contents.length > 0) {
-      const fileName = (contents[0] as any).title;
-      return NextResponse.json({ error: `Nội dung tài liệu này trùng hoàn toàn với file "${fileName}" đã lưu trước đó.` }, { status: 409 });
+    if (documents && documents.length > 0) {
+      const fileName = documents[0].title || "Tài liệu cũ";
+      return NextResponse.json({ 
+        error: `Nội dung tài liệu này trùng hoàn toàn với file "${fileName}" đã lưu trước đó trong hệ thống.` 
+      }, { status: 409 });
     }
 
     // 1. Upload lên S3 từ Server
@@ -60,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
     const objectKey = `documents/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
-    
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -102,22 +98,22 @@ export async function POST(req: NextRequest) {
 
       await connection.commit();
 
-      return NextResponse.json({ 
-        success: true, 
-        documentId, 
+      return NextResponse.json({
+        success: true,
+        documentId,
         s3Url,
-        message: "Upload và lưu tài liệu thành công!" 
+        message: "Upload và lưu tài liệu thành công!"
       });
 
-    } catch (dbError) {
-      await connection.rollback();
-      throw dbError;
-    } finally {
-      connection.release();
-    }
+      } catch (dbError) {
+        await connection.rollback();
+        throw dbError;
+      } finally {
+        connection.release();
+      }
 
-  } catch (error: any) {
-    console.error("Error in upload-and-save API:", error);
-    return NextResponse.json({ error: error.message || "Lỗi server" }, { status: 500 });
-  }
+    } catch (error: any) {
+      console.error("Error in upload-and-save API:", error);
+      return NextResponse.json({ error: error.message || "Lỗi server" }, { status: 500 });
+    }
 }

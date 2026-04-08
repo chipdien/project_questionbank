@@ -3,49 +3,18 @@
 import React, { useState } from 'react';
 import QuestionClassificationCard from './QuestionClassificationCard';
 import QuestionsDataGrid from './QuestionsDataGrid';
-import { classifyQuestions } from '@/app/actions/question';
-import { autoClassifyWithAI } from '@/app/actions/ai-classify';
+import { classifyQuestions } from '@/actions/question';
+import { autoClassifyWithAI } from '@/actions/ai-classify';
 import { useRouter } from 'next/navigation';
-import DashboardUploader from './DashboardUploader';
 import Link from 'next/link';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { toast } from 'react-hot-toast';
+import { Question, Document, Lesson, Pagination } from '@/types';
+import DashboardUploader from '@/components/documents/DashboardUploader';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-}
-
-interface Option {
-  id: number;
-  question_id: number;
-  content: string;
-  order: number;
-  weight: number;
-}
-
-interface Question {
-  id: number;
-  statement: string;
-  grade: string;
-  question_difficulty: string;
-  question_type: string;
-  created_at: string;
-  options?: Option[];
-  lesson_name?: string;
-}
-
-interface Document {
-  id: number;
-  title: string;
-  created_at: string;
-  is_ai_classified: number;
-}
-
-interface Lesson {
-  id: number;
-  name: string;
-  grade?: string;
 }
 
 interface QuestionsManagerProps {
@@ -53,12 +22,7 @@ interface QuestionsManagerProps {
   documents: Document[];
   activeDocId: number | null;
   lessons: Lesson[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalQuestions: number;
-    pageSize: number;
-  };
+  pagination: Pagination;
 }
 
 export default function QuestionsManager({ questions, documents, activeDocId, lessons, pagination }: QuestionsManagerProps) {

@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import BlockEditor from './BlockEditor';
 import { FileDown, Plus, X, Loader2, CheckCircle2 } from 'lucide-react';
-import { blocksToMarkdown } from '@/lib/export-utils';
+import { blocksToMarkdown } from '@/lib/utils/export-utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export type BlockType = 'headline' | 'textbox' | 'question';
@@ -29,7 +29,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
 
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
-  
+
   // Expose hàm load dữ liệu cho cha
   React.useImperativeHandle(ref, () => ({
     loadDocument: (title, questions) => {
@@ -49,12 +49,12 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
         }))
       ];
       setBlocks(newBlocks);
-      
+
       // Cuộn lên đầu trang sau khi load
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }));
-  
+
   // States for Saving/Export Flow
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [docTitle, setDocTitle] = useState('');
@@ -211,12 +211,16 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
         return;
       }
 
-      // 3. Tính toán contentHash toàn diện (bao gồm văn bản và câu hỏi)
+      // 3. Tính toán contentHash (Chỉ bao gồm nội dung Blocks, không bao gồm tiêu đề)
       const contentData = sortedBlocks.map(b => {
-        const core = b.type === 'question' ? b.content.id : b.content;
-        return `${b.type}:${core}`;
+        if (b.type === 'question') {
+          const q = b.content;
+          const optionsStr = q.options?.map((opt: any) => opt.content || opt.statement || '').join('|') || '';
+          return `question:${q.id}:${q.statement || q.content || ''}:${optionsStr}`;
+        }
+        return `${b.type}:${b.content}`;
       }).join('|');
-      
+
       const msgBuffer = new TextEncoder().encode(contentData);
       const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
       const contentHash = Array.from(new Uint8Array(hashBuffer))
@@ -411,7 +415,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-on-surface">Lưu & Xuất tài liệu</h2>
                 {!isExporting && (
-                  <button 
+                  <button
                     onClick={() => setIsSaveModalOpen(false)}
                     className="p-2 rounded-full hover:bg-surface-container transition-colors text-outline"
                   >
@@ -419,7 +423,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
                   </button>
                 )}
               </div>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-on-surface-variant mb-1.5">
@@ -458,7 +462,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
                 </div>
 
                 <p className="text-[11px] text-center text-on-surface-variant/60">
-                   Hệ thống sẽ tạo file PDF, tải về máy và lưu vào thư viện cá nhân của bạn.
+                  Hệ thống sẽ tạo file PDF, tải về máy và lưu vào thư viện cá nhân của bạn.
                 </p>
               </div>
             </motion.div>

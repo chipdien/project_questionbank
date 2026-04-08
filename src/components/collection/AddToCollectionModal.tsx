@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { createCollectionAction } from '@/app/actions/collection';
+import { createCollectionAction } from '@/actions/collection';
 import { useRouter } from 'next/navigation';
 
 interface AddToCollectionModalProps {
@@ -24,7 +24,7 @@ export default function AddToCollectionModal({ selectedIds, onClose, onSuccess }
     setIsSubmitting(true);
     try {
       const result = await createCollectionAction(title, selectedIds);
-      
+
       if (result.success) {
         setIsSuccess(true);
       } else {
@@ -66,7 +66,7 @@ export default function AddToCollectionModal({ selectedIds, onClose, onSuccess }
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-6">
                 <span className="material-symbols-outlined text-4xl">check_circle</span>
               </div>
-              
+
               <h2 className="text-xl font-bold text-on-surface mb-2 font-headline">Tạo thành công!</h2>
               <p className="text-sm text-on-surface-variant mb-8 px-4">
                 Bộ sưu tập **"{title}"** đã được lưu. Bạn có muốn chuyển sang trang danh sách bộ sưu tập để xem ngay không?
