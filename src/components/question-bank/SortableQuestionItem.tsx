@@ -4,6 +4,7 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
@@ -65,7 +66,7 @@ export default function SortableQuestionItem({ question, isOverlay = false }: So
     >
       <div className="text-sm font-medium text-on-surface leading-relaxed max-w-full flex-1 min-w-0 overflow-hidden prose prose-sm prose-slate select-none">
         <ReactMarkdown
-          remarkPlugins={[remarkMath]}
+          remarkPlugins={[remarkMath, remarkGfm]}
           rehypePlugins={[rehypeRaw, rehypeMathjax]}
           components={{ p: 'span' }}
         >

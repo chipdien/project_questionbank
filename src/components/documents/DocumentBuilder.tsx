@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import BlockEditor from './BlockEditor';
 import { FileDown, Plus } from 'lucide-react';
+import { blocksToMarkdown } from '@/lib/export-utils';
 
 export type BlockType = 'headline' | 'textbox' | 'question';
 
@@ -142,132 +143,46 @@ export default function DocumentBuilder() {
   };
 
   const handleExportPDF = async () => {
-    const element = document.getElementById('pdf-content');
-    if (!element) return;
-
     // Hiển thị trạng thái đang xử lý
     const btnText = document.querySelector('.export-btn-text');
     const btn = btnText?.closest('button');
     if (btnText) btnText.textContent = 'Đang xử lý...';
     if (btn) btn.disabled = true;
 
-    // Thêm class để ẩn các khoảng cách/shadow khi chụp ảnh
-    element.classList.add('exporting');
-
     try {
-      // Sử dụng dynamic import để tránh lỗi SSR
-      const [html2canvasModule, { jsPDF }] = await Promise.all([
-        import('html2canvas-pro' as any),
-        import('jspdf')
-      ]);
-      const html2canvas = html2canvasModule.default;
+      // 1. Convert block sang markdown
+      // Sắp xếp blocks theo order (blocks thực tế đã được update order)
+      const sortedBlocks = [...blocks].sort((a, b) => a.order - b.order);
+      const markdown = blocksToMarkdown(sortedBlocks, questionNumbers);
 
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pagesElements = element.querySelectorAll('.a4-page');
+      // 2. Gọi API để export
+      const response = await fetch('/api/export/pandoc', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ markdown }),
+      });
 
-      if (pagesElements.length === 0) {
-        throw new Error('Không tìm thấy trang nào để xuất.');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => null);
+        throw new Error(errData?.error || 'Lỗi từ server API');
       }
 
-      for (let i = 0; i < pagesElements.length; i++) {
-        const pageEl = pagesElements[i] as HTMLElement;
+      // 3. Tải file blob về máy
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Tai-lieu-${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
 
-        // Đợi tất cả font chữ (đặc biệt là KaTeX) nạp xong trước khi chụp ảnh màn hình
-        if (typeof document !== 'undefined' && (document as any).fonts) {
-          await (document as any).fonts.ready;
-        }
-
-        // Đảm bảo MathJax render xong các công thức toán học
-        if (typeof window !== 'undefined' && (window as any).MathJax?.typesetPromise) {
-          await (window as any).MathJax.typesetPromise();
-        }
-
-        // Đợi tất cả hình ảnh trong trang tải xong hoàn toàn trước khi chụp
-        const imgs = Array.from(pageEl.querySelectorAll('img'));
-        await Promise.all(imgs.map(img => {
-          if (img.complete) return Promise.resolve();
-          return new Promise((resolve) => {
-            img.onload = resolve;
-            img.onerror = resolve; // Tiếp tục kể cả khi lỗi
-            // Thử nạp lại nếu bị treo
-            setTimeout(resolve, 5000); 
-          });
-        }));
-
-        // Chụp ảnh trang hiện tại với scale 2x để đảm bảo độ sắc nét
-        // html2canvas-pro hỗ trợ oklab/oklch nguyên bản
-        const canvas = await html2canvas(pageEl, {
-          scale: 3, // Tăng độ phân giải để ảnh Mathpix sắc nét hơn
-          useCORS: true,
-          logging: true,
-          backgroundColor: '#ffffff',
-          allowTaint: false, // Tránh lỗi SecurityError khi dùng toDataURL
-          imageTimeout: 15000, // Đợi ảnh từ server Mathpix nạp lâu hơn
-          onclone: (clonedDoc: HTMLDocument) => {
-            // --- XỬ LÝ HÌNH ẢNH TRÁNH LỖI TRỐNG ẢNH DO CORS ---
-            const images = clonedDoc.querySelectorAll('img');
-            images.forEach(img => {
-              img.removeAttribute('loading'); // Bỏ lazy load
-              
-              if (img.src && (img.src.startsWith('http') || img.src.startsWith('//')) && !img.src.startsWith('data:')) {
-                // Kiểm tra xem ảnh đã được proxy chưa để tránh loop proxy
-                if (!img.src.includes('/api/proxy-image')) {
-                   const absoluteUrl = img.src.startsWith('//') ? `https:${img.src}` : img.src;
-                   img.src = `/api/proxy-image?url=${encodeURIComponent(absoluteUrl)}`;
-                }
-              }
-            });
-
-
-            // Thay thế input/textarea bằng div để chụp ảnh sắc nét, không bị cắt chữ
-            const inputs = clonedDoc.querySelectorAll('input, textarea');
-            inputs.forEach((input: Element) => {
-              const el = input as HTMLInputElement | HTMLTextAreaElement;
-              const parent = el.parentElement;
-              if (parent) {
-                const replacement = clonedDoc.createElement('div');
-                replacement.textContent = el.value;
-                
-                // Sao chép các class liên quan đến typography và màu sắc
-                replacement.className = el.className;
-                
-                // Ghi đè một số style để render văn bản tĩnh chuẩn nhất
-                replacement.style.whiteSpace = 'pre-wrap';
-                replacement.style.wordBreak = 'break-word';
-                replacement.style.display = 'block';
-                replacement.style.height = 'auto';
-                replacement.style.minHeight = '1.5em';
-                replacement.style.overflow = 'visible';
-                
-                // Ẩn phần tử gốc và thêm phần tử thay thế
-                el.style.display = 'none';
-                parent.appendChild(replacement);
-              }
-            });
-          }
-        });
-
-        // Chuyển sang định dạng PNG để giữ độ nét tuyệt đối cho sơ đồ hình học (Mathpix)
-        const imgData = canvas.toDataURL('image/png'); 
-        const imgWidth = 210; // A4 width in mm
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        if (i > 0) {
-          pdf.addPage();
-        }
-
-        // Dùng định dạng PNG và nén cao cho file PDF
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'SLOW');
-      }
-
-      pdf.save(`Tai-lieu-${Date.now()}.pdf`);
-
-      // Xóa class sau khi xuất xong
-      element.classList.remove('exporting');
     } catch (error) {
       console.error('Lỗi khi xuất PDF:', error);
-      element.classList.remove('exporting');
-      alert('Không thể xuất PDF. Vui lòng thử lại hoặc sử dụng tính năng In (Ctrl+P) của trình duyệt.');
+      alert('Không thể xuất PDF. Vui lòng kiểm tra lại kết nối hoặc định dạng câu hỏi.');
     } finally {
       if (btnText) btnText.textContent = 'Xuất PDF';
       if (btn) btn.disabled = false;

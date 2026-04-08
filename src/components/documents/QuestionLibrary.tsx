@@ -5,6 +5,7 @@ import { Search, Loader2, ChevronLeft, ChevronRight, Filter } from 'lucide-react
 import { getLibraryQuestions, getLessons } from '@/app/actions/question';
 import { ReactSortable } from 'react-sortablejs';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
@@ -185,7 +186,7 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
 
                 <div className="text-xs text-on-surface line-clamp-4 prose prose-sm max-w-none [&_p]:my-1 pointer-events-none">
                   <ReactMarkdown
-                    remarkPlugins={[remarkMath]}
+                    remarkPlugins={[remarkMath, remarkGfm]}
                     rehypePlugins={[rehypeRaw, rehypeMathjax]}
                   >
                     {cleanMathpixData(q.statement)}

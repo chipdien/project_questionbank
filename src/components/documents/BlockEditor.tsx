@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Block } from './DocumentBuilder';
 import { GripVertical, X, Edit2, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
@@ -170,7 +171,7 @@ export default function BlockEditor({ block, onChange, onRemove, qNumber }: Bloc
                     style={{ whiteSpace: 'normal' }}
                   >
                     <ReactMarkdown
-                      remarkPlugins={[remarkMath]}
+                      remarkPlugins={[remarkMath, remarkGfm]}
                       rehypePlugins={[rehypeRaw, rehypeMathjax]}
                       components={{ p: 'span' }}
                     >
@@ -187,7 +188,7 @@ export default function BlockEditor({ block, onChange, onRemove, qNumber }: Bloc
                       <span className="font-bold shrink-0 text-primary-fixed pt-0.5">{String.fromCharCode(65 + idx)}.</span>
                       <div className="prose prose-sm max-w-none [&_p]:my-0">
                         <ReactMarkdown
-                          remarkPlugins={[remarkMath]}
+                          remarkPlugins={[remarkMath, remarkGfm]}
                           rehypePlugins={[rehypeRaw, rehypeMathjax]}
                           components={{ p: 'span' }}
                         >

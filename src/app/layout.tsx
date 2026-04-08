@@ -19,11 +19,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="vi" >
+    <html lang="vi" suppressHydrationWarning>
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${inter.variable} ${manrope.variable} bg-background font-body text-on-background antialiased overflow-hidden`}>
+      <body className={`${inter.variable} ${manrope.variable} bg-background font-body text-on-background antialiased overflow-hidden`} suppressHydrationWarning>
         <Script
           id="mathjax-config"
           strategy="beforeInteractive"
@@ -46,7 +46,7 @@ export default function RootLayout({
                   displayIndent: '0px'
                 },
                 startup: {
-                  typeset: true,
+                  typeset: false,
                   ready: () => {
                     MathJax.startup.defaultReady();
                   }

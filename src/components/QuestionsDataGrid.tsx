@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
+import remarkGfm from 'remark-gfm';
 import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
 import QuestionModal from './QuestionModal';
@@ -164,7 +165,7 @@ export default function QuestionsDataGrid({
                   <td className="px-6 py-4 text-sm font-semibold text-on-surface">
                     <div className="line-clamp-2 prose prose-slate prose-sm max-w-none text-sm [&_p]:my-0 [&_img]:hidden">
                       <ReactMarkdown
-                        remarkPlugins={[remarkMath]}
+                        remarkPlugins={[remarkMath, remarkGfm]}
                         rehypePlugins={[rehypeRaw, rehypeMathjax]}
                         components={{ p: 'span' }}
                       >

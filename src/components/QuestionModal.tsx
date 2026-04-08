@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
@@ -92,7 +93,7 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
               <h3 className="text-sm font-bold uppercase tracking-widest text-outline mb-4">Mô tả (Statement)</h3>
               <div className="prose prose-slate max-w-none text-base [&_img]:max-w-full [&_img]:rounded-md [&_img]:border [&_img]:border-outline-variant/30 [&_img]:my-4">
                 <ReactMarkdown
-                  remarkPlugins={[remarkMath]}
+                  remarkPlugins={[remarkMath, remarkGfm]}
                   rehypePlugins={[rehypeRaw, rehypeMathjax]}
                   components={{ p: 'span' }}
                 >
@@ -129,7 +130,7 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
                         </div>
                         <div className={`pt-1 prose prose-slate max-w-none text-sm [&_img]:max-w-full [&_img]:rounded-md [&_img]:border [&_img]:border-outline-variant/30 [&_img]:my-2 ${isCorrect ? 'text-green-900 font-medium' : 'text-on-surface'}`}>
                           <ReactMarkdown
-                            remarkPlugins={[remarkMath]}
+                            remarkPlugins={[remarkMath, remarkGfm]}
                             rehypePlugins={[rehypeRaw, rehypeMathjax]}
                             components={{ p: 'span' }}
                           >

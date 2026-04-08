@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, FileText, CheckCircle2, AlertCircle, Loader2, ArrowRight, LibraryBig } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
@@ -210,7 +211,7 @@ export default function CollectionSaveModal({
                             </div>
                             <div className="flex-1 text-xs leading-relaxed text-on-surface-variant prose prose-sm max-w-none overflow-x-auto">
                               <ReactMarkdown
-                                remarkPlugins={[remarkMath]}
+                                remarkPlugins={[remarkMath, remarkGfm]}
                                 rehypePlugins={[rehypeRaw, rehypeMathjax]}
                               >
                                 {cleanMathpixData(question.statement)}

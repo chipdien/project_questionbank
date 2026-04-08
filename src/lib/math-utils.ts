@@ -7,10 +7,14 @@
 export const cleanMathpixData = (text: string | null | undefined): string => {
   if (!text) return 'N/A';
   
-  return text
+  const cleaned = text
     .replace(/\\\\/g, '\\')         // Normalize double backslashes
-    .replace(/\\\[/g, '\\(')        // Convert Block Math to Inline Math
-    .replace(/\\\]/g, '\\)')        // Convert Block Math to Inline Math
-    .replace(/[\r\n]+/g, ' ')      // Remove extra whitespaces/newlines
+    .replace(/\\\[/g, '$$$$')          // Convert Block Math to $$
+    .replace(/\\\]/g, '$$$$')          // Convert Block Math to $$
+    .replace(/\\\(/g, '$$')          // Convert Inline Math \( to $
+    .replace(/\\\)/g, '$$')          // Convert Inline Math \) to $
+    .replace(/\r\n/g, '\n')         // Normalize Windows newlines to Unix newlines (Do NOT remove them completely)
     .trim();
+
+  return cleaned;
 };
