@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import BlockEditor from './BlockEditor';
-import { FileDown, Plus, X, Loader2, CheckCircle2 } from 'lucide-react';
+import { FileDown, Plus, X, Loader2, CheckCircle2, RotateCcw } from 'lucide-react';
 import { blocksToMarkdown } from '@/lib/utils/export-utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -62,24 +62,9 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
   useEffect(() => {
-    // Khởi tạo dữ liệu mẫu sau khi Component mounted để tránh Hydration mismatch
-    const initialBlocks: Block[] = [
-      {
-        id: 'b_' + Date.now() + '_1',
-        type: 'headline',
-        content: 'Đề thi mẫu số 1',
-        order: 0
-      },
-      {
-        id: 'b_' + Date.now() + '_2',
-        type: 'textbox',
-        content: 'Vui lòng làm bài nghiêm túc, không sao chép.',
-        order: 1
-      }
-    ];
-    setBlocks(initialBlocks);
-    // Set default title from headline if exist
-    setDocTitle('Đề thi mẫu số 1');
+    // Khởi tạo trạng thái rỗng thân thiện (luôn giữ lại 1 trang A4 trắng)
+    setBlocks([]);
+    setDocTitle('');
   }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -132,6 +117,11 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
 
       if (currentPage.length > 0) {
         newPages.push(currentPage);
+      }
+
+      // Đảm bảo luôn có ít nhất 1 trang A4 hiển thị (kể cả khi không có block nào)
+      if (newPages.length === 0) {
+        newPages.push([]);
       }
 
       setPages(newPages);
@@ -188,7 +178,12 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
     try {
       // 1. Convert block sang markdown
       const sortedBlocks = [...blocks].sort((a, b) => a.order - b.order);
-      const markdown = blocksToMarkdown(sortedBlocks, questionNumbers);
+      
+      const markdown = pages.map(page => {
+        const sortedPageBlocks = [...page].sort((a, b) => a.order - b.order);
+        return blocksToMarkdown(sortedPageBlocks, questionNumbers);
+      }).join('\n\n\\newpage\n\n');
+
       const questionIds = sortedBlocks
         .filter(b => b.type === 'question')
         .map(b => b.content.id);
@@ -294,13 +289,27 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
             </button>
           </div>
 
-          <button
-            onClick={handleExportClick}
-            className="flex items-center gap-2 px-4 py-1.5 bg-primary text-white font-bold rounded-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FileDown className="w-4 h-4" />
-            <span>Xuất PDF & Lưu</span>
-          </button>
+          <div className="flex gap-2 items-center">
+            <button
+              onClick={() => {
+                if (window.confirm('Bạn có chắc chắn muốn làm trắng tài liệu hiện tại không?')) {
+                  setBlocks([]);
+                  setDocTitle('');
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-bold transition-colors text-xs border border-red-200"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset</span>
+            </button>
+            <button
+              onClick={handleExportClick}
+              className="flex items-center gap-2 px-4 py-1.5 bg-primary text-white font-bold rounded-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FileDown className="w-4 h-4" />
+              <span>Xuất PDF & Lưu</span>
+            </button>
+          </div>
         </div>
       </div>
 
