@@ -6,6 +6,7 @@ import BlockEditor from './BlockEditor';
 import { FileDown, Plus, X, Loader2, CheckCircle2, RotateCcw } from 'lucide-react';
 import { blocksToMarkdown } from '@/lib/utils/export-utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import VditorEditor from '../ui/VditorEditor';
 
 export type BlockType = 'headline' | 'textbox' | 'question';
 
@@ -62,8 +63,14 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
   useEffect(() => {
-    // Khởi tạo trạng thái rỗng thân thiện (luôn giữ lại 1 trang A4 trắng)
-    setBlocks([]);
+    // Khởi tạo dữ liệu mẫu kèm công thức toán học (Latex)
+    const initialBlock: Block = {
+      id: generateId(),
+      type: 'textbox',
+      content: 'Bắt đầu soạn thảo tài liệu tại đây. Ví dụ công thức toán học: $E = mc^2$',
+      order: 0
+    };
+    setBlocks([initialBlock]);
     setDocTitle('');
   }, []);
 
@@ -178,7 +185,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
     try {
       // 1. Convert block sang markdown
       const sortedBlocks = [...blocks].sort((a, b) => a.order - b.order);
-      
+
       const markdown = pages.map(page => {
         const sortedPageBlocks = [...page].sort((a, b) => a.order - b.order);
         return blocksToMarkdown(sortedPageBlocks, questionNumbers);
@@ -267,14 +274,26 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
     }
   };
 
+  const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
+
+  // Close editor on escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setActiveFieldId(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col gap-6 items-center w-full min-h-screen">
+    <div className="flex flex-col gap-6 items-center w-full min-h-screen pb-20" onClick={() => setActiveFieldId(null)}>
       {/* Top Sticky Toolbar */}
-      <div className="sticky top-0 z-20 w-full flex justify-center py-4 bg-background/95 backdrop-blur-md no-print border-b border-outline-variant/10 shadow-sm">
-        <div className="flex items-center justify-between w-full max-w-[210mm] px-4">
-          <div className="flex gap-2">
+      <div className="sticky top-0 z-50 w-full flex justify-center py-2 bg-background/95 backdrop-blur-md no-print border-b border-outline-variant/10 shadow-sm min-h-[64px]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-4 w-full max-w-[1200px] px-4">
+          {/* Left: Add Blocks */}
+          <div className="flex gap-2 shrink-0">
             <button
               onClick={() => addBlock('headline', '')}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg font-medium transition-colors text-xs border border-outline-variant/30"
@@ -289,25 +308,39 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
             </button>
           </div>
 
-          <div className="flex gap-2 items-center">
+          {/* Center: Global Vditor Toolbar Placeholder */}
+          <div className="flex-1 flex justify-center min-w-0 relative">
+            <div id="global-vditor-toolbar" className="flex-1 flex justify-center" />
+
+            {/* Disabled Overlay for Toolbar */}
+            {!activeFieldId && (
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] cursor-not-allowed z-10 flex items-center justify-center">
+                <span className="text-[10px] text-on-surface-variant/40 font-medium italic">Chọn một vùng văn bản để định dạng</span>
+              </div>
+            )}
+          </div>
+
+          {/* Right: Actions */}
+          <div className="flex gap-2 items-center shrink-0">
             <button
               onClick={() => {
                 if (window.confirm('Bạn có chắc chắn muốn làm trắng tài liệu hiện tại không?')) {
                   setBlocks([]);
                   setDocTitle('');
+                  setActiveFieldId(null);
                 }
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-bold transition-colors text-xs border border-red-200"
+              className="flex items-center gap-1.5 px-2 py-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors text-xs"
+              title="Reset"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset</span>
             </button>
             <button
               onClick={handleExportClick}
               className="flex items-center gap-2 px-4 py-1.5 bg-primary text-white font-bold rounded-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-xs disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FileDown className="w-4 h-4" />
-              <span>Xuất PDF & Lưu</span>
+              <span>Xuất PDF</span>
             </button>
           </div>
         </div>
@@ -381,6 +414,8 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
                     qNumber={questionNumbers[block.id]}
                     onChange={(content) => updateBlock(block.id, content)}
                     onRemove={() => removeBlock(block.id)}
+                    activeFieldId={activeFieldId}
+                    setActiveFieldId={setActiveFieldId}
                   />
                 ))}
               </ReactSortable>
