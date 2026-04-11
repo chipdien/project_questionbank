@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useCallback, useState } from 'react';
 import { useDropzone, DropzoneOptions } from 'react-dropzone';
@@ -39,9 +39,9 @@ export default function FileUploader({ onUploadSuccess, onError }: FileUploaderP
     onDropRejected: (fileRejections) => {
       const error = fileRejections[0]?.errors[0];
       if (error?.code === 'file-too-large') {
-        onError('Kích thước file vượt quá 10MB.');
+        onError('KÃ­ch thÆ°á»›c file vượt quá 10MB.');
       } else {
-        onError('Định dạng file không được hỗ trợ. Vui lòng tải lên PDF, DOCX hoặc Ảnh (JPG, PNG).');
+        onError('Äá»‹nh dạng file không Ä‘Æ°á»£c há»— trá»£. Vui lÃ²ng tải lên PDF, DOCX hoáº·c áº¢nh (JPG, PNG).');
       }
     }
   } as DropzoneOptions);
@@ -62,13 +62,13 @@ export default function FileUploader({ onUploadSuccess, onError }: FileUploaderP
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Đã xảy ra lỗi khi chuyển đổi file.');
+        throw new Error(data.error || 'ÄÃ£ xảy ra lỗi khi chuyển Ä‘á»•i file.');
       }
 
       onUploadSuccess(data.data.text, file.name, data.data.documentId);
       setFile(null); // Reset after success
     } catch (err: any) {
-      onError(err.message || 'Lỗi kết nối máy chủ.');
+      onError(err.message || 'Lá»—i kết nối máy chủ.');
     } finally {
       setIsUploading(false);
     }
@@ -105,8 +105,8 @@ export default function FileUploader({ onUploadSuccess, onError }: FileUploaderP
                 <UploadCloud className="w-10 h-10 text-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold mb-1">Kéo thả tài liệu vào đây</h3>
-                <p className="text-muted-foreground text-sm">hoặc click để chọn file từ máy tính</p>
+                <h3 className="text-xl font-semibold mb-1">KÃ©o thả tÃ i liệu vào đây</h3>
+                <p className="text-muted-foreground text-sm">hoáº·c click để chá»n file từ máy tÃ­nh</p>
                 <div className="mt-4 flex gap-2 justify-center text-xs text-slate-500">
                   <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded">PDF</span>
                   <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded">DOCX</span>
@@ -159,7 +159,7 @@ export default function FileUploader({ onUploadSuccess, onError }: FileUploaderP
               {isUploading ? (
                 <>
                   <Loader2 className="animate-spin w-5 h-5" />
-                  <span>Đang phân tích...</span>
+                  <span>Äang phÃ¢n tÃ­ch...</span>
                 </>
               ) : (
                 <span>Trích xuất văn bản ngay</span>

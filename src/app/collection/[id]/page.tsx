@@ -1,8 +1,7 @@
-import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getCollectionByIdAction, getCollectionQuestionsAction } from '@/actions/collection';
-import QuestionsDataGrid from '@/components/question-bank/QuestionsDataGrid';
+import QuestionsDataGrid from '@/app/question-bank/components/QuestionsDataGrid';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,19 +15,19 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
   }
 
   const collection = await getCollectionByIdAction(collectionId);
-  
+
   if (!collection) {
     notFound();
   }
 
   const allQuestions = await getCollectionQuestionsAction(collectionId);
-  
+
   const page = parseInt(resolvedSearchParams.page || '1', 10);
   const pageSize = 10;
   const totalQuestions = allQuestions.length;
   // Make sure totalPages is at least 1 even if 0 questions
   const totalPages = Math.max(1, Math.ceil(totalQuestions / pageSize));
-  
+
   const safePage = Math.max(1, Math.min(page, totalPages));
   const startIndex = (safePage - 1) * pageSize;
   const paginatedQuestions = allQuestions.slice(startIndex, startIndex + pageSize);
@@ -62,9 +61,9 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
 
       <div className="mt-8">
         {totalQuestions > 0 ? (
-          <QuestionsDataGrid 
-            questions={paginatedQuestions} 
-            pagination={pagination} 
+          <QuestionsDataGrid
+            questions={paginatedQuestions}
+            pagination={pagination}
           />
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">

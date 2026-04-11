@@ -1,4 +1,4 @@
-import { Block } from '@/components/documents/DocumentBuilder';
+import { Block } from '@/app/documents/components/DocumentBuilder';
 import { cleanMathpixData } from './math-utils';
 
 /**
@@ -27,25 +27,25 @@ export const blocksToMarkdown = (blocks: Block[], questionNumbers: Record<string
       const q = block.content;
       if (!q || typeof q !== 'object') return;
 
-      const displayNum = q.manualNumber !== undefined && q.manualNumber !== '' 
-        ? q.manualNumber 
+      const displayNum = q.manualNumber !== undefined && q.manualNumber !== ''
+        ? q.manualNumber
         : questionNumbers[block.id];
-      
+
       const statement = normalizeMathForPandoc(q.statement || q.content || '');
-      
+
       md += `\n**Câu ${displayNum}:** ${statement}\n\n`;
 
       if (q.options && Array.isArray(q.options)) {
         if (q.options.length === 4) {
           md += `\n\`\`\`{=latex}\n\\begin{multicols}{2}\n\`\`\`\n\n`;
           const getOptStr = (idx: number) => `**${String.fromCharCode(65 + idx)}.** ` + normalizeMathForPandoc(q.options[idx].content || q.options[idx].statement || '');
-          
+
           // Render theo thứ tự (A, C, B, D) để lúc chia 2 cột, kết quả hiển thị từ trái qua phải sẽ là A B / C D
           md += getOptStr(0) + `\n\n`;
           md += getOptStr(2) + `\n\n`;
           md += getOptStr(1) + `\n\n`;
           md += getOptStr(3) + `\n\n`;
-          
+
           md += `\`\`\`{=latex}\n\\end{multicols}\n\`\`\`\n\n`;
         } else {
           // Render các phương án đáp án, có thể dạng danh sách

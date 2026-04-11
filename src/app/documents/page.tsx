@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef } from 'react';
-import DocumentBuilder, { DocumentBuilderRef } from '@/components/documents/DocumentBuilder';
-import QuestionLibrary from '@/components/documents/QuestionLibrary';
-import SavedDocumentsLibrary from '@/components/documents/SavedDocumentsLibrary';
+import DocumentBuilder, { DocumentBuilderRef } from '@/app/documents/components/DocumentBuilder';
+import QuestionLibrary from '@/app/documents/components/QuestionLibrary';
+import SavedDocumentsLibrary from '@/app/documents/components/SavedDocumentsLibrary';
 import { Database, History, Loader2 } from 'lucide-react';
 
 export default function DocumentsPage() {
@@ -16,7 +16,7 @@ export default function DocumentsPage() {
     try {
       const res = await fetch(`/api/documentcustom/detail?id=${docId}`);
       const data = await res.json();
-      
+
       if (data.success && data.document && data.questions) {
         builderRef.current?.loadDocument(data.document.title, data.questions);
       } else {
@@ -54,7 +54,7 @@ export default function DocumentsPage() {
                 Kéo thả câu hỏi từ thư viện hoặc tải lại từ lịch sử để soạn thảo.
               </p>
             </div>
-            
+
             <DocumentBuilder ref={builderRef} />
           </div>
         </div>
@@ -65,11 +65,10 @@ export default function DocumentsPage() {
           <div className="flex border-b border-outline-variant/10">
             <button
               onClick={() => setActiveTab('library')}
-              className={`flex-1 flex items-center justify-center gap-2 py-4 text-xs font-bold transition-all relative ${
-                activeTab === 'library' 
-                  ? 'text-primary' 
+              className={`flex-1 flex items-center justify-center gap-2 py-4 text-xs font-bold transition-all relative ${activeTab === 'library'
+                  ? 'text-primary'
                   : 'text-on-surface-variant/60 hover:text-on-surface-variant'
-              }`}
+                }`}
             >
               <Database className="w-4 h-4" />
               THƯ VIỆN CÂU HỎI
@@ -79,11 +78,10 @@ export default function DocumentsPage() {
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex-1 flex items-center justify-center gap-2 py-4 text-xs font-bold transition-all relative ${
-                activeTab === 'history' 
-                  ? 'text-primary' 
+              className={`flex-1 flex items-center justify-center gap-2 py-4 text-xs font-bold transition-all relative ${activeTab === 'history'
+                  ? 'text-primary'
                   : 'text-on-surface-variant/60 hover:text-on-surface-variant'
-              }`}
+                }`}
             >
               <History className="w-4 h-4" />
               LỊCH SỬ TÀI LIỆU

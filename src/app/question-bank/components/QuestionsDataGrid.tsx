@@ -6,8 +6,8 @@ import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
-import QuestionModal from '@/components/question-bank/QuestionModal';
-import AddToCollectionModal from '@/components/collection/AddToCollectionModal';
+import QuestionModal from '@/app/question-bank/components/QuestionModal';
+import AddToCollectionModal from '@/app/collection/components/AddToCollectionModal';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { cleanMathpixData } from '@/lib/utils/math-utils';
 
@@ -20,8 +20,12 @@ interface QuestionsDataGridProps {
   pagination: Pagination;
 }
 
-function getDifficultyBadge(difficulty: string) {
-  const diff = (difficulty || 'medium').toLowerCase();
+function getDifficultyBadge(difficulty: string | null | undefined) {
+  if (!difficulty) {
+    return <span className="text-on-surface-variant font-medium">---</span>;
+  }
+
+  const diff = difficulty.toLowerCase();
 
   if (diff.includes('hard') || diff.includes('khó')) {
     return <span className="px-2 py-1 rounded-full bg-error/10 text-error text-[10px] font-bold uppercase whitespace-nowrap leading-none">Khó</span>;
@@ -91,14 +95,14 @@ export default function QuestionsDataGrid({
   return (
     <>
       <div className="flex justify-between items-center mb-1">
-        <h2 className="text-lg font-bold text-on-surface font-headline">Câu hỏi trong file</h2>
+        <h2 className="text-lg font-bold text-on-surface font-headline">Câu hỏi trong tệp</h2>
         <button
           onClick={() => setIsCollectionModalOpen(true)}
           disabled={selectedIds.size === 0}
           className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined text-sm">add</span>
-          Thêm vào collection ({selectedIds.size})
+          Thêm vào bộ sưu tập ({selectedIds.size})
         </button>
       </div>
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden mb-4">

@@ -32,7 +32,7 @@ interface QuestionModalProps {
 }
 
 export default function QuestionModal({ question, onClose }: QuestionModalProps) {
-  // Ngăn cuộn body khi mở modal
+  // NgÄƒn cuá»™n body khi má»Ÿ modal
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -64,7 +64,7 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-primary text-2xl">quiz</span>
               <div>
-                <h2 className="text-lg font-bold text-on-surface font-headline">Question Details (Q-{question.id})</h2>
+                <h2 className="text-lg font-bold text-on-surface font-headline">Chi tiết câu hỏi (Q-{question.id})</h2>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
                     {question.question_type}
@@ -148,7 +148,7 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
               </div>
             )}
 
-            {/* Nếu không phải câu gốc trắc nghiệm mà là tự luận */}
+            {/* Nếu không phải câu gốc trắc nghiá»‡m mà là tự luận */}
             {(!question.options || question.options.length === 0) && question.question_type !== 'SINGLE_CHOICE' && (
               <div className="p-4 rounded-lg bg-surface-container-low text-on-surface-variant text-center text-sm">
                 Câu hỏi tự luận không có tùy chọn trả lời.
@@ -159,7 +159,7 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
           <div className="p-4 border-t border-outline-variant/20 bg-surface-container-lowest flex justify-end gap-3">
             <button onClick={onClose} className="px-5 py-2.5 rounded-lg text-sm font-bold text-on-surface hover:bg-surface-container-low transition-colors">Đóng</button>
             <button className="px-5 py-2.5 rounded-lg text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2">
-              <span className="material-symbols-outlined text-sm">edit</span> Edit Question
+              <span className="material-symbols-outlined text-sm">edit</span> Sửa câu hỏi
             </button>
           </div>
         </motion.div>

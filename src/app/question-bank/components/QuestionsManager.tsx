@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import QuestionClassificationCard from './QuestionClassificationCard';
@@ -11,7 +11,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { toast } from 'react-hot-toast';
 import { Question, Document, Lesson, Pagination } from '@/types';
-import DashboardUploader from '@/components/documents/DashboardUploader';
+import DashboardUploader from '@/app/documents/components/DashboardUploader';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -49,7 +49,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
 
     try {
       const result = await classifyQuestions(Array.from(selectedIds), classification);
-      
+
       if (result.success) {
         toast.success('Phân loại thành công!');
         setSelectedIds(new Set());
@@ -70,7 +70,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
 
     try {
       const result = await autoClassifyWithAI(activeDocId);
-      
+
       if (result.success) {
         toast.success(`AI đã phân loại thành công ${result.count} câu hỏi trong tài liệu này!`);
         setSelectedIds(new Set());
@@ -95,7 +95,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
         <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col min-h-[400px]">
           <div className="flex justify-between items-center mb-6 text-on-surface">
             <h4 className="font-bold flex items-center gap-2 text-lg font-headline">
-              File đã tải gần đây
+              Tệp đã tải gần đây
             </h4>
           </div>
 
@@ -113,10 +113,10 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className={cn(
                         "flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center",
-                        isPdf ? "bg-error-container/30 text-error" : 
-                        isDocx ? "bg-primary-fixed/30 text-primary" : 
-                        isCsv ? "bg-secondary-container/50 text-secondary" : 
-                        "bg-surface-container-highest text-on-surface-variant"
+                        isPdf ? "bg-error-container/30 text-error" :
+                          isDocx ? "bg-primary-fixed/30 text-primary" :
+                            isCsv ? "bg-secondary-container/50 text-secondary" :
+                              "bg-surface-container-highest text-on-surface-variant"
                       )}>
                         <span className="material-symbols-outlined">
                           {isPdf ? 'picture_as_pdf' : isDocx ? 'description' : isCsv ? 'table_chart' : 'description'}
@@ -132,7 +132,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
                       </div>
                     </div>
                     <span className={`flex-shrink-0 ml-4 text-xs font-bold text-primary flex items-center gap-1 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                      View <span className="material-symbols-outlined text-sm">open_in_new</span>
+                      Xem <span className="material-symbols-outlined text-sm">open_in_new</span>
                     </span>
                   </div>
                 </Link>
@@ -140,20 +140,20 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
             })}
             {documents.length === 0 && (
               <div className="py-6 text-center text-outline text-sm">
-                Chưa có file nào được tải lên.
+                Chưa có tệp nào được tải lên.
               </div>
             )}
           </div>
 
           <button className="w-full mt-6 py-3 text-[11px] font-extrabold uppercase tracking-[0.15em] text-primary bg-primary/5 border border-primary/30 rounded-xl hover:bg-primary/10 hover:border-primary/50 transition-all flex items-center justify-center gap-2 group">
-            Xem toàn bộ files
+            Xem toàn bộ tệp
             <span className="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1 font-bold">arrow_forward</span>
           </button>
         </div>
 
         {/* Question Classification Card */}
-        <QuestionClassificationCard 
-          selectedCount={selectedIds.size} 
+        <QuestionClassificationCard
+          selectedCount={selectedIds.size}
           onApply={handleApplyClassification}
           onAIClassify={handleAIClassify}
           lessons={lessons}
@@ -163,8 +163,8 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
 
       {/* Row 2: Data Grid Table */}
       <div className="mt-4">
-        <QuestionsDataGrid 
-          questions={questions} 
+        <QuestionsDataGrid
+          questions={questions}
           externalSelectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
           pagination={pagination}

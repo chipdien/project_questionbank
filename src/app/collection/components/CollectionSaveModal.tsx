@@ -39,7 +39,7 @@ export default function CollectionSaveModal({
 
   const handleSave = async () => {
     if (!title.trim()) {
-      setError('Vui lòng nhập tiêu đề bộ sưu tập.');
+      setError('Vui lòng nhập tiêu Ä‘ề bộ sưu tập.');
       return;
     }
 
@@ -109,7 +109,7 @@ export default function CollectionSaveModal({
                 <div className="space-y-3">
                   <h2 className="text-3xl font-extrabold tracking-tight font-headline">Tạo thành công!</h2>
                   <p className="text-on-surface-variant max-w-sm font-medium leading-relaxed">
-                    Bộ sưu tập **"{title}"** đã được lưu vào hệ thống của bạn với {selectedQuestions.length} câu hỏi.
+                    Bộ sưu tập <b>"{title}"</b> đã được lưu vào hệ thống của bạn với {selectedQuestions.length} câu hỏi!
                   </p>
                 </div>
 
@@ -119,7 +119,7 @@ export default function CollectionSaveModal({
                     className="flex-1 px-8 py-3.5 bg-primary text-on-primary rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all"
                   >
                     <LibraryBig className="w-5 h-5" />
-                    Xem Collections
+                    Xem Bộ sưu tập
                   </button>
                   <button
                     onClick={handleCreateNext}
@@ -169,8 +169,8 @@ export default function CollectionSaveModal({
                       autoFocus
                       placeholder="Ví dụ: Đề thi thử Toán học kỳ I"
                       className={`w-full px-4 py-3 rounded-2xl bg-surface-container-low border text-sm transition-all focus:outline-none focus:ring-2 ${error
-                          ? 'border-error/50 focus:ring-error/20 bg-error/5'
-                          : 'border-outline-variant/30 focus:border-primary/50 focus:ring-primary/10'
+                        ? 'border-error/50 focus:ring-error/20 bg-error/5'
+                        : 'border-outline-variant/30 focus:border-primary/50 focus:ring-primary/10'
                         }`}
                     />
                     <AnimatePresence>
@@ -195,7 +195,7 @@ export default function CollectionSaveModal({
                         Danh sách câu hỏi xem lại
                       </span>
                       <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase">
-                        {selectedQuestions.length} ITEMS
+                        {selectedQuestions.length} CÂU
                       </span>
                     </div>
                     <div className="grid gap-3 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary/10">
@@ -236,8 +236,8 @@ export default function CollectionSaveModal({
                     disabled={isSaving || selectedQuestions.length === 0}
                     onClick={handleSave}
                     className={`w-full sm:w-auto px-8 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-95 ${isSaving || selectedQuestions.length === 0
-                        ? 'bg-outline-variant/50 text-on-surface/30 cursor-not-allowed'
-                        : 'bg-primary text-on-primary hover:bg-primary/90'
+                      ? 'bg-outline-variant/50 text-on-surface/30 cursor-not-allowed'
+                      : 'bg-primary text-on-primary hover:bg-primary/90'
                       }`}
                   >
                     {isSaving ? (

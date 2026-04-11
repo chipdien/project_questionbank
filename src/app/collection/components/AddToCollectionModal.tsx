@@ -78,13 +78,13 @@ export default function AddToCollectionModal({ selectedIds, onClose, onSuccess }
                   className="w-full py-3 bg-primary text-white text-sm font-bold rounded-xl shadow-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
                 >
                   <span className="material-symbols-outlined text-lg">arrow_forward</span>
-                  Xem danh sách Collection
+                  Xem danh sách Bộ sưu tập
                 </button>
                 <button
                   onClick={onSuccess}
                   className="w-full py-3 bg-surface-container-low text-on-surface text-sm font-bold rounded-xl hover:bg-surface-container-high transition-all"
                 >
-                  Ở lại Dashboard
+                  Ở lại Trang chủ
                 </button>
               </div>
             </div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Loader2, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
@@ -51,13 +51,13 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
     fetchLessons();
   }, []);
 
-  // Lọc danh sách bài học dựa trên khối lớp đã chọn
+  // Lá»c danh sách bÃ i há»c dá»±a trÃªn khá»‘i lá»›p đã chá»n
   const filteredLessons = useMemo(() => {
     if (!filters.grade) return lessons;
     return lessons.filter(ls => String(ls.grade) === String(filters.grade));
   }, [lessons, filters.grade]);
 
-  // Reset bài học nếu nó không còn nằm trong danh sách đã lọc
+  // Reset bÃ i há»c náº¿u nÃ³ không cÃ²n náº±m trong danh sách đã lá»c
   useEffect(() => {
     if (filters.lessonId && !filteredLessons.some(ls => String(ls.id) === String(filters.lessonId))) {
       setFilters(prev => ({ ...prev, lessonId: '' }));
@@ -115,20 +115,6 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Độ khó</label>
-            <select
-              value={filters.difficulty}
-              onChange={(e) => handleFilterChange('difficulty', e.target.value)}
-              className="w-full bg-white border border-outline-variant/50 rounded-lg px-2 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-primary outline-none"
-            >
-              <option value="">Tất cả độ khó</option>
-              <option value="Dễ">Dễ</option>
-              <option value="Trung Bình">Trung Bình</option>
-              <option value="Khó">Khó</option>
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
             <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Bài học</label>
             <select
               value={filters.lessonId}
@@ -140,6 +126,20 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
               {filteredLessons.map(ls => (
                 <option key={ls.id} value={ls.id}>{ls.name}</option>
               ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Độ khó</label>
+            <select
+              value={filters.difficulty}
+              onChange={(e) => handleFilterChange('difficulty', e.target.value)}
+              className="w-full bg-white border border-outline-variant/50 rounded-lg px-2 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-primary outline-none"
+            >
+              <option value="">Tất cả độ khó</option>
+              <option value="Dễ">Dễ</option>
+              <option value="Trung bình">Trung bình</option>
+              <option value="Khó">Khó</option>
             </select>
           </div>
         </div>
@@ -155,7 +155,7 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
         ) : questions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 text-on-surface-variant opacity-60">
             <Search className="w-8 h-8" />
-            <p className="text-xs text-center">Không tìm thấy câu hỏi nào phù hợp.</p>
+            <p className="text-xs text-center">Không tìm thấy câu hỏi nào.</p>
           </div>
         ) : (
           <ReactSortable
@@ -176,25 +176,18 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
               <div
                 key={q.id}
                 className="p-3 bg-white border border-outline-variant/40 rounded-xl hover:border-primary/40 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing group relative select-none"
-                data-id={q.id} // Cần metadata để DocumentBuilder nhận diện
+                data-id={q.id}
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex gap-2 items-center">
                     {q.question_difficulty && (
                       <span className={`text-[9px] font-bold uppercase ${q.question_difficulty === 'Khó' ? 'text-error' :
-                        q.question_difficulty === 'Trung Bình' ? 'text-warning' : 'text-success'
+                        q.question_difficulty === 'Trung bình' ? 'text-warning' : 'text-success'
                         }`}>
                         {q.question_difficulty}
                       </span>
                     )}
                   </div>
-                  <button
-                    onClick={() => onSelect?.(q)}
-                    className="p-1 rounded bg-primary/5 text-primary opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Thêm vào cuối"
-                  >
-                    +
-                  </button>
                 </div>
 
                 <div className="text-xs text-on-surface line-clamp-4 prose prose-sm max-w-none [&_p]:my-1 pointer-events-none">

@@ -1,9 +1,7 @@
 export const dynamic = 'force-dynamic';
 
-import React from 'react';
 import { query } from '@/lib/db';
-import Link from 'next/link';
-import QuestionsManager from '@/components/question-bank/QuestionsManager';
+import QuestionsManager from '@/app/question-bank/components/QuestionsManager';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -43,8 +41,12 @@ interface Lesson {
   grade?: string;
 }
 
-function getDifficultyBadge(difficulty: string) {
-  const diff = (difficulty || 'medium').toLowerCase();
+function getDifficultyBadge(difficulty: string | null | undefined) {
+  if (!difficulty) {
+    return <span className="text-on-surface-variant font-medium">---</span>;
+  }
+
+  const diff = difficulty.toLowerCase();
 
   if (diff.includes('hard') || diff.includes('khó')) {
     return <span className="px-2 py-1 rounded-full bg-error/10 text-error text-[10px] font-bold uppercase whitespace-nowrap leading-none">Khó</span>;
@@ -153,9 +155,9 @@ export default async function DashboardPage(props: PageProps) {
       </div>
 
       {/* Questions Management Workflow */}
-      <QuestionsManager 
-        questions={questions} 
-        documents={documents} 
+      <QuestionsManager
+        questions={questions}
+        documents={documents}
         activeDocId={activeDocId}
         lessons={lessons}
         pagination={{

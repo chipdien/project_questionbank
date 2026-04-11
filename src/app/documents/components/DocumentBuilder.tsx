@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ReactSortable } from 'react-sortablejs';
@@ -6,7 +6,6 @@ import BlockEditor from './BlockEditor';
 import { FileDown, Plus, X, Loader2, CheckCircle2, RotateCcw } from 'lucide-react';
 import { blocksToMarkdown } from '@/lib/utils/export-utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import VditorEditor from '../ui/VditorEditor';
 
 export type BlockType = 'headline' | 'textbox' | 'question';
 
@@ -31,7 +30,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
 
-  // Expose hàm load dữ liệu cho cha
+  // Expose hÃ m load dữ liệu cho cha
   React.useImperativeHandle(ref, () => ({
     loadDocument: (title, questions) => {
       setDocTitle(title);
@@ -51,7 +50,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
       ];
       setBlocks(newBlocks);
 
-      // Cuộn lên đầu trang sau khi load
+      // Cuá»™n lên đầu trang sau khi load
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }));
@@ -63,11 +62,11 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
   useEffect(() => {
-    // Khởi tạo dữ liệu mẫu kèm công thức toán học (Latex)
+    // Khá»Ÿi táº¡o dữ liệu máº«u kÃ¨m công thá»©c toÃ¡n há»c (Latex)
     const initialBlock: Block = {
       id: generateId(),
       type: 'textbox',
-      content: 'Bắt đầu soạn thảo tài liệu tại đây. Ví dụ công thức toán học: $E = mc^2$',
+      content: 'Báº¯t đầu soáº¡n thảo tÃ i liệu táº¡i đây. VÃ­ dụ công thá»©c toÃ¡n há»c: $E = mc^2$',
       order: 0
     };
     setBlocks([initialBlock]);
@@ -76,7 +75,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Logic tính số thứ tự câu hỏi: Reset khi gặp headline
+  // Logic tÃ­nh sá»‘ thá»© tá»± câu há»i: Reset khi gáº·p headline
   const questionNumbers = React.useMemo(() => {
     const map: Record<string, number> = {};
     let currentNum = 1;
@@ -92,13 +91,13 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
 
   const [pages, setPages] = useState<Block[][]>([blocks]);
 
-  // Chiều cao tối đa của nội dung trong 1 trang
+  // Chiá»u cao tá»‘i Ä‘a của ná»™i dung trong 1 trang
   const A4_HEIGHT_MM = 297;
   const MARGIN_VERTICAL_MM = 50; // 25mm Top + 25mm Bottom
-  const PX_PER_MM = 3.78; // Tỷ lệ chuẩn 96dpi
+  const PX_PER_MM = 3.78; // Tá»· lá»‡ chuáº©n 96dpi
   const DYNAMIC_PAGE_HEIGHT = (A4_HEIGHT_MM - MARGIN_VERTICAL_MM) * PX_PER_MM;
 
-  // Chia blocks vào các trang dựa trên chiều cao thực tế
+  // Chia blocks vào các trang dá»±a trÃªn chiá»u cao thá»±c táº¿
   useEffect(() => {
     const paginate = () => {
       if (!containerRef.current) return;
@@ -126,7 +125,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
         newPages.push(currentPage);
       }
 
-      // Đảm bảo luôn có ít nhất 1 trang A4 hiển thị (kể cả khi không có block nào)
+      // Äáº£m bảo luôn có Ã­t nháº¥t 1 trang A4 hiá»ƒn thị (ká»ƒ cáº£ khi không có block nào)
       if (newPages.length === 0) {
         newPages.push([]);
       }
@@ -134,7 +133,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
       setPages(newPages);
     };
 
-    // Đợi 1 chút để DOM cập nhật xong
+    // Äá»£i 1 chÃºt để DOM cập nhật xong
     const timer = setTimeout(paginate, 100);
     return () => clearTimeout(timer);
   }, [blocks]);
@@ -164,7 +163,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
   };
 
   const handleExportClick = () => {
-    // Luôn lấy tiêu đề từ headline đầu tiên nếu có để gợi ý
+    // Luôn láº¥y tiÃªu Ä‘á» từ headline đầu tiên náº¿u có để gá»£i Ã½
     const firstHeadline = blocks.find(b => b.type === 'headline');
     if (firstHeadline && firstHeadline.content) {
       setDocTitle(firstHeadline.content);
@@ -175,7 +174,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
 
   const performExportAndSave = async () => {
     if (!docTitle.trim()) {
-      alert('Vui lòng nhập tiêu đề tài liệu');
+      alert('Vui lÃ²ng nhập tiÃªu Ä‘á» tÃ i liệu');
       return;
     }
 
@@ -195,25 +194,25 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
         .filter(b => b.type === 'question')
         .map(b => b.content.id);
 
-      // 2. Gọi API để export PDF (Pandoc)
+      // 2. Gá»i API để export PDF (Pandoc)
       const exportResponse = await fetch('/api/export/pandoc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ markdown }),
       });
 
-      if (!exportResponse.ok) throw new Error('Lỗi xuất PDF');
+      if (!exportResponse.ok) throw new Error('Lá»—i xuất PDF');
       const pdfBlob = await exportResponse.blob();
 
-      // Validate 10MB client-side trước khi upload
+      // Validate 10MB client-side trÆ°á»›c khi upload
       if (pdfBlob.size > 10 * 1024 * 1024) {
-        alert('File PDF quá lớn (vượt quá 10MB). Hãy giảm bớt nội dung.');
+        alert('File PDF quá lá»›n (vượt quá 10MB). HÃ£y giáº£m bá»›t ná»™i dung.');
         setIsExporting(false);
         setSaveStatus('idle');
         return;
       }
 
-      // 3. Tính toán contentHash (Chỉ bao gồm nội dung Blocks, không bao gồm tiêu đề)
+      // 3. TÃ­nh toÃ¡n contentHash (Chá»‰ bao gá»“m ná»™i dung Blocks, không bao gá»“m tiÃªu Ä‘á»)
       const contentData = sortedBlocks.map(b => {
         if (b.type === 'question') {
           const q = b.content;
@@ -229,14 +228,14 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
 
-      // 4. Chuẩn bị FormData để gộp Upload S3 và Lưu DB trên server
+      // 4. Chuáº©n bá»‹ FormData để gá»™p Upload S3 và LÆ°u DB trÃªn server
       const formData = new FormData();
       formData.append('title', docTitle);
       formData.append('file', pdfBlob, `${docTitle}.pdf`);
       formData.append('questionIds', JSON.stringify(questionIds));
       formData.append('contentHash', contentHash);
 
-      // 5. Gọi API gộp
+      // 5. Gá»i API gá»™p
       const response = await fetch('/api/documentcustom/upload-and-save', {
         method: 'POST',
         body: formData,
@@ -244,12 +243,12 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || 'Lỗi khi upload và lưu tài liệu');
+        throw new Error(errData.error || 'Lá»—i khi upload và lưu tÃ i liệu');
       }
 
       setSaveStatus('success');
 
-      // 5. Tải file về máy cho người dùng
+      // 5. Táº£i file vá» máy cho ngÆ°á»i dÃ¹ng
       const downloadUrl = window.URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = downloadUrl;
@@ -259,17 +258,17 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
       window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(a);
 
-      // Đóng modal sau 1.5s thành công
+      // ÄÃ³ng modal sau 1.5s thÃ nh công
       setTimeout(() => {
         setIsSaveModalOpen(false);
         setIsExporting(false);
       }, 1500);
 
     } catch (error: any) {
-      console.error('Lỗi quy trình xuất/lưu:', error);
+      console.error('Lá»—i quy trÃ¬nh xuất/lưu:', error);
       setSaveStatus('error');
-      // Hiển thị thông báo lỗi chi tiết từ API (ví dụ: thông báo trùng tên/nội dung)
-      alert(error.message || 'Có lỗi xảy ra trong quá trình xuất hoặc lưu tài liệu.');
+      // Hiển thị thông bÃ¡o lỗi chi tiết từ API (ví­ dụ: thông bÃ¡o trÃ¹ng tên/ná»™i dung)
+      alert(error.message || 'CÃ³ lỗi xảy ra trong quá trÃ¬nh xuất hoáº·c lưu tÃ i liệu.');
       setIsExporting(false);
     }
   };
@@ -315,7 +314,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
             {/* Disabled Overlay for Toolbar */}
             {!activeFieldId && (
               <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] cursor-not-allowed z-10 flex items-center justify-center">
-                <span className="text-[10px] text-on-surface-variant/40 font-medium italic">Chọn một vùng văn bản để định dạng</span>
+                <span className="text-[10px] text-on-surface-variant/40 font-medium italic">Chọn nội dung văn bản để định dạng</span>
               </div>
             )}
           </div>
@@ -366,7 +365,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
             <div className="flex-1 relative">
               {pageBlocks.length === 0 && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-on-surface-variant/50 no-print border-2 border-dashed border-outline-variant/20 rounded-2xl pointer-events-none z-0">
-                  <p className="text-sm font-medium">Kéo câu hỏi từ thư viện hoặc thêm tiêu đề/văn bản.</p>
+                  <p className="text-sm font-medium">Kéo câu hỏi từ thư viện hoặc thêm tiêu đề/văn bản</p>
                 </div>
               )}
               <ReactSortable
@@ -506,7 +505,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
                 </div>
 
                 <p className="text-[11px] text-center text-on-surface-variant/60">
-                  Hệ thống sẽ tạo file PDF, tải về máy và lưu vào thư viện cá nhân của bạn.
+                  Hệ thống sẽ tạo file PDF, tải về máy và lưu vào thư viện cá nhân của bạn
                 </p>
               </div>
             </motion.div>

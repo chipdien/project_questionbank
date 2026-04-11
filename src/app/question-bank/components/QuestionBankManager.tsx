@@ -22,12 +22,12 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { restrictToWindowEdges } from '@dnd-kit/modifiers';
-import SortableQuestionItem from '@/components/question-bank/SortableQuestionItem';
+import SortableQuestionItem from '@/app/question-bank/components/SortableQuestionItem';
 import { getQuestionsByDocId } from '@/actions/question';
 import { createCollection } from '@/actions/collection';
-import CollectionSaveModal from '../collection/CollectionSaveModal';
+import CollectionSaveModal from '@/app/collection/components/CollectionSaveModal';
 import { FileText, ChevronRight, Hash, Layers, Loader2, Grab, Save } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 interface Option {
@@ -83,21 +83,20 @@ export default function QuestionBankManager({ initialDocuments }: QuestionBankMa
       if (!activeDocId) return;
       setIsLoading(true);
       const data = await getQuestionsByDocId(activeDocId);
-      
-      // LỌC THÔNG MINH: Chỉ lấy những câu chưa có trong giỏ hàng (selectedQuestions)
-      const filteredData = data.filter((q: any) => 
+
+      const filteredData = data.filter((q: any) =>
         !selectedQuestions.some(sq => sq.id === q.id)
       );
 
-      setSourceQuestions(filteredData.map((q: any) => ({ 
-        ...q, 
+      setSourceQuestions(filteredData.map((q: any) => ({
+        ...q,
         containerId: 'source',
-        document_id: activeDocId // Ghi nhớ tệp gốc để hỗ trợ kéo ngược sau này
+        document_id: activeDocId
       })));
       setIsLoading(false);
     }
     loadQuestions();
-  }, [activeDocId, selectedQuestions.length]); // Theo dõi cả độ dài giỏ hàng
+  }, [activeDocId, selectedQuestions.length]);
 
   const findContainer = (id: string | number) => {
     if (id === 'source' || sourceQuestions.find((q) => q.id === id)) return 'source';
@@ -123,12 +122,10 @@ export default function QuestionBankManager({ initialDocuments }: QuestionBankMa
     if (activeContainer === 'source' && shadowSelected(overId)) {
       moveItemBetweenContainers(active.id as number, 'source', 'selected');
     } else if (activeContainer === 'selected' && shadowSource(overId)) {
-      // Logic Kéo ngược: Chỉ cho hiện lại ở nguồn nếu đúng tệp đang mở
       const question = selectedQuestions.find(q => q.id === active.id);
       if (question && question.document_id === activeDocId) {
         moveItemBetweenContainers(active.id as number, 'selected', 'source');
       } else {
-        // Nếu không đúng tệp, chỉ xóa khỏi giỏ hàng
         setSelectedQuestions(prev => prev.filter(q => q.id !== active.id));
       }
     }
@@ -163,22 +160,22 @@ export default function QuestionBankManager({ initialDocuments }: QuestionBankMa
     const overContainer = findContainer(over.id);
 
     if (activeContainer === overContainer && active.id !== over.id) {
-       if (activeContainer === 'source') {
-          const oldIndex = sourceQuestions.findIndex((q) => q.id === active.id);
-          const newIndex = sourceQuestions.findIndex((q) => q.id === over.id);
-          setSourceQuestions(arrayMove(sourceQuestions, oldIndex, newIndex));
-        } else if (activeContainer === 'selected') {
-          const oldIndex = selectedQuestions.findIndex((q) => q.id === active.id);
-          const newIndex = selectedQuestions.findIndex((q) => q.id === over.id);
-          setSelectedQuestions(arrayMove(selectedQuestions, oldIndex, newIndex));
-        }
+      if (activeContainer === 'source') {
+        const oldIndex = sourceQuestions.findIndex((q) => q.id === active.id);
+        const newIndex = sourceQuestions.findIndex((q) => q.id === over.id);
+        setSourceQuestions(arrayMove(sourceQuestions, oldIndex, newIndex));
+      } else if (activeContainer === 'selected') {
+        const oldIndex = selectedQuestions.findIndex((q) => q.id === active.id);
+        const newIndex = selectedQuestions.findIndex((q) => q.id === over.id);
+        setSelectedQuestions(arrayMove(selectedQuestions, oldIndex, newIndex));
+      }
     }
   };
 
   const handleSaveCollection = async (title: string) => {
     const questionIds = selectedQuestions.map(q => q.id);
     const result = await createCollection(title, questionIds);
-    
+
     if (result.success) {
       toast.success('Đã tạo bộ sưu tập thành công!');
       return { success: true };
@@ -188,8 +185,8 @@ export default function QuestionBankManager({ initialDocuments }: QuestionBankMa
     }
   };
 
-  const activeQuestion = activeId 
-    ? [...sourceQuestions, ...selectedQuestions].find((q) => q.id === activeId) 
+  const activeQuestion = activeId
+    ? [...sourceQuestions, ...selectedQuestions].find((q) => q.id === activeId)
     : null;
 
   return (
@@ -202,8 +199,7 @@ export default function QuestionBankManager({ initialDocuments }: QuestionBankMa
       modifiers={[restrictToWindowEdges]}
     >
       <div className="flex-1 grid grid-cols-12 gap-6 min-h-0 overflow-hidden pb-4">
-        
-        {/* Cột 1: Danh sách Tệp (4/12) */}
+
         <div className="col-span-12 lg:col-span-4 bg-surface-container-lowest rounded-2xl border border-outline-variant/20 flex flex-col overflow-hidden shadow-sm">
           <div className="p-4 border-b border-outline-variant/10 bg-surface-container-low/50 flex items-center justify-between">
             <h3 className="font-bold text-sm tracking-tight flex items-center gap-2">
@@ -211,7 +207,7 @@ export default function QuestionBankManager({ initialDocuments }: QuestionBankMa
               DANH SÁCH TỆP
             </h3>
             <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase">
-              {initialDocuments.length} files
+              {initialDocuments.length} tệp
             </span>
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
@@ -219,11 +215,10 @@ export default function QuestionBankManager({ initialDocuments }: QuestionBankMa
               <button
                 key={doc.id}
                 onClick={() => setActiveDocId(doc.id)}
-                className={`w-full text-left p-3 rounded-xl transition-all group flex items-center gap-3 border ${
-                  activeDocId === doc.id
-                    ? 'bg-primary/5 border-primary/20 shadow-sm'
-                    : 'bg-transparent border-transparent hover:bg-surface-container-low hover:border-outline-variant/30'
-                }`}
+                className={`w-full text-left p-3 rounded-xl transition-all group flex items-center gap-3 border ${activeDocId === doc.id
+                  ? 'bg-primary/5 border-primary/20 shadow-sm'
+                  : 'bg-transparent border-transparent hover:bg-surface-container-low hover:border-outline-variant/30'
+                  }`}
               >
                 <div className={`p-2 rounded-lg ${activeDocId === doc.id ? 'bg-primary text-on-primary' : 'bg-surface-container-highest text-on-surface-variant group-hover:text-primary'}`}>
                   <FileText className="w-4 h-4" />
@@ -246,12 +241,11 @@ export default function QuestionBankManager({ initialDocuments }: QuestionBankMa
           </div>
         </div>
 
-        {/* Cột 2: Câu hỏi khả dụng (4/12) */}
-        <DroppableColumn 
-          id="source" 
-          questions={sourceQuestions} 
-          title="CÂU HỎI TRONG TỆP" 
-          icon={Hash} 
+        <DroppableColumn
+          id="source"
+          questions={sourceQuestions}
+          title="CÂU HỎI TRONG TỆP"
+          icon={Hash}
           color="secondary"
           isLoading={isLoading}
         >
@@ -265,18 +259,17 @@ export default function QuestionBankManager({ initialDocuments }: QuestionBankMa
                 <Grab className="w-8 h-8" />
               </div>
               <p className="text-sm font-medium">
-                {activeDocId ? 'Tệp này chưa có câu hỏi hoặc đang tải...' : 'Vui lòng chọn một tệp ở cột bên trái.'}
+                {activeDocId ? 'Tập này chưa có câu hỏi hoặc đang tải...' : 'Vui lòng chọn một tệp ở cột bên trái.'}
               </p>
             </div>
           )}
         </DroppableColumn>
 
-        {/* Cột 3: Câu hỏi được chọn (4/12) */}
-        <DroppableColumn 
-          id="selected" 
-          questions={selectedQuestions} 
-          title="CÂU HỎI ĐÃ CHỌN" 
-          icon={FileText} 
+        <DroppableColumn
+          id="selected"
+          questions={selectedQuestions}
+          title="CÂU HỎI ĐÃ CHỌN"
+          icon={FileText}
           color="primary"
           showCount
           headerAction={
@@ -306,7 +299,6 @@ export default function QuestionBankManager({ initialDocuments }: QuestionBankMa
         </DroppableColumn>
       </div>
 
-      {/* Modal Lưu Bộ sưu tập */}
       <CollectionSaveModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -341,13 +333,11 @@ function DroppableColumn({ id, questions, title, icon: Icon, color, children, sh
   return (
     <div
       ref={setNodeRef}
-      className={`col-span-12 lg:col-span-4 bg-surface-container-lowest rounded-2xl border flex flex-col overflow-hidden shadow-sm transition-all duration-300 ${
-        id === 'selected' ? 'border-dashed border-2 border-primary/20' : 'border-outline-variant/20'
-      } ${isOver ? 'ring-2 ring-primary/40 bg-primary/5' : ''}`}
+      className={`col-span-12 lg:col-span-4 bg-surface-container-lowest rounded-2xl border flex flex-col overflow-hidden shadow-sm transition-all duration-300 ${id === 'selected' ? 'border-dashed border-2 border-primary/20' : 'border-outline-variant/20'
+        } ${isOver ? 'ring-2 ring-primary/40 bg-primary/5' : ''}`}
     >
-      <div className={`p-4 border-b border-outline-variant/10 flex items-center justify-between ${
-        color === 'primary' ? 'bg-primary/5' : 'bg-surface-container-low/50'
-      }`}>
+      <div className={`p-4 border-b border-outline-variant/10 flex items-center justify-between ${color === 'primary' ? 'bg-primary/5' : 'bg-surface-container-low/50'
+        }`}>
         <h3 className="font-bold text-sm tracking-tight flex items-center gap-2">
           <Icon className={`w-4 h-4 ${color === 'primary' ? 'text-primary' : 'text-secondary'}`} />
           {title}
@@ -362,9 +352,8 @@ function DroppableColumn({ id, questions, title, icon: Icon, color, children, sh
           {headerAction}
         </div>
       </div>
-      <div className={`flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin ${
-        color === 'primary' ? 'scrollbar-thumb-primary/20 bg-primary/[0.02]' : 'scrollbar-thumb-outline-variant/30'
-      }`}>
+      <div className={`flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin ${color === 'primary' ? 'scrollbar-thumb-primary/20 bg-primary/[0.02]' : 'scrollbar-thumb-outline-variant/30'
+        }`}>
         <SortableContext items={questions.map((q: any) => q.id)} strategy={verticalListSortingStrategy}>
           {children}
         </SortableContext>

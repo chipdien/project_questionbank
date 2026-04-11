@@ -47,7 +47,7 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
             className="relative bg-surface-container-lowest rounded-2xl shadow-xl w-full max-w-2xl p-6 z-10 mx-4 border border-outline-variant/20"
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-headline font-bold text-on-surface">Upload Question File</h2>
+              <h2 className="text-2xl font-headline font-bold text-on-surface">Tải lên tệp câu hỏi</h2>
               <button 
                 onClick={onClose}
                 className="p-2 rounded-full hover:bg-surface-container transition-colors text-outline"

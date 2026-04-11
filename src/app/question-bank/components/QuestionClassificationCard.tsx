@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 
@@ -36,14 +36,14 @@ export default function QuestionClassificationCard({
     }
   };
 
-  // Lọc danh sách chủ đề dựa trên khối lớp đã chọn
+  // Lọc danh sách chủ Ä‘ề dựa trên khá»‘i lá»›p đã chọn
   const filteredLessons = useMemo(() => {
     if (!grade || grade === '0') return lessons;
-    // Chuyển đổi grade sang string để so sánh an toàn
+    // Chuyển Ä‘á»•i grade sang string để so sánh an toàn
     return lessons.filter(l => String(l.grade) === String(grade));
   }, [lessons, grade]);
 
-  // Reset chủ đề nếu nó không còn nằm trong danh sách đã lọc
+  // Reset chủ Ä‘ề nếu nó không còn nằm trong danh sách đã lọc
   useEffect(() => {
     if (lessonId && !filteredLessons.some(l => String(l.id) === String(lessonId))) {
       setLessonId('');
@@ -65,7 +65,7 @@ export default function QuestionClassificationCard({
       </div>
 
       <form className="space-y-6 flex-grow" onSubmit={(e) => e.preventDefault()}>
-        {/* Khối lớp */}
+        {/* Khá»‘i lá»›p */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-bold text-outline uppercase tracking-widest pl-1" htmlFor="grade">
             <span className="material-symbols-outlined text-sm">school</span>
@@ -78,7 +78,7 @@ export default function QuestionClassificationCard({
               value={grade}
               onChange={(e) => setGrade(e.target.value)}
             >
-              <option value="0">Chọn khối lớp</option>
+              <option value="0">Tất cả khối lớp</option>
               {[6, 7, 8, 9, 10, 11, 12].map((g) => (
                 <option key={g} value={g}>Lớp {g}</option>
               ))}
@@ -93,7 +93,7 @@ export default function QuestionClassificationCard({
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-bold text-outline uppercase tracking-widest pl-1" htmlFor="lesson">
             <span className="material-symbols-outlined text-sm">topic</span>
-            Chủ đề
+            Bài học
           </label>
           <div className="relative group/select">
             <select
@@ -102,7 +102,7 @@ export default function QuestionClassificationCard({
               value={lessonId}
               onChange={(e) => setLessonId(e.target.value)}
             >
-              <option value="">Chọn chủ đề</option>
+              <option value="">Tất cả bài học</option>
               {filteredLessons.map((lesson) => (
                 <option key={lesson.id} value={lesson.id}>{lesson.name}</option>
               ))}
@@ -113,7 +113,7 @@ export default function QuestionClassificationCard({
           </div>
         </div>
 
-        {/* Độ khó */}
+        {/* Đ�™ khó */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-bold text-outline uppercase tracking-widest pl-1" htmlFor="difficulty">
             <span className="material-symbols-outlined text-sm">signal_cellular_alt</span>
@@ -126,7 +126,7 @@ export default function QuestionClassificationCard({
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value)}
             >
-              <option value="">Chọn độ khó</option>
+              <option value="">Tất cả độ khó</option>
               <option value="Dễ">Dễ</option>
               <option value="Trung Bình">Trung Bình</option>
               <option value="Khó">Khó</option>

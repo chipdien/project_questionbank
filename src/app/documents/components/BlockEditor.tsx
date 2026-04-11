@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Block } from './DocumentBuilder';
@@ -9,8 +9,7 @@ import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax/browser';
 import rehypeRaw from 'rehype-raw';
 import { cleanMathpixData } from '@/lib/utils/math-utils';
-import dynamic from 'next/dynamic';
-import VditorEditor from '../ui/VditorEditor';
+import VditorEditor from '@/components/ui/VditorEditor';
 
 interface BlockEditorProps {
   block: Block;
@@ -64,7 +63,7 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
 
     if (isActive) {
       return (
-        <div 
+        <div
           className={`${className} prose prose-sm prose-slate max-w-none relative w-full p-1 -m-1`}
           onClick={(e) => e.stopPropagation()}
         >
@@ -154,7 +153,7 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
                 `q-statement-${block.id}`,
                 rawStatement,
                 "text-sm font-body text-on-surface",
-                "Nhập đề bài câu hỏi..."
+                "Nhập nội dung câu hỏi..."
               )}
             </div>
           </div>
@@ -201,7 +200,7 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
         <button
           onClick={onRemove}
           className="w-6 h-6 flex items-center justify-center text-error opacity-0 group-hover:opacity-100 transition-opacity rounded hover:bg-error/10 shrink-0"
-          title="Xóa khối này"
+          title="Xuất file PDF"
         >
           <X className="w-4 h-4" />
         </button>

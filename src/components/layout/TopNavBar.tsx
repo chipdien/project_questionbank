@@ -1,15 +1,12 @@
-'use client';
+﻿'use client';
 
-import React, { useState } from 'react';
-import { Menu, Search, Plus, Bell, Calculator } from 'lucide-react';
-import UploadModal from '@/components/documents/UploadModal';
+import { Menu, Search } from 'lucide-react';
 
 interface TopNavBarProps {
   toggleSidebar: () => void;
 }
 
 export default function TopNavBar({ toggleSidebar }: TopNavBarProps) {
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   return (
     <>
@@ -31,12 +28,6 @@ export default function TopNavBar({ toggleSidebar }: TopNavBarProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => setIsUploadModalOpen(true)}
-            className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-95 transition-all"
-          >
-            <span className="material-symbols-outlined text-sm">add</span>Upload File
-          </button>
           <button className="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant relative">
             <span className="material-symbols-outlined">notifications</span>
             <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
@@ -49,7 +40,7 @@ export default function TopNavBar({ toggleSidebar }: TopNavBarProps) {
             </div>
             <div className="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center overflow-hidden border border-primary/10">
               <img
-                alt="Admin Teacher"
+                alt="Admin"
                 className="w-full h-full object-cover"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuB060I_706YlyVRXj6R-FcXOCAx18x-5Upy14wrxSntURmERutVYewvmYmJVAMtHZyHMQsjhv_t_X8X3FGW2eOLV_XyYNrUR2k2EDsWwYRpg7HikRPHgajn7NIF680jsTtEhLOJJgR0J6kRI-DS53K8nBzwmPWDXUltePrMMRrHDG3v1fHZ9_E34lKNr4ganWs9j-ywzvEhfacKXOJJCrfFQ2X4OM2o6pnEdWDDIvwf5vR3MJQSMWDzPzkwL4Em8Xrey7MqAfcjK8M"
               />
@@ -57,11 +48,6 @@ export default function TopNavBar({ toggleSidebar }: TopNavBarProps) {
           </div>
         </div>
       </header>
-
-      <UploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-      />
     </>
   );
 }

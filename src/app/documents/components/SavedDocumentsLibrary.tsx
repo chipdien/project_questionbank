@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { FileText, Loader2, Download, ExternalLink, History, Search } from 'lucide-react';
@@ -31,7 +31,7 @@ export default function SavedDocumentsLibrary({ onLoadDocument }: SavedDocuments
     fetchDocuments();
   }, []);
 
-  const filteredDocs = documents.filter(doc => 
+  const filteredDocs = documents.filter(doc =>
     doc.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -61,7 +61,7 @@ export default function SavedDocumentsLibrary({ onLoadDocument }: SavedDocuments
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-primary">
             <Loader2 className="w-8 h-8 animate-spin" />
-            <p className="text-xs font-medium">Đang tải lịch sử...</p>
+            <p className="text-xs font-medium">Đang tải danh sách...</p>
           </div>
         ) : filteredDocs.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 text-on-surface-variant opacity-60">
@@ -101,7 +101,7 @@ export default function SavedDocumentsLibrary({ onLoadDocument }: SavedDocuments
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center p-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg transition-colors border border-outline-variant/30"
-                    title="Tải PDF"
+                    title="Táº£i PDF"
                   >
                     <Download className="w-3.5 h-3.5" />
                   </a>

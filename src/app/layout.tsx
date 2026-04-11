@@ -1,9 +1,9 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { Inter, Manrope } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
-import LayoutWrapper from '../components/layout/LayoutWrapper'
-import MathJaxProvider from '../components/providers/MathJaxProvider'
+import LayoutWrapper from '@/components/layout/LayoutWrapper'
+import MathJaxProvider from '@/components/providers/MathJaxProvider'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope' })

@@ -13,7 +13,7 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 
 // Giả lập timeline với các bước
 const UPLOAD_STEPS = [
-  { id: 'upload', label: 'Tải file & Phân tích định dạng' },
+  { id: 'upload', label: 'Phân tích định dạng' },
   { id: 'extract', label: 'Trích xuất dữ liệu gốc' },
   { id: 'ai', label: 'AI cấu trúc hóa dữ liệu' },
   { id: 'save', label: 'Lưu vào hệ thống' }
@@ -49,7 +49,7 @@ export default function DashboardUploader() {
         throw new Error(data.error || 'Đã xảy ra lỗi khi xử lý.');
       }
 
-      setCurrentStep(3); // Bước lưu xong
+      setCurrentStep(3); // Bư›c lưu xong
 
       // Sau 1s thì refresh UI
       setTimeout(() => {
@@ -123,9 +123,9 @@ export default function DashboardUploader() {
           </div>
         ) : (
           <div>
-            <h3 className="text-xl font-bold text-on-surface font-headline mb-2">Drop files or click to upload</h3>
+            <h3 className="text-xl font-bold text-on-surface font-headline mb-2">Kéo thả tệp hoặc nhấp để tải lên</h3>
             <div className="text-on-surface-variant text-sm mt-2">
-              PDF, CSV, XLSX, DOCX, MD, TXT, JPG, PNG, JPEG
+              PDF, JPG, PNG, JPEG
             </div>
             {errorMsg && (
               <p className="text-error text-sm mt-3 font-medium bg-error/10 py-1 px-3 rounded-md">{errorMsg}</p>

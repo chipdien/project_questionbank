@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
@@ -50,9 +50,9 @@ export default function SortableQuestionItem({ question, isOverlay = false }: So
   const difficulty = question.question_difficulty?.toLowerCase().trim() || '';
 
   const difficultyBorderColor =
-    (difficulty.includes('khó') || difficulty.includes('hard')) ? 'border-l-error' :
-      (difficulty.includes('trung bình') || difficulty.includes('vừa') || difficulty.includes('medium')) ? 'border-l-warning' :
-        (difficulty.includes('dễ') || difficulty.includes('easy')) ? 'border-l-success' :
+    (difficulty.includes('khÃ³') || difficulty.includes('hard')) ? 'border-l-error' :
+      (difficulty.includes('trung bÃ¬nh') || difficulty.includes('vá»«a') || difficulty.includes('medium')) ? 'border-l-warning' :
+        (difficulty.includes('dá»…') || difficulty.includes('easy')) ? 'border-l-success' :
           'border-l-outline-variant/30';
 
   return (
