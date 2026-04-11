@@ -9,6 +9,8 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get('document') as File | null;
+    const isPublicPath = formData.get('is_public');
+    const isPublic = isPublicPath === '1' || isPublicPath === 'true';
 
     if (!file) {
       return NextResponse.json({ success: false, error: 'Không tìm thấy file tải lên.' }, { status: 400 });
@@ -128,7 +130,7 @@ export async function POST(req: NextRequest) {
       const structuredData = await IngestService.processAi(rawText);
 
       // 6. Save to Main DB
-      const result = await IngestService.saveToDatabase(taskId, name, rawText, structuredData);
+      const result = await IngestService.saveToDatabase(taskId, name, rawText, structuredData, isPublic);
 
       return NextResponse.json({
         success: true,

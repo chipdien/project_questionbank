@@ -25,6 +25,7 @@ export interface Document {
   created_at: string;
   is_ai_classified?: number;
   pdf_url?: string;
+  public?: string | null;
 }
 
 export interface Lesson {

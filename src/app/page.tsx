@@ -33,6 +33,7 @@ interface Document {
   title: string;
   created_at: string;
   is_ai_classified: number;
+  public?: string | null;
 }
 
 interface Lesson {
@@ -69,7 +70,7 @@ export default async function DashboardPage(props: PageProps) {
   let documents: Document[] = [];
   let lessons: Lesson[] = [];
   try {
-    documents = await query<Document[]>('SELECT id, title, created_at, is_ai_classified FROM lms_documents ORDER BY created_at DESC LIMIT 5');
+    documents = await query<Document[]>('SELECT id, title, created_at, is_ai_classified, `public` FROM lms_documents ORDER BY created_at DESC LIMIT 5');
     lessons = await query<Lesson[]>('SELECT id, name, grade FROM lms_lessons ORDER BY name ASC');
   } catch (error) {
     console.error("Failed to load documents or lessons:", error);
@@ -167,11 +168,6 @@ export default async function DashboardPage(props: PageProps) {
           pageSize: PAGE_SIZE
         }}
       />
-
-      {/* Floating Action Button (FAB) */}
-      <button className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-xl shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
-        <span className="material-symbols-outlined text-2xl">message</span>
-      </button>
     </div>
   );
 }

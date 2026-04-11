@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { Modal } from '@/components/ui/Modal';
+import { toast } from 'react-hot-toast';
 
 function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
@@ -23,15 +25,18 @@ export default function DashboardUploader() {
   const [isUploading, setIsUploading] = useState(false);
   const [currentStep, setCurrentStep] = useState<number>(-1);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const router = useRouter();
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (file: File, isPublic: boolean) => {
     setIsUploading(true);
     setErrorMsg(null);
     setCurrentStep(0); // Bắt đầu bước 1: Tải file
+    setPendingFile(null); // Đóng modal
 
     const formData = new FormData();
     formData.append('document', file);
+    formData.append('is_public', isPublic ? '1' : '0');
 
     try {
       // Giả lập đang xử lý bước 1
@@ -50,6 +55,7 @@ export default function DashboardUploader() {
       }
 
       setCurrentStep(3); // Bư›c lưu xong
+      toast.success('Tải và xử lý tài liệu phân tích thành công!');
 
       // Sau 1s thì refresh UI
       setTimeout(() => {
@@ -62,6 +68,7 @@ export default function DashboardUploader() {
       }, 1000);
 
     } catch (err: any) {
+      toast.error(err.message || 'Lỗi kết nối máy chủ.');
       setErrorMsg(err.message || 'Lỗi kết nối máy chủ.');
       setIsUploading(false);
       setCurrentStep(-1);
@@ -70,7 +77,7 @@ export default function DashboardUploader() {
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
-      handleUpload(acceptedFiles[0]);
+      setPendingFile(acceptedFiles[0]);
     }
   }, []);
 
@@ -187,6 +194,37 @@ export default function DashboardUploader() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Modal xác nhận Public */}
+      <Modal
+        isOpen={!!pendingFile}
+        onClose={() => setPendingFile(null)}
+        title="Chia sẻ tài liệu?"
+        footer={
+          <>
+            <button
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors text-on-surface-variant hover:bg-surface-container-high"
+              onClick={() => setPendingFile(null)}
+            >
+              Hủy
+            </button>
+            <button
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors bg-surface-container text-on-surface hover:bg-surface-container-highest"
+              onClick={() => pendingFile && handleUpload(pendingFile, false)}
+            >
+              Không (Private)
+            </button>
+            <button
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors bg-primary text-white hover:bg-primary/90"
+              onClick={() => pendingFile && handleUpload(pendingFile, true)}
+            >
+              Có (Public)
+            </button>
+          </>
+        }
+      >
+        Bạn có muốn đặt tài liệu <span className="font-semibold text-primary">"{pendingFile?.name}"</span> ở chế độ công khai không?
+      </Modal>
     </div>
   );
 }

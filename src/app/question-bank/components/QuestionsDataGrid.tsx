@@ -94,7 +94,7 @@ export default function QuestionsDataGrid({
 
   return (
     <>
-      <div className="flex justify-between items-center mb-1">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold text-on-surface font-headline">Câu hỏi trong tệp</h2>
         <button
           onClick={() => setIsCollectionModalOpen(true)}

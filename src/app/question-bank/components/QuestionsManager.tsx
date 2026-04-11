@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import QuestionClassificationCard from './QuestionClassificationCard';
@@ -126,9 +126,20 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
                         <p className={`text-sm font-semibold truncate ${isActive ? 'text-primary' : 'text-on-surface'}`} title={docTitle}>
                           {docTitle}
                         </p>
-                        <p className="text-[10px] text-outline font-medium" suppressHydrationWarning>
-                          {new Date(doc.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className="text-[10px] text-outline font-medium" suppressHydrationWarning>
+                            {new Date(doc.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </p>
+                          {doc.public === '1' || doc.public === 'true' ? (
+                            <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[8px] font-bold uppercase tracking-wider border border-primary/20">
+                              Công khai
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant border border-outline-variant/40 text-[8px] font-bold uppercase tracking-wider">
+                              Riêng tư
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <span className={`flex-shrink-0 ml-4 text-xs font-bold text-primary flex items-center gap-1 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
