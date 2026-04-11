@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
@@ -47,12 +47,12 @@ export default function SortableQuestionItem({ question, isOverlay = false }: So
     transition,
   };
 
-  const difficulty = question.question_difficulty?.toLowerCase().trim() || '';
+  const difficulty = question.question_difficulty?.trim() || '';
 
   const difficultyBorderColor =
-    (difficulty.includes('khÃ³') || difficulty.includes('hard')) ? 'border-l-error' :
-      (difficulty.includes('trung bÃ¬nh') || difficulty.includes('vá»«a') || difficulty.includes('medium')) ? 'border-l-warning' :
-        (difficulty.includes('dá»…') || difficulty.includes('easy')) ? 'border-l-success' :
+    difficulty === 'Khó' ? 'border-l-error' :
+      difficulty === 'Trung Bình' ? 'border-l-warning' :
+        difficulty === 'Dễ' ? 'border-l-success' :
           'border-l-outline-variant/30';
 
   return (

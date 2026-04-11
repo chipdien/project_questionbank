@@ -138,7 +138,7 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
             >
               <option value="">Tất cả độ khó</option>
               <option value="Dễ">Dễ</option>
-              <option value="Trung bình">Trung bình</option>
+              <option value="Trung Bình">Trung Bình</option>
               <option value="Khó">Khó</option>
             </select>
           </div>
@@ -182,7 +182,7 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
                   <div className="flex gap-2 items-center">
                     {q.question_difficulty && (
                       <span className={`text-[9px] font-bold uppercase ${q.question_difficulty === 'Khó' ? 'text-error' :
-                        q.question_difficulty === 'Trung bình' ? 'text-warning' : 'text-success'
+                        q.question_difficulty === 'Trung Bình' ? 'text-warning' : 'text-success'
                         }`}>
                         {q.question_difficulty}
                       </span>

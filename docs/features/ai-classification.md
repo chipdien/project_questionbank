@@ -6,7 +6,7 @@ Tính năng này cho phép tự động gắn thẻ (Tag) cho toàn bộ câu h�
 
 ## 🎯 Mục tiêu
 - Tự động xác định **Khối lớp** (từ lớp 6 đến 12).
-- Phân loại **Độ khó** (Dễ, Trung bình, Khó).
+- Phân loại **Độ khó** (Dễ, Trung Bình, Khó).
 - Ánh xạ câu hỏi vào **Bài học** (Lesson) phù hợp nhất có sẵn trong hệ thống.
 
 ---
@@ -35,7 +35,7 @@ Hệ thống cung cấp cho AI hai danh sách:
 
 ### 3. Quy tắc phân loại
 - **Khối lớp**: Chỉ chọn từ 6 đến 12 dưới dạng số chuỗi.
-- **Độ khó**: Chỉ chọn một trong ba mức: `Dễ`, `Trung bình`, `Khó`.
+- **Độ khó**: Chỉ chọn một trong ba mức: `Dễ`, `Trung Bình`, `Khó`.
 - **Bài học**: 
     - Phải tìm bài học có nội dung sát nhất.
     - Trả về `ID` của bài học đó.

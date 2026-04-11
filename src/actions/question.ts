@@ -64,20 +64,53 @@ export async function classifyQuestions(
   }
 }
 
-export async function getQuestionsByDocId(docId: number) {
+export async function getQuestionsByDocId(
+  docId: number,
+  page: number = 1,
+  pageSize: number = 30,
+  excludeIds: number[] = []
+) {
   try {
-    const questions = await query<any[]>(
-      `SELECT q.*, l.name as lesson_name
-       FROM lms_questions q
-       LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
-       LEFT JOIN lms_lessons l ON ql.lesson_id = l.id
-       JOIN lms_questions_documents qd ON q.id = qd.question_id
-       WHERE qd.document_id = ?
-       ORDER BY q.id ASC`,
-      [docId]
-    );
+    const safePage = Math.max(1, Number(page));
+    const safePageSize = Math.max(1, Number(pageSize));
+    const offset = (safePage - 1) * safePageSize;
 
-    // Lấy options cho từng câu hỏi
+    // Count total
+    let countSql = `
+      SELECT COUNT(DISTINCT q.id) as total
+      FROM lms_questions q
+      JOIN lms_questions_documents qd ON q.id = qd.question_id
+      WHERE qd.document_id = ?
+    `;
+    const countParams: any[] = [docId];
+    if (excludeIds.length > 0) {
+      const placeholders = excludeIds.map(() => '?').join(',');
+      countSql += ` AND q.id NOT IN (${placeholders})`;
+      countParams.push(...excludeIds);
+    }
+    const countResult = await query<any[]>(countSql, countParams);
+    const total = Number(countResult[0]?.total || 0);
+
+    // Fetch paginated
+    let paginatedSql = `
+      SELECT q.*, GROUP_CONCAT(l.name SEPARATOR ', ') as lesson_name
+      FROM lms_questions q
+      LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
+      LEFT JOIN lms_lessons l ON ql.lesson_id = l.id
+      JOIN lms_questions_documents qd ON q.id = qd.question_id
+      WHERE qd.document_id = ?
+    `;
+    const queryParams: any[] = [docId];
+    if (excludeIds.length > 0) {
+      const placeholders = excludeIds.map(() => '?').join(',');
+      paginatedSql += ` AND q.id NOT IN (${placeholders})`;
+      queryParams.push(...excludeIds);
+    }
+    paginatedSql += ` GROUP BY q.id ORDER BY q.id ASC LIMIT ? OFFSET ?`;
+    queryParams.push(safePageSize, offset);
+
+    const questions = await query<any[]>(paginatedSql, queryParams);
+
     for (const q of questions) {
       const options = await query<any[]>(
         'SELECT * FROM lms_options WHERE question_id = ? ORDER BY `order` ASC',
@@ -86,17 +119,24 @@ export async function getQuestionsByDocId(docId: number) {
       q.options = options;
     }
 
-    return questions;
+    return {
+      data: questions,
+      total,
+      page: safePage,
+      pageSize: safePageSize,
+      totalPages: Math.ceil(total / safePageSize)
+    };
   } catch (error) {
     console.error('Error fetching questions for doc:', error);
-    return [];
+    return { data: [], total: 0, page: 1, pageSize: 30, totalPages: 0 };
   }
 }
 
 export async function getLibraryQuestions(
   page: number = 1,
-  pageSize: number = 10,
-  filters: { grade?: string; difficulty?: string; lessonId?: string } = {}
+  pageSize: number = 30,
+  filters: { grade?: string; difficulty?: string; lessonId?: string } = {},
+  excludeIds: number[] = []
 ) {
   const { grade = '', difficulty = '', lessonId = '' } = filters;
 
@@ -105,27 +145,33 @@ export async function getLibraryQuestions(
     const safePageSize = Math.max(1, Number(pageSize));
     const offset = (safePage - 1) * safePageSize;
 
-    let baseSql = `
-      SELECT q.*, l.name as lesson_name
+    // Count total
+    let countSql = `
+      SELECT COUNT(DISTINCT q.id) as total 
       FROM lms_questions q
       LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
-      LEFT JOIN lms_lessons l ON ql.lesson_id = l.id
       WHERE 1=1
     `;
-    // Count total - Sử dụng GROUP BY để tránh đếm trùng nếu câu hỏi có nhiều bài học
-    const countSql = `SELECT COUNT(DISTINCT q.id) as total FROM lms_questions q
-                      LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
-                      LEFT JOIN lms_lessons l ON ql.lesson_id = l.id
-                      WHERE 1=1 ${grade ? 'AND q.grade = ?' : ''} ${difficulty ? 'AND q.question_difficulty = ?' : ''} ${lessonId ? 'AND ql.lesson_id = ?' : ''}`;
-    
     const countParams: any[] = [];
-    if (grade) countParams.push(grade);
-    if (difficulty) countParams.push(difficulty);
-    if (lessonId) countParams.push(lessonId);
+    if (grade) {
+      countSql += ' AND q.grade = ?';
+      countParams.push(grade);
+    }
+    if (difficulty) {
+      countSql += ' AND q.question_difficulty = ?';
+      countParams.push(difficulty);
+    }
+    if (lessonId) {
+      countSql += ' AND ql.lesson_id = ?';
+      countParams.push(lessonId);
+    }
+    if (excludeIds.length > 0) {
+      const placeholders = excludeIds.map(() => '?').join(',');
+      countSql += ` AND q.id NOT IN (${placeholders})`;
+      countParams.push(...excludeIds);
+    }
 
     const countResult = await query<any[]>(countSql, countParams);
-    
-    // Quan trọng: Ép kiểu Number vì MySQL có thể trả về BigInt cho COUNT
     const total = Number(countResult[0]?.total || 0);
     
     // Fetch pagination
@@ -149,9 +195,16 @@ export async function getLibraryQuestions(
       paginatedSql += ` AND ql.lesson_id = ?`;
       queryParams.push(lessonId);
     }
+    if (excludeIds.length > 0) {
+      const placeholders = excludeIds.map(() => '?').join(',');
+      paginatedSql += ` AND q.id NOT IN (${placeholders})`;
+      queryParams.push(...excludeIds);
+    }
 
     paginatedSql += ` GROUP BY q.id ORDER BY q.id DESC LIMIT ? OFFSET ?`;
-    const questions = await query<any[]>(paginatedSql, [...queryParams, Number(safePageSize), Number(offset)]);
+    queryParams.push(Number(safePageSize), Number(offset));
+
+    const questions = await query<any[]>(paginatedSql, queryParams);
 
     for (const q of questions) {
       const options = await query<any[]>(
@@ -170,7 +223,7 @@ export async function getLibraryQuestions(
     };
   } catch (error: any) {
     console.error('Error fetching library questions:', error.message);
-    return { data: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
+    return { data: [], total: 0, page: 1, pageSize: 30, totalPages: 0 };
   }
 }
 

@@ -21,7 +21,7 @@ Giao diện **Question Bank** được thiết kế theo cấu trúc **3 cột (
 ### 2. Hệ thống Độ khó & Nhận diện Màu sắc
 Hệ thống tự động phân loại và gán màu sắc nhận diện dựa trên dữ liệu từ Database:
 - 🔴 **Khó (Hard)**: Nhận diện từ khóa `khó`, `hard`. Hiển thị viền màu Đỏ và Badge Đỏ rực rỡ.
-- 🟡 **Trung bình (Medium)**: Nhận diện từ khóa `trung bình`, `vừa`, `medium`. Hiển thị viền màu Vàng và Badge Vàng.
+- 🟡 **Trung Bình (Medium)**: Nhận diện từ khóa `trung Bình`, `vừa`, `medium`. Hiển thị viền màu Vàng và Badge Vàng.
 - 🟢 **Dễ (Easy)**: Nhận diện từ khóa `dễ`, `easy`. Hiển thị viền màu Xanh lá và Badge Xanh.
 
 ### 3. Quy trình Tạo Bộ sưu tập (Save Workflow)
