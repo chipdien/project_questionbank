@@ -14,7 +14,7 @@ export default async function CollectionsPage() {
           <p className="text-on-surface-variant font-body text-sm">Quản lý và ôn tập các câu hỏi theo nhóm.</p>
         </div>
         <Link
-          href="/"
+          href="/question-bank"
           className="px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-xl shadow-lg hover:bg-primary/90 transition-all flex items-center gap-2"
         >
           <span className="material-symbols-outlined">add</span>
@@ -33,18 +33,11 @@ export default async function CollectionsPage() {
               <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
                 <span className="material-symbols-outlined text-2xl">library_books</span>
               </div>
-              <span className="px-3 py-1 bg-surface-container-high rounded-full text-[10px] font-bold text-outline-variant uppercase tracking-wider">
-                ID: {col.id}
-              </span>
             </div>
 
             <h3 className="text-lg font-bold text-on-surface mb-2 group-hover:text-primary transition-colors line-clamp-1">
               {col.title}
             </h3>
-
-            <p className="text-sm text-on-surface-variant mb-6 line-clamp-2">
-              Bộ sưu tập này chứa các câu hỏi được tuyển chọn nội bộ.
-            </p>
 
             <div className="mt-auto flex items-center justify-between">
               <div className="flex items-center gap-2">

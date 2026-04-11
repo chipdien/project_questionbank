@@ -18,6 +18,7 @@ interface QuestionsDataGridProps {
   externalSelectedIds?: Set<number>;
   onSelectionChange?: (ids: Set<number>) => void;
   pagination: Pagination;
+  showSelection?: boolean;
 }
 
 function getDifficultyBadge(difficulty: string | null | undefined) {
@@ -40,7 +41,8 @@ export default function QuestionsDataGrid({
   questions,
   externalSelectedIds,
   onSelectionChange,
-  pagination
+  pagination,
+  showSelection = true
 }: QuestionsDataGridProps) {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [internalSelectedIds, setInternalSelectedIds] = useState<Set<number>>(new Set());
@@ -94,30 +96,34 @@ export default function QuestionsDataGrid({
 
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold text-on-surface font-headline">Câu hỏi trong tệp</h2>
-        <button
-          onClick={() => setIsCollectionModalOpen(true)}
-          disabled={selectedIds.size === 0}
-          className="flex items-center gap-2 bg-primary cursor-pointer text-on-primary px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span className="material-symbols-outlined text-sm">add</span>
-          Thêm vào bộ sưu tập ({selectedIds.size})
-        </button>
-      </div>
+      {showSelection && (
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-bold text-on-surface font-headline">Câu hỏi trong tệp</h2>
+          <button
+            onClick={() => setIsCollectionModalOpen(true)}
+            disabled={selectedIds.size === 0}
+            className="flex items-center gap-2 bg-primary cursor-pointer text-on-primary px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            Thêm vào bộ sưu tập ({selectedIds.size})
+          </button>
+        </div>
+      )}
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden mb-4">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead className="bg-surface-container-low text-[11px] font-bold text-outline uppercase tracking-wider">
               <tr>
-                <th className="px-6 py-4 w-4">
-                  <input
-                    type="checkbox"
-                    checked={isAllSelected}
-                    onChange={toggleAll}
-                    className="rounded border-outline-variant text-primary focus:ring-primary h-4 w-4 transition-all cursor-pointer"
-                  />
-                </th>
+                {showSelection && (
+                  <th className="px-6 py-4 w-4">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={toggleAll}
+                      className="rounded border-outline-variant text-primary focus:ring-primary h-4 w-4 transition-all cursor-pointer"
+                    />
+                  </th>
+                )}
                 <th className="px-6 py-4">STT</th>
                 <th className="px-6 py-4">Nội dung</th>
                 <th className="px-6 py-4">Chủ đề</th>
@@ -133,15 +139,17 @@ export default function QuestionsDataGrid({
                   onClick={() => setSelectedQuestion(q)}
                   className="hover:bg-slate-50 transition-colors group cursor-pointer"
                 >
-                  <td className="px-6 py-4 w-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(q.id)}
-                      onChange={() => toggleId(q.id)}
-                      className="rounded border-outline-variant text-primary focus:ring-primary h-4 w-4 transition-all cursor-pointer"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </td>
+                  {showSelection && (
+                    <td className="px-6 py-4 w-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(q.id)}
+                        onChange={() => toggleId(q.id)}
+                        className="rounded border-outline-variant text-primary focus:ring-primary h-4 w-4 transition-all cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </td>
+                  )}
                   <td className="px-6 py-4 text-sm font-medium text-primary">
                     {(currentPage - 1) * pageSize + index + 1}
                   </td>
@@ -175,7 +183,7 @@ export default function QuestionsDataGrid({
               ))}
               {questions.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-on-surface-variant">
+                  <td colSpan={showSelection ? 7 : 6} className="px-6 py-10 text-center text-on-surface-variant">
                     Không có câu hỏi nào trong tài liệu này.
                   </td>
                 </tr>

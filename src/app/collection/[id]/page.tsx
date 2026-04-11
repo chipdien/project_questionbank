@@ -64,6 +64,7 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
           <QuestionsDataGrid
             questions={paginatedQuestions}
             pagination={pagination}
+            showSelection={false}
           />
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
