@@ -68,3 +68,55 @@ export async function getCollections() {
     return [];
   }
 }
+
+export const getCollectionByIdAction = getCollectionById;
+
+export async function getCollectionById(id: number) {
+  try {
+    const rows = await query(`
+      SELECT 
+        c.*, 
+        COUNT(qc.question_id) as question_count 
+      FROM lms_collections c 
+      LEFT JOIN lms_questions_collections qc ON c.id = qc.collection_id 
+      WHERE c.id = ?
+      GROUP BY c.id 
+    `, [id]) as any[];
+
+    return rows.length > 0 ? rows[0] : null;
+  } catch (error) {
+    console.error('Error fetching collection:', error);
+    return null;
+  }
+}
+
+export const getCollectionQuestionsAction = getCollectionQuestions;
+
+export async function getCollectionQuestions(collectionId: number) {
+  try {
+    const questions = await query<any[]>(
+      `SELECT q.*, l.name as lesson_name
+       FROM lms_questions q
+       JOIN lms_questions_collections qc ON q.id = qc.question_id
+       LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
+       LEFT JOIN lms_lessons l ON ql.lesson_id = l.id
+       WHERE qc.collection_id = ?
+       ORDER BY qc.created_at ASC`,
+      [collectionId]
+    );
+
+    // Lấy options cho từng câu hỏi
+    for (const q of questions) {
+      const options = await query<any[]>(
+        'SELECT * FROM lms_options WHERE question_id = ? ORDER BY `order` ASC',
+        [q.id]
+      );
+      q.options = options;
+    }
+
+    return questions;
+  } catch (error) {
+    console.error('Error fetching collection questions:', error);
+    return [];
+  }
+}

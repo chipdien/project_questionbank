@@ -1,4 +1,3 @@
-import React from 'react';
 import Link from 'next/link';
 import { getCollectionsAction } from '@/actions/collection';
 
@@ -25,7 +24,8 @@ export default async function CollectionsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {collections.map((col: any) => (
-          <div
+          <Link
+            href={`/collection/${col.id}`}
             key={col.id}
             className="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full"
           >
@@ -60,7 +60,7 @@ export default async function CollectionsPage() {
             <div className="mt-6 pt-4 border-t border-outline-variant/10 flex items-center gap-1 text-primary text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">
               Chi tiết <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
