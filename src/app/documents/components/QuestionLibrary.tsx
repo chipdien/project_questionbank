@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Loader2, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
@@ -119,10 +119,10 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
             <select
               value={filters.lessonId}
               onChange={(e) => handleFilterChange('lessonId', e.target.value)}
-              disabled={isLoadingLessons}
-              className="w-full bg-white border border-outline-variant/50 rounded-lg px-2 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-primary outline-none disabled:opacity-50"
+              disabled={isLoadingLessons || !filters.grade}
+              className="w-full bg-white border border-outline-variant/50 rounded-lg px-2 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-primary outline-none disabled:opacity-50 disabled:bg-surface-container-low disabled:cursor-not-allowed"
             >
-              <option value="">Tất cả bài học</option>
+              <option value="">{filters.grade ? "Tất cả bài học" : "Chưa chọn khối lớp"}</option>
               {filteredLessons.map(ls => (
                 <option key={ls.id} value={ls.id}>{ls.name}</option>
               ))}

@@ -142,9 +142,25 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
                         </div>
                       </div>
                     </div>
-                    <span className={`flex-shrink-0 ml-4 text-xs font-bold text-primary flex items-center gap-1 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                      Xem <span className="material-symbols-outlined text-sm">open_in_new</span>
-                    </span>
+                    {doc.link_s3 ? (
+                      <span
+                        className={`cursor-pointer flex-shrink-0 ml-4 text-xs font-bold text-primary flex items-center gap-1 transition-opacity hover:underline ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          window.open(doc.link_s3, '_blank');
+                        }}
+                      >
+                        Xem <span className="material-symbols-outlined text-sm">open_in_new</span>
+                      </span>
+                    ) : (
+                      <span
+                        className={`flex-shrink-0 ml-4 text-xs font-bold text-on-surface-variant/40 flex items-center gap-1 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                        title="Tài liệu cũ không có link hiển thị"
+                      >
+                        Xem <span className="material-symbols-outlined text-sm">open_in_new</span>
+                      </span>
+                    )}
                   </div>
                 </Link>
               );
@@ -156,7 +172,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
             )}
           </div>
 
-          <button className="w-full mt-6 py-3 text-[11px] font-extrabold uppercase tracking-[0.15em] text-primary bg-primary/5 border border-primary/30 rounded-xl hover:bg-primary/10 hover:border-primary/50 transition-all flex items-center justify-center gap-2 group">
+          <button onClick={() => router.push('/question-bank')} className="w-full mt-6 py-3 text-[11px] cursor-pointer font-extrabold uppercase tracking-[0.15em] text-primary bg-primary/5 border border-primary/30 rounded-xl hover:bg-primary/10 hover:border-primary/50 transition-all flex items-center justify-center gap-2 group">
             Xem toàn bộ tệp
             <span className="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1 font-bold">arrow_forward</span>
           </button>

@@ -25,6 +25,7 @@ export interface Document {
   created_at: string;
   is_ai_classified?: number;
   pdf_url?: string;
+  link_s3?: string;
   public?: string | null;
 }
 

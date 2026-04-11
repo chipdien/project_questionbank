@@ -70,7 +70,7 @@ export default async function DashboardPage(props: PageProps) {
   let documents: Document[] = [];
   let lessons: Lesson[] = [];
   try {
-    documents = await query<Document[]>('SELECT id, title, created_at, is_ai_classified, `public` FROM lms_documents ORDER BY created_at DESC LIMIT 5');
+    documents = await query<Document[]>('SELECT id, title, created_at, is_ai_classified, `public`, link_s3 FROM lms_documents ORDER BY created_at DESC LIMIT 5');
     lessons = await query<Lesson[]>('SELECT id, name, grade FROM lms_lessons ORDER BY name ASC');
   } catch (error) {
     console.error("Failed to load documents or lessons:", error);

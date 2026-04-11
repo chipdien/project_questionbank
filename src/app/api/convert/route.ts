@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
 import crypto from 'crypto';
 import { IngestService } from '@/lib/services/ingest';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 export const maxDuration = 300; // 5 minutes
 
@@ -129,8 +130,35 @@ export async function POST(req: NextRequest) {
       // 5. AI Structuring (Gemini)
       const structuredData = await IngestService.processAi(rawText);
 
+      // --- Bóc tách xong thành công, upload file raw lên AWS S3 ---
+      let link_s3: string | null = null;
+      try {
+        const s3Client = new S3Client({
+          region: process.env.AWS_REGION!,
+          credentials: {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
+          }
+        });
+        
+        const fileExt = name.split('.').pop() || 'pdf';
+        const objectKey = `documents/${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${fileExt}`;
+        
+        await s3Client.send(new PutObjectCommand({
+          Bucket: process.env.AWS_S3_BUCKET_NAME!,
+          Key: objectKey,
+          Body: buffer,
+          ContentType: type || 'application/pdf'
+        }));
+        
+        link_s3 = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${objectKey}`;
+        console.log("Đã upload raw document lên S3:", link_s3);
+      } catch (s3Error) {
+        console.error("Lỗi upload S3 (vẫn lưu DB bình thường):", s3Error);
+      }
+
       // 6. Save to Main DB
-      const result = await IngestService.saveToDatabase(taskId, name, rawText, structuredData, isPublic);
+      const result = await IngestService.saveToDatabase(taskId, name, rawText, structuredData, isPublic, link_s3);
 
       return NextResponse.json({
         success: true,

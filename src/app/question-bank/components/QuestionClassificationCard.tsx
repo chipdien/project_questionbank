@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 
@@ -97,12 +97,13 @@ export default function QuestionClassificationCard({
           </label>
           <div className="relative group/select">
             <select
-              className="w-full appearance-none rounded-xl border border-outline-variant/50 focus:border-primary focus:ring-4 focus:ring-primary/10 text-sm bg-surface-container-lowest py-3.5 px-4 outline-none transition-all cursor-pointer hover:bg-surface-container-low disabled:opacity-50"
+              className="w-full appearance-none rounded-xl border border-outline-variant/50 focus:border-primary focus:ring-4 focus:ring-primary/10 text-sm bg-surface-container-lowest py-3.5 px-4 outline-none transition-all cursor-pointer hover:bg-surface-container-low disabled:opacity-50 disabled:bg-surface-container-low disabled:cursor-not-allowed"
               id="lesson"
               value={lessonId}
               onChange={(e) => setLessonId(e.target.value)}
+              disabled={!grade || grade === '0'}
             >
-              <option value="">Tất cả bài học</option>
+              <option value="">{(!grade || grade === '0') ? "Chưa chọn khối lớp" : "Tất cả bài học"}</option>
               {filteredLessons.map((lesson) => (
                 <option key={lesson.id} value={lesson.id}>{lesson.name}</option>
               ))}
@@ -140,7 +141,7 @@ export default function QuestionClassificationCard({
         <div className="pt-4">
           <div className="flex flex-row gap-3">
             <button
-              className="flex-1 py-4 bg-primary text-on-primary rounded-2xl font-bold text-sm hover:translate-y-[-2px] hover:shadow-lg hover:shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2 relative overflow-hidden group/btn disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-4 bg-primary text-on-primary cursor-pointer rounded-2xl font-bold text-sm hover:translate-y-[-2px] hover:shadow-lg hover:shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2 relative overflow-hidden group/btn disabled:opacity-50 disabled:cursor-not-allowed"
               type="button"
               onClick={() => onApply({ grade, lessonId, difficulty })}
               disabled={selectedCount === 0}
@@ -150,7 +151,7 @@ export default function QuestionClassificationCard({
               <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
             </button>
             <button
-              className="flex-1 py-4 bg-surface-container-lowest text-primary border border-primary/20 rounded-2xl font-bold text-sm hover:bg-primary/5 active:scale-95 transition-all flex items-center justify-center gap-2 group/btn-ai disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-4 bg-surface-container-lowest cursor-pointer text-primary border border-primary/20 rounded-2xl font-bold text-sm hover:bg-primary/5 active:scale-95 transition-all flex items-center justify-center gap-2 group/btn-ai disabled:opacity-50 disabled:cursor-not-allowed"
               type="button"
               onClick={handleAIButtonClick}
               disabled={isClassifying || isAiClassified}

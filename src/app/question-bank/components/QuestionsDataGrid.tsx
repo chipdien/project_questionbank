@@ -99,7 +99,7 @@ export default function QuestionsDataGrid({
         <button
           onClick={() => setIsCollectionModalOpen(true)}
           disabled={selectedIds.size === 0}
-          className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 bg-primary cursor-pointer text-on-primary px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined text-sm">add</span>
           Thêm vào bộ sưu tập ({selectedIds.size})
