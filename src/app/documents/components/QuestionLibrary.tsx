@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Loader2, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
-import { getLibraryQuestions, getLessons } from '@/actions/question';
+import { Search, Loader2, ChevronLeft, ChevronRight, Bookmark } from 'lucide-react';
+import { getCollections, getCollectionQuestions } from '@/actions/collection';
 import { ReactSortable } from 'react-sortablejs';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -24,51 +24,42 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
   }, []);
 
   const [questions, setQuestions] = useState<any[]>([]);
-  const [lessons, setLessons] = useState<any[]>([]);
+  const [collections, setCollections] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingLessons, setIsLoadingLessons] = useState(true);
+  const [isLoadingCollections, setIsLoadingCollections] = useState(true);
 
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [filters, setFilters] = useState({
-    grade: '',
-    difficulty: '',
-    lessonId: ''
-  });
+  const [totalPages, setTotalPages] = useState(0);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string>('');
 
-  // Fetch lessons
+  // Fetch collections
   useEffect(() => {
-    async function fetchLessons() {
+    async function fetchCollections() {
       try {
-        const data = await getLessons();
-        setLessons(data);
+        const data = await getCollections();
+        setCollections(data);
+        if (data.length > 0) {
+          setSelectedCollectionId(String(data[0].id));
+        }
       } catch (e) {
-        console.error(e);
+        console.error('Error fetching collections:', e);
       } finally {
-        setIsLoadingLessons(false);
+        setIsLoadingCollections(false);
       }
     }
-    fetchLessons();
+    fetchCollections();
   }, []);
-
-  // Lá»c danh sách bÃ i há»c dá»±a trÃªn khá»‘i lá»›p đã chá»n
-  const filteredLessons = useMemo(() => {
-    if (!filters.grade) return lessons;
-    return lessons.filter(ls => String(ls.grade) === String(filters.grade));
-  }, [lessons, filters.grade]);
-
-  // Reset bÃ i há»c náº¿u nÃ³ không cÃ²n náº±m trong danh sách đã lá»c
-  useEffect(() => {
-    if (filters.lessonId && !filteredLessons.some(ls => String(ls.id) === String(filters.lessonId))) {
-      setFilters(prev => ({ ...prev, lessonId: '' }));
-    }
-  }, [filteredLessons, filters.lessonId]);
 
   // Fetch questions
   const loadQuestions = async (currentPage = 1) => {
+    if (!selectedCollectionId) {
+      setQuestions([]);
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      const res = await getLibraryQuestions(currentPage, 30, filters);
+      const res = await getCollectionQuestions(Number(selectedCollectionId), currentPage, 30);
 
       setQuestions(res.data);
       setTotalPages(res.totalPages);
@@ -82,10 +73,10 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
 
   useEffect(() => {
     loadQuestions(1);
-  }, [filters]);
+  }, [selectedCollectionId]);
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    // Placeholder for potential future filter logic
   };
 
   if (!mounted) return null;
@@ -95,53 +86,30 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
       {/* Header & Filters */}
       <div className="p-4 border-b border-outline-variant/20 bg-surface-container-low/50">
         <div className="flex items-center gap-2 mb-4">
-          <Filter className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold text-on-surface font-headline">Thư viện câu hỏi</h2>
+          <Bookmark className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-bold text-on-surface font-headline">Bộ sưu tập câu hỏi</h2>
         </div>
 
-        <div className="grid grid-cols-1 gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Khối lớp</label>
-            <select
-              value={filters.grade}
-              onChange={(e) => handleFilterChange('grade', e.target.value)}
-              className="w-full bg-white border border-outline-variant/50 rounded-lg px-2 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-primary outline-none"
-            >
-              <option value="">Tất cả khối lớp</option>
-              {[...Array(7)].map((_, i) => (
-                <option key={i + 6} value={i + 6}>Lớp {i + 6}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Bài học</label>
-            <select
-              value={filters.lessonId}
-              onChange={(e) => handleFilterChange('lessonId', e.target.value)}
-              disabled={isLoadingLessons || !filters.grade}
-              className="w-full bg-white border border-outline-variant/50 rounded-lg px-2 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-primary outline-none disabled:opacity-50 disabled:bg-surface-container-low disabled:cursor-not-allowed"
-            >
-              <option value="">{filters.grade ? "Tất cả bài học" : "Chưa chọn khối lớp"}</option>
-              {filteredLessons.map(ls => (
-                <option key={ls.id} value={ls.id}>{ls.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Độ khó</label>
-            <select
-              value={filters.difficulty}
-              onChange={(e) => handleFilterChange('difficulty', e.target.value)}
-              className="w-full bg-white border border-outline-variant/50 rounded-lg px-2 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-primary outline-none"
-            >
-              <option value="">Tất cả độ khó</option>
-              <option value="Dễ">Dễ</option>
-              <option value="Trung Bình">Trung Bình</option>
-              <option value="Khó">Khó</option>
-            </select>
-          </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Chọn bộ sưu tập</label>
+          <select
+            value={selectedCollectionId}
+            onChange={(e) => setSelectedCollectionId(e.target.value)}
+            disabled={isLoadingCollections}
+            className="w-full bg-white border border-outline-variant/50 rounded-lg px-2 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none disabled:opacity-50 disabled:bg-surface-container-low"
+          >
+            {isLoadingCollections ? (
+              <option>Đang tải bộ sưu tập...</option>
+            ) : collections.length === 0 ? (
+              <option>Chưa có bộ sưu tập nào</option>
+            ) : (
+              collections.map(col => (
+                <option key={col.id} value={col.id}>
+                  {col.title} ({col.question_count} câu)
+                </option>
+              ))
+            )}
+          </select>
         </div>
       </div>
 

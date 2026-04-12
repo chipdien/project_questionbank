@@ -92,8 +92,21 @@ export async function getCollectionById(id: number) {
 
 export const getCollectionQuestionsAction = getCollectionQuestions;
 
-export async function getCollectionQuestions(collectionId: number) {
+export async function getCollectionQuestions(collectionId: number, page = 1, pageSize = 30) {
   try {
+    const offset = (page - 1) * pageSize;
+
+    // 1. Lấy tổng số câu hỏi để tính totalPages
+    const countResult = await query<{ count: number }[]>(
+      `SELECT COUNT(*) as count 
+       FROM lms_questions_collections 
+       WHERE collection_id = ?`,
+      [collectionId]
+    );
+    const totalCount = countResult[0]?.count || 0;
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    // 2. Lấy dữ liệu câu hỏi có phân trang
     const questions = await query<any[]>(
       `SELECT q.*, l.name as lesson_name
        FROM lms_questions q
@@ -101,8 +114,9 @@ export async function getCollectionQuestions(collectionId: number) {
        LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
        LEFT JOIN lms_lessons l ON ql.lesson_id = l.id
        WHERE qc.collection_id = ?
-       ORDER BY qc.created_at ASC`,
-      [collectionId]
+       ORDER BY qc.created_at ASC
+       LIMIT ? OFFSET ?`,
+      [collectionId, pageSize, offset]
     );
 
     // Lấy options cho từng câu hỏi
@@ -114,9 +128,19 @@ export async function getCollectionQuestions(collectionId: number) {
       q.options = options;
     }
 
-    return questions;
+    return {
+      data: questions,
+      totalPages,
+      totalCount,
+      page
+    };
   } catch (error) {
     console.error('Error fetching collection questions:', error);
-    return [];
+    return {
+      data: [],
+      totalPages: 0,
+      totalCount: 0,
+      page: 1
+    };
   }
 }

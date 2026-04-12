@@ -20,24 +20,21 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
     notFound();
   }
 
-  const allQuestions = await getCollectionQuestionsAction(collectionId);
-
   const page = parseInt(resolvedSearchParams.page || '1', 10);
   const pageSize = 10;
-  const totalQuestions = allQuestions.length;
-  // Make sure totalPages is at least 1 even if 0 questions
-  const totalPages = Math.max(1, Math.ceil(totalQuestions / pageSize));
+  
+  const questionsResponse = await getCollectionQuestionsAction(collectionId, page, pageSize);
 
-  const safePage = Math.max(1, Math.min(page, totalPages));
-  const startIndex = (safePage - 1) * pageSize;
-  const paginatedQuestions = allQuestions.slice(startIndex, startIndex + pageSize);
-
+  const totalQuestions = questionsResponse.totalCount;
+  
   const pagination = {
-    currentPage: safePage,
-    totalPages: totalPages,
+    currentPage: questionsResponse.page,
+    totalPages: questionsResponse.totalPages,
     totalQuestions: totalQuestions,
     pageSize: pageSize,
   };
+
+  const paginatedQuestions = questionsResponse.data;
 
   return (
     <div className="p-8 min-h-full">
