@@ -31,7 +31,10 @@ Khi file được tải lên, hệ thống sẽ tạo mã băm SHA-256. Nếu m�
 
 ### 2. Trích xuất văn bản (Parsing)
 - **PDF/Ảnh**: Được gửi trực tiếp lên Mathpix API.
-- **Word (.docx)**: Được xử lý cục bộ bằng Mammoth.
+- **Văn bản**: OCR thô được chuyển thành LaTeX và hiển thị tức thì qua công cụ **KaTeX** trên giao diện để người dùng kiểm tra trước khi lưu.
+
+---
+*Truy cập `docs/features/ai-classification.md` để xem cách Gemini phân loại câu hỏi.*
 - Biểu thức Toán học: Các công thức được bao quanh bởi ký tự `$` hoặc `$$` để hiển thị đúng định dạng LaTeX trên giao diện.
 
 ### 3. Cấu trúc hóa bằng AI (Gemini AI)

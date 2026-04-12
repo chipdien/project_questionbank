@@ -14,6 +14,7 @@ Project Question Bank là một nền tảng giáo dục hỗ trợ bởi AI, đ
 | :--- | :--- | :--- |
 | **Giao diện (Frontend)** | Next.js 16, React 19 | Hiệu suất cao, App Router tối ưu hóa cho SEO và điều hướng. |
 | **Định dạng (Styling)** | Tailwind CSS 4, Framer Motion | CSS linh hoạt, hỗ trợ tốt cho các chuyển động mượt mà. |
+| **Render Toán học** | KaTeX | Tốc độ render cực nhanh, hỗ trợ tốt cho các công thức LaTeX phức tạp. |
 | **Máy chủ (Backend)** | Next.js API Routes, Server Actions | Hợp nhất mã nguồn, thực thi phía server với độ trễ tối thiểu. |
 | **Cơ sở dữ liệu (DB)** | MySQL | Lưu trữ quan hệ mạnh mẽ, tin cậy cho dữ liệu có cấu trúc. |
 | **Xử lý AI** | Google Gemini 1.5/2.0 | Khả năng lập luận cao, hiểu biết sâu về ký pháp toán học. |
@@ -36,7 +37,7 @@ graph TD
     F -- Hợp lệ --> G[Cấu trúc hóa bằng Gemini AI]
     F -- Trùng lặp --> H[Trả về tài liệu đã tồn tại]
     G --> I[Lưu vào MySQL]
-    I --> J[Hiển thị trên DataGrid]
+    I --> J[Hiển thị trên DataGrid (KaTeX Render)]
 ```
 
 ### Các bước quan trọng trong Workflow:
@@ -45,6 +46,7 @@ graph TD
 3.  **Bóc tách (Parsing)**: Sử dụng Mathpix đặc biệt để đảm bảo độ chính xác cao cho các biểu thức Toán học LaTeX.
 4.  **Trí tuệ nhân tạo (AI Intelligence)**: Gemini cấu trúc hóa chuỗi thô thành đối tượng JSON chứa câu hỏi, phương án và metadata.
 5.  **Lưu trữ (Storage)**: Sử dụng giao dịch MySQL để lưu đồng thời câu hỏi, các phương án và các liên kết tài liệu.
+6.  **Hiển thị (Rendering)**: Sử dụng KaTeX để chuyển đổi các chuỗi LaTeX thành biểu thức toán học trực quan trên giao diện người dùng.
 
 ---
 *Cập nhật gần nhất: Tháng 4/2026. Biên soạn bởi eMon.*

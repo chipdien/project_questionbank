@@ -32,6 +32,16 @@ Gemini nổi bật nhờ khả năng lập luận cao và hiểu biết sâu s�
 
 ---
 
+## 📐 Render Toán học: KaTeX
+
+Thay vì sử dụng MathJax, dự án lựa chọn KaTeX để hiển thị các biểu thức LaTeX trên giao diện.
+
+- **Hiệu năng**: KaTeX nhanh hơn đáng kể so với MathJax trong việc xử lý các trang có hàng trăm biểu thức toán học.
+- **SSR (Server-Side Rendering)**: KaTeX hỗ trợ tốt việc render sẵn công thức trên server, giúp giảm hiện tượng "nhảy" nội dung khi tải trang (layout shift).
+- **Gói nhẹ**: Giảm dung lượng bundle của frontend, cải thiện thời gian tải trang ban đầu.
+
+---
+
 ## 📐 OCR mạnh mẽ: Mathpix API
 
 Mathpix là chuẩn mực công nghiệp cho việc nhận diện ký tự quang học (OCR) toán học.

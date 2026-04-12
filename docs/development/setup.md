@@ -51,12 +51,6 @@ Hướng dẫn cấu hình môi trường phát triển cục bộ và khởi ch
 
 ---
 
-## 🧪 Kiểm tra kết nối (Testing Connection)
-
-Đảm bảo máy chủ MySQL đã hoạt động. Bạn có thể chạy script kiểm tra:
-```bash
-node check_schema.js
-```
-
 ---
 *Truy cập `docs/development/coding-standard.md` để xem quy chuẩn lập trình.*
+
