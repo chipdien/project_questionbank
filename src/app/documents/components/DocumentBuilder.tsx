@@ -1,8 +1,9 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import BlockEditor from './BlockEditor';
+import QuestionEditModal from './QuestionEditModal';
 import { FileDown, Plus, X, Loader2, CheckCircle2, RotateCcw } from 'lucide-react';
 import { blocksToMarkdown } from '@/lib/utils/export-utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,7 +29,8 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
   }, []);
 
   const [blocks, setBlocks] = useState<Block[]>([]);
-  const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [editingQuestionBlock, setEditingQuestionBlock] = useState<Block | null>(null);
 
   // Expose hÃ m load dữ liệu cho cha
   React.useImperativeHandle(ref, () => ({
@@ -99,6 +101,9 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
 
   // Chia blocks vào các trang dá»±a trÃªn chiá»u cao thá»±c táº¿
   useEffect(() => {
+    // Nếu đang kéo thả, không thực hiện phân trang lại để tránh xung đột DOM
+    if (isDragging) return;
+
     const paginate = () => {
       if (!containerRef.current) return;
 
@@ -136,7 +141,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
     // Äá»£i 1 chÃºt để DOM cập nhật xong
     const timer = setTimeout(paginate, 100);
     return () => clearTimeout(timer);
-  }, [blocks]);
+  }, [blocks, isDragging]);
 
   const generateId = () => {
     return 'b_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
@@ -360,71 +365,80 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
       </div>
 
       <div id="pdf-content" className="flex flex-col gap-8 w-full items-center pb-40">
-        {pages.map((pageBlocks, pageIdx) => (
-          <div key={pageIdx} className={`a4-page document-print-container flex flex-col ${pageIdx < pages.length - 1 ? 'page-break' : ''}`}>
-            <div className="flex-1 relative">
-              {pageBlocks.length === 0 && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-on-surface-variant/50 no-print border-2 border-dashed border-outline-variant/20 rounded-2xl pointer-events-none z-0">
-                  <p className="text-sm font-medium">Kéo câu hỏi từ thư viện hoặc thêm tiêu đề/văn bản</p>
-                </div>
-              )}
-              <ReactSortable
-                list={pageBlocks}
-                setList={(newList) => {
-                  setBlocks(prevBlocks => {
-                    const normalizedList: Block[] = newList
-                      .filter(item => item !== null && item !== undefined)
-                      .map((item: any) => {
-                        if (item && !item.type && (item.statement !== undefined || item.content !== undefined)) {
-                          return {
-                            id: 'b_' + Date.now() + '_' + Math.floor(Math.random() * 1000000),
-                            type: 'question' as BlockType,
-                            content: item,
-                            order: 0
-                          };
-                        }
-                        return item as Block;
-                      });
+        {pages.map((pageBlocks, pageIdx) => {
+          // Tạo key ổn định từ ID của block đầu tiên hoặc index nếu trang trống
+          const pageKey = pageBlocks.length > 0 ? `page-${pageBlocks[0].id}` : `empty-page-${pageIdx}`;
+          
+          return (
+            <div key={pageKey} className={`a4-page document-print-container flex flex-col ${pageIdx < pages.length - 1 ? 'page-break' : ''}`}>
+              <div className="flex-1 relative">
+                {pageBlocks.length === 0 && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-on-surface-variant/50 no-print border-2 border-dashed border-outline-variant/20 rounded-2xl pointer-events-none z-0">
+                    <p className="text-sm font-medium">Kéo câu hỏi từ thư viện hoặc thêm tiêu đề/văn bản</p>
+                  </div>
+                )}
+                <ReactSortable
+                  list={pageBlocks}
+                  setList={(newList) => {
+                    setBlocks(prevBlocks => {
+                      const normalizedList: Block[] = newList
+                        .filter(item => item !== null && item !== undefined)
+                        .map((item: any) => {
+                          if (item && !item.type && (item.statement !== undefined || item.content !== undefined)) {
+                            return {
+                              id: 'b_' + Date.now() + '_' + Math.floor(Math.random() * 1000000),
+                              type: 'question' as BlockType,
+                              content: item,
+                              order: 0
+                            };
+                          }
+                          return item as Block;
+                        });
 
-                    if (pages.length === 1) {
-                      return normalizedList.map((b, i) => ({ ...b, order: i }));
-                    }
+                      if (pages.length === 1) {
+                        return normalizedList.map((b, i) => ({ ...b, order: i }));
+                      }
 
-                    const startIdx = pageBlocks.length > 0
-                      ? prevBlocks.findIndex(b => b.id === pageBlocks[0].id)
-                      : prevBlocks.length;
+                      const startIdx = pageBlocks.length > 0
+                        ? prevBlocks.findIndex(b => b.id === pageBlocks[0].id)
+                        : prevBlocks.length;
 
-                    const newTotalBlocks = [...prevBlocks];
-                    const idxToInsert = startIdx === -1 ? prevBlocks.length : startIdx;
-                    newTotalBlocks.splice(idxToInsert, pageBlocks.length, ...normalizedList);
-                    return newTotalBlocks.map((b, i) => ({ ...b, order: i }));
-                  });
-                }}
-                group="blocks"
-                animation={200}
-                handle=".drag-handle"
-                ghostClass="opacity-40"
-                className="flex flex-col gap-4 min-h-[150px] h-full relative z-10"
-              >
-                {pageBlocks.map((block) => (
-                  <BlockEditor
-                    key={block.id}
-                    block={block}
-                    qNumber={questionNumbers[block.id]}
-                    onChange={(content) => updateBlock(block.id, content)}
-                    onRemove={() => removeBlock(block.id)}
-                    activeFieldId={activeFieldId}
-                    setActiveFieldId={setActiveFieldId}
-                  />
-                ))}
-              </ReactSortable>
+                      const newTotalBlocks = [...prevBlocks];
+                      const idxToInsert = startIdx === -1 ? prevBlocks.length : startIdx;
+                      newTotalBlocks.splice(idxToInsert, pageBlocks.length, ...normalizedList);
+                      return newTotalBlocks.map((b, i) => ({ ...b, order: i }));
+                    });
+                  }}
+                  onStart={() => setIsDragging(true)}
+                  onEnd={() => setIsDragging(false)}
+                  forceFallback={true}
+                  group="blocks"
+                  animation={200}
+                  handle=".drag-handle"
+                  ghostClass="opacity-40"
+                  className="flex flex-col gap-4 min-h-[150px] h-full relative z-10"
+                >
+                  {pageBlocks.map((block) => (
+                    <BlockEditor
+                      key={block.id}
+                      block={block}
+                      qNumber={questionNumbers[block.id]}
+                      onChange={(content) => updateBlock(block.id, content)}
+                      onRemove={() => removeBlock(block.id)}
+                      activeFieldId={activeFieldId}
+                      setActiveFieldId={setActiveFieldId}
+                      onEditQuestion={(b) => setEditingQuestionBlock(b)}
+                    />
+                  ))}
+                </ReactSortable>
+              </div>
+
+              <div className="absolute bottom-4 right-8 text-[10px] text-outline/40 no-print font-bold">
+                Trang {pageIdx + 1} / {pages.length}
+              </div>
             </div>
-
-            <div className="absolute bottom-4 right-8 text-[10px] text-outline/40 no-print font-bold">
-              Trang {pageIdx + 1} / {pages.length}
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Quick Add at bottom */}
         <button
@@ -512,6 +526,18 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Edit Question Modal */}
+      <QuestionEditModal
+        isOpen={!!editingQuestionBlock}
+        onClose={() => setEditingQuestionBlock(null)}
+        question={editingQuestionBlock?.content}
+        onSave={(updatedQuestion) => {
+          if (editingQuestionBlock) {
+            updateBlock(editingQuestionBlock.id, updatedQuestion);
+          }
+        }}
+      />
     </div>
   );
 });

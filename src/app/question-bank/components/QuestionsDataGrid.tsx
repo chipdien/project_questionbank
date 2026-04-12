@@ -4,8 +4,9 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
-import rehypeMathjax from 'rehype-mathjax/browser';
+import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
+
 import QuestionModal from '@/app/question-bank/components/QuestionModal';
 import AddToCollectionModal from '@/app/collection/components/AddToCollectionModal';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
@@ -158,11 +159,11 @@ export default function QuestionsDataGrid({
                       <ReactMarkdown
                         key={q.statement}
                         remarkPlugins={[remarkMath, remarkGfm]}
-                        rehypePlugins={[rehypeRaw, rehypeMathjax]}
-                        components={{ p: 'span' }}
+                        rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
                       >
                         {cleanMathpixData(q.statement)}
                       </ReactMarkdown>
+
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-on-surface-variant max-w-[150px]">

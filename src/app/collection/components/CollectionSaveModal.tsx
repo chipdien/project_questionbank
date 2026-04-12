@@ -7,8 +7,9 @@ import { useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-import rehypeMathjax from 'rehype-mathjax/browser';
+import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
+
 import { cleanMathpixData } from '@/lib/utils/math-utils';
 
 interface Question {
@@ -212,7 +213,7 @@ export default function CollectionSaveModal({
                               <ReactMarkdown
                                 key={question.statement}
                                 remarkPlugins={[remarkMath, remarkGfm]}
-                                rehypePlugins={[rehypeRaw, rehypeMathjax]}
+                                rehypePlugins={[rehypeKatex, rehypeRaw]}
                               >
                                 {cleanMathpixData(question.statement)}
                               </ReactMarkdown>

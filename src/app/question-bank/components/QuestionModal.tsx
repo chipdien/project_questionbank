@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-import rehypeMathjax from 'rehype-mathjax/browser';
+import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
+
 import { cleanMathpixData } from '@/lib/utils/math-utils';
 
 interface Option {
@@ -95,8 +96,7 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
                 <ReactMarkdown
                   key={question.statement}
                   remarkPlugins={[remarkMath, remarkGfm]}
-                  rehypePlugins={[rehypeRaw, rehypeMathjax]}
-                  components={{ p: 'span' }}
+                  rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
                 >
                   {cleanMathpixData(question.statement)}
                 </ReactMarkdown>
@@ -130,8 +130,7 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
                         <div className={`pt-1 prose prose-slate max-w-none text-sm [&_img]:max-w-full [&_img]:rounded-md [&_img]:border [&_img]:border-outline-variant/30 [&_img]:my-2 ${isCorrect ? 'text-green-900 font-medium' : 'text-on-surface'}`}>
                           <ReactMarkdown
                             remarkPlugins={[remarkMath, remarkGfm]}
-                            rehypePlugins={[rehypeRaw, rehypeMathjax]}
-                            components={{ p: 'span' }}
+                            rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
                           >
                             {cleanMathpixData(opt.content)}
                           </ReactMarkdown>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Block } from './DocumentBuilder';
@@ -6,8 +6,9 @@ import { GripVertical, X, Edit2, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-import rehypeMathjax from 'rehype-mathjax/browser';
+import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
+
 import { cleanMathpixData } from '@/lib/utils/math-utils';
 import VditorEditor from '@/components/ui/VditorEditor';
 
@@ -18,9 +19,10 @@ interface BlockEditorProps {
   activeFieldId?: string | null;
   setActiveFieldId?: (id: string | null) => void;
   qNumber?: number;
+  onEditQuestion?: (block: Block) => void;
 }
 
-export default function BlockEditor({ block, onChange, onRemove, activeFieldId, setActiveFieldId, qNumber }: BlockEditorProps) {
+export default function BlockEditor({ block, onChange, onRemove, activeFieldId, setActiveFieldId, qNumber, onEditQuestion }: BlockEditorProps) {
   // Local state for primitive text (headline/textbox)
   const [localText, setLocalText] = useState<string>(
     typeof block.content === 'string' ? block.content : ''
@@ -47,17 +49,6 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
       if (fieldId.startsWith('text-')) {
         onChange(newVal);
         setLocalText(newVal);
-      } else if (fieldId.startsWith('q-statement-')) {
-        const newQ = { ...localQuestion, statement: newVal, content: newVal };
-        setLocalQuestion(newQ);
-        onChange(newQ);
-      } else if (fieldId.startsWith('q-opt-')) {
-        const optIdx = parseInt(fieldId.split('-').pop() || '0');
-        const newOptions = [...localQuestion.options];
-        newOptions[optIdx] = { ...newOptions[optIdx], content: newVal, statement: newVal };
-        const newQ = { ...localQuestion, options: newOptions };
-        setLocalQuestion(newQ);
-        onChange(newQ);
       }
     };
 
@@ -94,11 +85,11 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
           {content.trim() ? (
             <ReactMarkdown
               remarkPlugins={[remarkMath, remarkGfm]}
-              rehypePlugins={[rehypeRaw, rehypeMathjax]}
-              components={{ p: 'span' }}
+              rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
             >
               {cleanMathpixData(content)}
             </ReactMarkdown>
+
           ) : (
             <span className="text-on-surface-variant/30 italic">{placeholder}</span>
           )}
@@ -144,35 +135,45 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
       const displayNum = (q.manualNumber !== undefined && q.manualNumber !== '') ? q.manualNumber : qNumber;
 
       return (
-        <div className="flex flex-col gap-3 w-full page-break-inside-avoid">
+        <div 
+          className="flex flex-col gap-3 w-full page-break-inside-avoid cursor-pointer hover:bg-primary/[0.03] p-2 -m-2 rounded-lg transition-colors group/qblock relative"
+          onClick={() => {
+            if (onEditQuestion) onEditQuestion(block);
+          }}
+        >
+          <div className="absolute right-2 top-2 opacity-0 group-hover/qblock:opacity-40 p-1 bg-surface-container rounded-sm shadow-sm transition-opacity no-print">
+            <Edit2 className="w-4 h-4" />
+          </div>
+
           {/* Main Statement */}
           <div className="flex items-start gap-2">
             <span className="font-bold shrink-0 text-primary pt-0.5">Câu {displayNum}:</span>
-            <div className="flex-1 min-w-0">
-              {renderEditableField(
-                `q-statement-${block.id}`,
-                rawStatement,
-                "text-sm font-body text-on-surface",
-                "Nhập nội dung câu hỏi..."
-              )}
+            <div className="flex-1 min-w-0 prose prose-sm prose-slate max-w-none pointer-events-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkMath, remarkGfm]}
+                rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
+              >
+                {cleanMathpixData(rawStatement)}
+              </ReactMarkdown>
             </div>
           </div>
 
           {/* Options Grid */}
-          {q.options && Array.isArray(q.options) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 mt-1 ml-4">
+          {q.options && Array.isArray(q.options) && q.options.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 mt-1 ml-4 pointer-events-none">
               {q.options.map((opt: any, idx: number) => {
                 const optContent = opt.content || opt.statement || '';
                 return (
                   <div key={opt.id || idx} className="flex gap-2 text-sm text-on-surface-variant items-start">
                     <span className="font-bold shrink-0 text-primary-fixed pt-0.5">{String.fromCharCode(65 + idx)}.</span>
-                    <div className="flex-1 min-w-0">
-                      {renderEditableField(
-                        `q-opt-${block.id}-${idx}`,
-                        optContent,
-                        "text-sm font-body",
-                        "Nhập phương án..."
-                      )}
+                    <div className="flex-1 min-w-0 prose prose-sm prose-slate max-w-none pointer-events-none">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkMath, remarkGfm]}
+                        rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
+                      >
+                        {cleanMathpixData(optContent)}
+                      </ReactMarkdown>
+
                     </div>
                   </div>
                 );
@@ -200,7 +201,7 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
         <button
           onClick={onRemove}
           className="w-6 h-6 flex items-center justify-center text-error opacity-0 group-hover:opacity-100 transition-opacity rounded hover:bg-error/10 shrink-0"
-          title="Xuất file PDF"
+          title="Xóa block"
         >
           <X className="w-4 h-4" />
         </button>
@@ -208,3 +209,4 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
     </div>
   );
 }
+

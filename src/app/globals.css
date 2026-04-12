@@ -220,50 +220,25 @@
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
 }
 
-/* --- MATHJAX SVG OPTIMIZATION --- */
-.mjx-container {
-  display: inline-block !important;
-  line-height: normal;
-  vertical-align: middle;
-  margin: 0 2px !important;
+
+/* --- KATEX OPTIMIZATION --- */
+.katex-display {
+  display: block;
+  padding: 0.5em 0;
+  margin: 0.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
   max-width: 100%;
 }
 
-.mjx-container[jax="SVG"][display="true"] {
-  display: block !important;
-  text-align: center;
-  margin: 1em 0 !important;
-  width: 100%;
+.katex {
+  font-size: 1.1em;
+  text-rendering: optimizeLegibility;
 }
 
-/* Đảm bảo MathJax không bị cắt khi xuất PDF và hiển thị đúng inline */
-.exporting .mjx-container {
-  display: inline-block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-.exporting .mjx-container svg {
-  overflow: visible !important;
-  display: inline-block !important;
-  vertical-align: middle !important;
-}
-
-.prose p, 
-.prose span {
-  display: inline !important;
-  margin: 0 !important;
-  line-height: inherit;
-  white-space: normal !important;
-}
-
-/* Ép các phần tử con trực tiếp của p hoặc span trong prose hiển thị inline-block */
-.prose p > *, .prose span > * {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.prose .mjx-container {
-  display: inline-block !important;
-  white-space: nowrap;
+/* Fix for tailwind typography competing with katex */
+.prose :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  display: block !important; /* Đảm bảo p luôn là block để chứa được katex-display */
 }

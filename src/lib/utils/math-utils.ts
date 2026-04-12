@@ -7,17 +7,27 @@
  */
 export const cleanMathpixData = (text: string | null | undefined): string => {
   if (!text) return 'N/A';
-  
-  const cleaned = text
-    .replace(/\\\\/g, '\\')         // Normalize double backslashes
-    // 1. Chuyển đổi và chuẩn hóa Block Math \[ ... \] hoặc $$ ... $$
+
+  // 1. Bước quan trọng nhất: Khử double-escape từ database/JSON
+  // Sử dụng regex có điều kiện để chỉ khử dấu \ khi theo sau là chữ cái hoặc ký hiệu lệnh
+  // (ví dụ: \\mathrm -> \mathrm, \\| -> \|). 
+  // Tránh việc biến các lệnh xuống dòng (\\) thành (\).
+  let cleaned = text.replace(/\\\\(?=[a-zA-Z|(){}\[\]%])/g, '\\');
+
+  cleaned = cleaned
+    // 2. Chuyển đổi Block Math: \[ ... \] hoặc \\ [ ... \\ ] về $$ ... $$
+    // Lưu ý: Sau bước replace \\ -> \ ở trên, các delimiter này sẽ là \[ và \]
     .replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, '$$$$$1$$$$')
-    .replace(/\$\$\s*([\s\S]*?)\s*\$\$/g, '$$$$$1$$$$')
-    // 2. Chuyển đổi và chuẩn hóa Inline Math \( ... \) hoặc $ ... $
+    // 3. Chuyển đổi Inline Math: \( ... \) về $ ... $
     .replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, '$$$1$$')
-    // Thắt chặt dấu $ đơn (không áp dụng nếu là $$)
+    // 4. Chuẩn hóa các dấu $$ ... $$ hiện có (đảm bảo không bị dính chữ hoặc khoảng trắng thừa)
+    .replace(/\$\$\s*([\s\S]*?)\s*\$\$/g, '$$$$$1$$$$')
+    // 5. Thắt chặt dấu $ đơn cho Inline Math 
+    // Đảm bảo không có khoảng trắng sát dấu $ (ví dụ: "$ x $" -> "$x$")
     .replace(/(?<!\$)\$\s*([^\$\n]+?)\s*\$(?!\$)/g, '$$$1$$')
-    .replace(/\r\n/g, '\n')         // Normalize Windows newlines
+    // 6. Xử lý khoảng trắng đặc thù của Mathpix (như dính chữ \mathrm{cm} dính vào số)
+    // Nhưng chủ yếu việc sửa lỗi double-escape ở bước 1 đã giải quyết phần lớn vấn đề hiển thị.
+    .replace(/\r\n/g, '\n')
     .trim();
 
   return cleaned;

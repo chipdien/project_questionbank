@@ -12,6 +12,7 @@ interface VditorEditorProps {
   toolbarContainerId?: string;
   placeholder?: string;
   className?: string;
+  mode?: 'ir' | 'wysiwyg' | 'sv';
 }
 
 /**
@@ -25,6 +26,7 @@ const VditorEditor: React.FC<VditorEditorProps> = ({
   toolbarContainerId,
   placeholder = 'Nhập nội dung...',
   className = '',
+  mode = 'ir',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const vditorRef = useRef<Vditor | null>(null);
@@ -44,7 +46,7 @@ const VditorEditor: React.FC<VditorEditorProps> = ({
     const vditor = new Vditor(containerRef.current, {
       height: 'auto',
       minHeight: 0,
-      mode: 'ir',
+      mode,
       value: value,
       lang: lang as any,
       placeholder,
