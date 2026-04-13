@@ -301,7 +301,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
   };
 
   const updateBlock = (id: string, newContent: any) => {
-    setBlocks(blocks.map(b => b.id === id ? { ...b, content: newContent } : b));
+    setBlocks(prev => prev.map(b => b.id === id ? { ...b, content: newContent } : b));
   };
 
   const removeBlock = (id: string) => {
@@ -722,7 +722,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
                     <input
                       type="text"
                       value={metadata.subject}
-                      onChange={(e) => setMetadata({ ...metadata, subject: e.target.value })}
+                      onChange={(e) => setMetadata(prev => ({ ...prev, subject: e.target.value }))}
                       className="w-full px-4 py-2 bg-surface-container rounded-xl border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium"
                     />
                   </div>
@@ -734,7 +734,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
                     <input
                       type="text"
                       value={metadata.classCode}
-                      onChange={(e) => setMetadata({ ...metadata, classCode: e.target.value })}
+                      onChange={(e) => setMetadata(prev => ({ ...prev, classCode: e.target.value }))}
                       className="w-full px-4 py-2 bg-surface-container rounded-xl border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium"
                     />
                   </div>
@@ -748,7 +748,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
                   <input
                     type="text"
                     value={metadata.teacher}
-                    onChange={(e) => setMetadata({ ...metadata, teacher: e.target.value })}
+                    onChange={(e) => setMetadata(prev => ({ ...prev, teacher: e.target.value }))}
                     className="w-full px-4 py-2 bg-surface-container rounded-xl border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium"
                   />
                 </div>
@@ -761,7 +761,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
                   <input
                     type="text"
                     value={metadata.topic}
-                    onChange={(e) => setMetadata({ ...metadata, topic: e.target.value })}
+                    onChange={(e) => setMetadata(prev => ({ ...prev, topic: e.target.value }))}
                     className="w-full px-4 py-2 bg-surface-container rounded-xl border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium"
                   />
                 </div>
@@ -774,7 +774,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
                   <input
                     type="text"
                     value={metadata.dateRange}
-                    onChange={(e) => setMetadata({ ...metadata, dateRange: e.target.value })}
+                    onChange={(e) => setMetadata(prev => ({ ...prev, dateRange: e.target.value }))}
                     className="w-full px-4 py-2 bg-surface-container rounded-xl border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium"
                   />
                 </div>

@@ -166,7 +166,7 @@ export default function QuestionLibrary({ onSelect, onSelectMany }: QuestionLibr
                 onClick={() => handleToggleSelect(q.id)}
                 onDoubleClick={() => onSelect?.(q)}
                 className={`p-3 bg-white border rounded-xl transition-all cursor-pointer active:scale-[0.98] group relative select-none ring-primary/20 ${selectedIds.has(q.id)
-                  ? 'border-primary bg-primary/[0.02] ring-2'
+                  ? 'border-primary bg-primary/2 ring-2'
                   : 'border-outline-variant/40 hover:border-primary/40 hover:shadow-md'
                   }`}
                 data-id={q.id}

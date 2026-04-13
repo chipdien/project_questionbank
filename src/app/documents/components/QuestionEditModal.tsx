@@ -8,7 +8,7 @@ import VditorEditor from '@/components/ui/VditorEditor';
 // Hàm chuẩn hóa riêng dành cho modal để editor Vditor hiển thị đúng
 const cleanMathDelimiters = (text: string) => {
   if (!text) return '';
-  
+
   // 1. Khử double-escape AN TOÀN: Chỉ khử khi theo sau là lệnh/ký hiệu LaTeX
   // Tránh làm hỏng lệnh xuống dòng (\\) trong bảng/ma trận.
   let cleaned = text.replace(/\\\\(?=[a-zA-Z|(){}\[\]%])/g, '\\');
@@ -52,13 +52,16 @@ export default function QuestionEditModal({ isOpen, onClose, question, onSave }:
   }, [isOpen, question]);
 
   const handleStatementChange = (val: string) => {
-    setLocalQuestion({ ...localQuestion, statement: val, content: val });
+    setLocalQuestion((prev: any) => ({ ...prev, statement: val, content: val }));
   };
 
   const handleOptionChange = (idx: number, val: string) => {
-    const newOptions = [...(localQuestion.options || [])];
-    newOptions[idx] = { ...newOptions[idx], content: val, statement: val };
-    setLocalQuestion({ ...localQuestion, options: newOptions });
+    setLocalQuestion((prev: any) => {
+      if (!prev) return prev;
+      const newOptions = [...(prev.options || [])];
+      newOptions[idx] = { ...newOptions[idx], content: val, statement: val };
+      return { ...prev, options: newOptions };
+    });
   };
 
   const handleSave = () => {
@@ -69,7 +72,7 @@ export default function QuestionEditModal({ isOpen, onClose, question, onSave }:
   return (
     <AnimatePresence mode="wait">
       {isOpen && localQuestion && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
