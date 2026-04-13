@@ -21,6 +21,8 @@ export const blocksToMarkdown = (blocks: Block[], questionNumbers: Record<string
   blocks.forEach(block => {
     if (block.type === 'headline') {
       md += `\n# ${block.content}\n\n`;
+    } else if (block.type === 'subheadline') {
+      md += `\n## ${block.content}\n\n`;
     } else if (block.type === 'textbox') {
       md += `\n${block.content}\n\n`;
     } else if (block.type === 'question') {

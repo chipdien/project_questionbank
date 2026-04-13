@@ -8,7 +8,7 @@ import { FileDown, Plus, X, RotateCcw, Settings, GraduationCap, Calendar, User, 
 import { blocksToMarkdown } from '@/lib/utils/export-utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export type BlockType = 'headline' | 'textbox' | 'question';
+export type BlockType = 'headline' | 'subheadline' | 'textbox' | 'question';
 
 export interface Block {
   id: string;
@@ -20,6 +20,7 @@ export interface Block {
 export interface DocumentBuilderRef {
   loadDocument: (title: string, questions: any[]) => void;
   addQuestion: (questionData: any) => void;
+  addQuestions: (questions: any[]) => void;
 }
 
 export interface DocumentMetadata {
@@ -35,7 +36,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
 
   // Helper Components for VietElite Template - Exact Match
   const PrimaryHeader = ({ metadata, totalPages }: { metadata: DocumentMetadata; totalPages: number }) => (
-    <div className="w-full mb-10 no-select text-black pb-2 border-b border-black">
+    <div className="w-full mb-6 no-select text-black pb-2 border-b border-black min-h-[48mm]">
       {/* 1. & 2. ĐẦU TRANG & THÔNG TIN ĐỊNH DANH (3 Cột) */}
       <table className="w-full border-collapse">
         <tbody>
@@ -90,7 +91,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
   );
 
   const SecondaryHeader = ({ metadata, pageIdx, totalPages }: { metadata: DocumentMetadata; pageIdx: number, totalPages: number }) => (
-    <div className="w-full mb-8 no-select text-black px-1 flex flex-col">
+    <div className="w-full mb-6 no-select text-black px-1 flex flex-col min-h-[48mm]">
       <div className="grid grid-cols-[auto_1fr] items-end border-b-[1.5px] border-[#00A651] pb-0.5">
         <div className="flex items-center">
           <img src="/images/logo-vietelite.png" alt="VietElite Logo" className="w-[185px] h-auto object-contain translate-y-[5px]" />
@@ -190,6 +191,35 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
 
       // Tự động chọn câu hỏi mới sau khi thêm
       setTimeout(() => setActiveFieldId(newBlock.id), 100);
+    },
+    addQuestions: (questionsData: any[]) => {
+      const newBlocks: Block[] = questionsData.map((q, idx) => ({
+        id: 'q_' + (Date.now() + idx) + '_' + Math.floor(Math.random() * 1000),
+        type: 'question' as BlockType,
+        content: q,
+        order: 0
+      }));
+
+      setBlocks(prev => {
+        let newList: Block[] = [];
+        if (activeFieldId) {
+          const index = prev.findIndex(b => b.id === activeFieldId);
+          if (index !== -1) {
+            newList = [...prev];
+            newList.splice(index + 1, 0, ...newBlocks);
+          } else {
+            newList = [...prev, ...newBlocks];
+          }
+        } else {
+          newList = [...prev, ...newBlocks];
+        }
+        return newList.map((b, i) => ({ ...b, order: i }));
+      });
+
+      // Tự động chọn câu đầu tiên trong nhóm mới thêm
+      if (newBlocks.length > 0) {
+        setTimeout(() => setActiveFieldId(newBlocks[0].id), 100);
+      }
     }
   }));
 
@@ -210,32 +240,12 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
   });
 
   useEffect(() => {
-    // 3. CẤU TRÚC NỘI DUNG
+    // 3. CẤU TRÚC NỘI DUNG MẶC ĐỊNH
     const initialBlocks: Block[] = [
-      {
-        id: generateId(),
-        type: 'headline',
-        content: 'PHẦN I. LÝ THUYẾT',
-        order: 0
-      },
-      {
-        id: generateId(),
-        type: 'headline',
-        content: 'PHẦN II. BÀI TẬP',
-        order: 1
-      },
-      {
-        id: generateId(),
-        type: 'headline',
-        content: 'Phần Trắc nghiệm',
-        order: 2
-      },
-      {
-        id: generateId(),
-        type: 'headline',
-        content: 'Phần Tự luận',
-        order: 3
-      }
+      { id: generateId(), type: 'headline', content: 'Phần I. Lý thuyết', order: 0 },
+      { id: generateId(), type: 'headline', content: 'Phần II. Bài tập', order: 1 },
+      { id: generateId(), type: 'subheadline', content: 'Phần trắc nghiệm', order: 2 },
+      { id: generateId(), type: 'subheadline', content: 'Phần tự luận', order: 3 }
     ];
     setBlocks(initialBlocks);
     setDocTitle('');
@@ -243,12 +253,13 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Logic tính số thứ tự câu hỏi: Reset khi gặp headline
+  // Logic tính số thứ tự câu hỏi: Reset khi gặp headline hoặc subheadline
   const questionNumbers = React.useMemo(() => {
     const map: Record<string, number> = {};
     let currentNum = 1;
     blocks.forEach(b => {
-      if (b.type === 'headline') {
+      // RESET logic: reset cho cả headline và subheadline
+      if (b.type === 'headline' || b.type === 'subheadline') {
         currentNum = 1;
       } else if (b.type === 'question') {
         map[b.id] = currentNum++;
@@ -256,58 +267,6 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
     });
     return map;
   }, [blocks]);
-
-  const [pages, setPages] = useState<Block[][]>([blocks]);
-
-  // Chiều cao tối đa của nội dung trong 1 trang
-  const A4_HEIGHT_MM = 297;
-  const MARGIN_VERTICAL_MM = 50; // 25mm Top + 25mm Bottom
-  const PX_PER_MM = 3.78; // Tỷ lệ chuẩn 96dpi
-  const DYNAMIC_PAGE_HEIGHT = (A4_HEIGHT_MM - MARGIN_VERTICAL_MM) * PX_PER_MM;
-
-  // Chia blocks vào các trang dựa trên chiều cao thực tế
-  useEffect(() => {
-    // Nếu đang kéo thả, không thực hiện phân trang lại để tránh xung đột DOM
-    if (isDragging) return;
-
-    const paginate = () => {
-      if (!containerRef.current) return;
-
-      const pElements = containerRef.current.querySelectorAll('.block-wrapper');
-      let currentHeight = 0;
-      let currentPage: Block[] = [];
-      const newPages: Block[][] = [];
-
-      blocks.forEach((block, index) => {
-        const el = pElements[index] as HTMLElement;
-        const h = el?.offsetHeight || 60; // fallback height
-
-        if (currentHeight + h > DYNAMIC_PAGE_HEIGHT && currentPage.length > 0) {
-          newPages.push(currentPage);
-          currentPage = [block];
-          currentHeight = h;
-        } else {
-          currentPage.push(block);
-          currentHeight += h;
-        }
-      });
-
-      if (currentPage.length > 0) {
-        newPages.push(currentPage);
-      }
-
-      // Đảm bảo luôn có ít nhất 1 trang A4 hiển thị (kể cả khi không có block nào)
-      if (newPages.length === 0) {
-        newPages.push([]);
-      }
-
-      setPages(newPages);
-    };
-
-    // Đợi 1 chút để DOM cập nhật xong
-    const timer = setTimeout(paginate, 100);
-    return () => clearTimeout(timer);
-  }, [blocks, isDragging]);
 
   const generateId = () => {
     return 'b_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
@@ -318,9 +277,27 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
       id: generateId(),
       type,
       content,
-      order: blocks.length
+      order: 0 // Will be recalculated
     };
-    setBlocks([...blocks, newBlock]);
+
+    setBlocks(prev => {
+      let newList: Block[] = [];
+      if (activeFieldId) {
+        const index = prev.findIndex(b => b.id === activeFieldId);
+        if (index !== -1) {
+          newList = [...prev];
+          newList.splice(index + 1, 0, newBlock);
+        } else {
+          newList = [...prev, newBlock];
+        }
+      } else {
+        newList = [...prev, newBlock];
+      }
+      return newList.map((b, i) => ({ ...b, order: i }));
+    });
+
+    // Tự động chọn block mới sau khi thêm
+    setTimeout(() => setActiveFieldId(newBlock.id), 100);
   };
 
   const updateBlock = (id: string, newContent: any) => {
@@ -355,11 +332,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
     try {
       // 1. Convert block sang markdown
       const sortedBlocks = [...blocks].sort((a, b) => a.order - b.order);
-
-      const markdown = pages.map(page => {
-        const sortedPageBlocks = [...page].sort((a, b) => a.order - b.order);
-        return blocksToMarkdown(sortedPageBlocks, questionNumbers);
-      }).join('\n\n\\newpage\n\n');
+      const markdown = blocksToMarkdown(sortedBlocks, questionNumbers);
 
       const questionIds = sortedBlocks
         .filter(b => b.type === 'question')
@@ -373,7 +346,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
           markdown,
           metadata: {
             ...metadata,
-            totalPages: pages.length
+            totalPages: 0 // Will be handled by LaTeX \pageref{LastPage}
           }
         }),
       });
@@ -493,6 +466,13 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
                 Tiêu đề mục
               </button>
               <button
+                onClick={() => addBlock('subheadline', '')}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-primary/4 hover:text-primary text-on-surface rounded-lg font-bold transition-all text-[11px] shadow-sm border border-outline-variant/10 group active:scale-95 whitespace-nowrap"
+              >
+                <Plus className="w-3.5 h-3.5 text-primary/70 group-hover:scale-125 transition-transform" />
+                Tiêu đề phụ
+              </button>
+              <button
                 onClick={() => addBlock('textbox', '')}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-primary/4 hover:text-primary text-on-surface rounded-lg font-bold transition-all text-[11px] shadow-sm border border-outline-variant/10 group active:scale-95 whitespace-nowrap"
               >
@@ -541,102 +521,66 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
           </div>
         </div>
       </div>
+      {/* Content flow */}
+      <div id="pdf-content" className="flex flex-col w-full items-center pt-8 pb-40 bg-white">
+        <div className="a4-page document-print-container flex flex-col min-h-[297mm]">
+          {/* Header hiển thị ở đầu trang Editor */}
+          <PrimaryHeader metadata={metadata} totalPages={0} />
 
-      {/* Hidden container for measuring heights */}
-      <div className="fixed opacity-0 pointer-events-none w-[210mm] pl-[30mm] pr-[15mm] no-print" style={{ left: '-9999px' }} ref={containerRef}>
-        {blocks.map((block) => (
-          <div key={block.id} className="block-wrapper py-2">
-            <BlockEditor
-              block={block}
-              qNumber={questionNumbers[block.id]}
-              onChange={() => { }}
-              onRemove={() => { }}
-            />
-          </div>
-        ))}
-      </div>
-
-      <div id="pdf-content" className="flex flex-col gap-10 w-full items-center pt-8 pb-40 bg-white">
-        {pages.map((pageBlocks, pageIdx) => {
-          // Tạo key ổn định từ ID của block đầu tiên hoặc index nếu trang trống
-          const pageKey = pageBlocks.length > 0 ? `page-${pageBlocks[0].id}` : `empty-page-${pageIdx}`;
-
-          return (
-            <div key={pageKey} className={`a4-page document-print-container flex flex-col ${pageIdx < pages.length - 1 ? 'page-break' : ''}`}>
-              {/* VietElite Page Header */}
-              {pageIdx === 0 ? (
-                <PrimaryHeader metadata={metadata} totalPages={pages.length} />
-              ) : (
-                <SecondaryHeader metadata={metadata} pageIdx={pageIdx} totalPages={pages.length} />
-              )}
-
-              <div className="flex-1 relative">
-                {pageBlocks.length === 0 && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-on-surface-variant/50 no-print border-2 border-dashed border-outline-variant/20 rounded-2xl pointer-events-none z-0">
-                    <p className="text-sm font-medium">Kéo câu hỏi từ thư viện hoặc thêm tiêu đề/văn bản</p>
-                  </div>
-                )}
-                <ReactSortable
-                  list={pageBlocks}
-                  setList={(newList) => {
-                    setBlocks(prevBlocks => {
-                      const normalizedList: Block[] = newList
-                        .filter(item => item !== null && item !== undefined)
-                        .map((item: any) => {
-                          if (item && !item.type && (item.statement !== undefined || item.content !== undefined)) {
-                            return {
-                              id: 'b_' + Date.now() + '_' + Math.floor(Math.random() * 1000000),
-                              type: 'question' as BlockType,
-                              content: item,
-                              order: 0
-                            };
-                          }
-                          return item as Block;
-                        });
-
-                      if (pages.length === 1) {
-                        return normalizedList.map((b, i) => ({ ...b, order: i }));
-                      }
-
-                      const startIdx = pageBlocks.length > 0
-                        ? prevBlocks.findIndex(b => b.id === pageBlocks[0].id)
-                        : prevBlocks.length;
-
-                      const newTotalBlocks = [...prevBlocks];
-                      const idxToInsert = startIdx === -1 ? prevBlocks.length : startIdx;
-                      newTotalBlocks.splice(idxToInsert, pageBlocks.length, ...normalizedList);
-                      return newTotalBlocks.map((b, i) => ({ ...b, order: i }));
-                    });
-                  }}
-                  onStart={() => setIsDragging(true)}
-                  onEnd={() => setIsDragging(false)}
-                  forceFallback={true}
-                  group="blocks"
-                  animation={200}
-                  handle=".drag-handle"
-                  ghostClass="opacity-40"
-                  className="flex flex-col gap-4 min-h-[150px] h-full relative z-10"
-                >
-                  {pageBlocks.map((block) => (
-                    <BlockEditor
-                      key={block.id}
-                      block={block}
-                      qNumber={questionNumbers[block.id]}
-                      onChange={(content) => updateBlock(block.id, content)}
-                      onRemove={() => removeBlock(block.id)}
-                      activeFieldId={activeFieldId}
-                      setActiveFieldId={setActiveFieldId}
-                      onEditQuestion={(b) => setEditingQuestionBlock(b)}
-                    />
-                  ))}
-                </ReactSortable>
+          <div className="flex-1 relative">
+            {blocks.length === 0 && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-on-surface-variant/50 no-print border-2 border-dashed border-outline-variant/20 rounded-2xl pointer-events-none z-0">
+                <p className="text-sm font-medium">Kéo câu hỏi từ thư viện hoặc thêm tiêu đề/văn bản</p>
               </div>
+            )}
+            <ReactSortable
+              list={blocks}
+              setList={(newList) => {
+                const normalizedList: Block[] = newList
+                  .filter(item => item !== null && item !== undefined)
+                  .map((item: any, i) => {
+                    if (item && !item.type && (item.statement !== undefined || item.content !== undefined)) {
+                      return {
+                        id: 'b_' + Date.now() + '_' + Math.floor(Math.random() * 1000000),
+                        type: 'question' as BlockType,
+                        content: item,
+                        order: i
+                      };
+                    }
+                    return { ...item, order: i };
+                  });
+                setBlocks(normalizedList);
+              }}
+              onStart={() => setIsDragging(true)}
+              onEnd={(evt) => {
+                setIsDragging(false);
+                const movedId = evt.item.getAttribute('data-id');
+                if (movedId) setActiveFieldId(movedId);
+              }}
+              forceFallback={true}
+              group="blocks"
+              animation={200}
+              handle=".drag-handle"
+              ghostClass="opacity-40"
+              className="flex flex-col gap-1 min-h-[500px] h-full relative z-10"
+            >
+              {blocks.map((block) => (
+                <BlockEditor
+                  key={block.id}
+                  block={block}
+                  qNumber={questionNumbers[block.id]}
+                  onChange={(content) => updateBlock(block.id, content)}
+                  onRemove={() => removeBlock(block.id)}
+                  activeFieldId={activeFieldId}
+                  setActiveFieldId={setActiveFieldId}
+                  onEditQuestion={(b) => setEditingQuestionBlock(b)}
+                />
+              ))}
+            </ReactSortable>
+          </div>
 
-              {/* VietElite Page Footer */}
-              <DocumentFooter pageIdx={pageIdx + 1} totalPages={pages.length} />
-            </div>
-          );
-        })}
+          <DocumentFooter pageIdx={1} totalPages={1} />
+        </div>
 
         {/* Quick Add at bottom */}
         <div className="w-[210mm] grid grid-cols-2 gap-4 no-print">

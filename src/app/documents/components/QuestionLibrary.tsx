@@ -15,9 +15,10 @@ import { cleanMathpixData } from '@/lib/utils/math-utils';
 
 interface QuestionLibraryProps {
   onSelect?: (question: any) => void;
+  onSelectMany?: (questions: any[]) => void;
 }
 
-export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
+export default function QuestionLibrary({ onSelect, onSelectMany }: QuestionLibraryProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -32,6 +33,7 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string>('');
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   // Fetch collections
   useEffect(() => {
@@ -76,8 +78,30 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
     loadQuestions(1);
   }, [selectedCollectionId]);
 
-  const handleFilterChange = (key: string, value: string) => {
-    // Placeholder for potential future filter logic
+  const handleToggleSelect = (id: number) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const handleAddSelected = () => {
+    const selectedQuestions = questions.filter(q => selectedIds.has(q.id));
+    if (selectedQuestions.length > 0) {
+      onSelectMany?.(selectedQuestions);
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === questions.length && questions.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(questions.map(q => q.id)));
+    }
   };
 
   if (!mounted) return null;
@@ -130,27 +154,35 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
           <ReactSortable
             list={questions}
             setList={() => { }} // Library list is read-only for sorting
-            group={{ name: 'blocks', pull: 'clone', put: false }}
-            clone={(item) => ({
-              id: 'b_' + Date.now() + '_' + Math.floor(Math.random() * 1000000),
-              type: 'question',
-              content: item,
-              order: 0
-            })}
+            group={{ name: 'blocks', pull: false, put: false }} // Disable D&D to editor as per request
+            disabled={true}
             sort={false}
             animation={200}
-            forceFallback={true}
             className="flex flex-col gap-3"
           >
             {questions.map((q) => (
               <div
                 key={q.id}
-                onClick={() => onSelect?.(q)}
-                className="p-3 bg-white border border-outline-variant/40 rounded-xl hover:border-primary/40 hover:shadow-md transition-all cursor-pointer active:scale-[0.98] group relative select-none"
+                onClick={() => handleToggleSelect(q.id)}
+                onDoubleClick={() => onSelect?.(q)}
+                className={`p-3 bg-white border rounded-xl transition-all cursor-pointer active:scale-[0.98] group relative select-none ring-primary/20 ${selectedIds.has(q.id)
+                  ? 'border-primary bg-primary/[0.02] ring-2'
+                  : 'border-outline-variant/40 hover:border-primary/40 hover:shadow-md'
+                  }`}
                 data-id={q.id}
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex gap-2 items-center">
+                    {/* Checkbox Visual */}
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selectedIds.has(q.id) ? 'bg-primary border-primary' : 'bg-white border-outline-variant/60 group-hover:border-primary/60'
+                      }`}>
+                      {selectedIds.has(q.id) && (
+                        <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      )}
+                    </div>
+
                     {q.question_difficulty && (
                       <span className={`text-[9px] font-bold uppercase ${q.question_difficulty === 'Khó' ? 'text-error' :
                         q.question_difficulty === 'Trung Bình' ? 'text-warning' : 'text-success'
@@ -159,8 +191,8 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
                       </span>
                     )}
                   </div>
-                  {/* Plus icon on hover to signify "Click to Add" */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary/10 p-1 rounded-lg">
+                  {/* Plus icon to signify "Double Click to Add" */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary/10 p-1 rounded-lg" title="Click đúp để thêm ngay">
                     <svg className="w-3.5 h-3.5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                       <line x1="12" y1="5" x2="12" y2="19"></line>
                       <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -182,6 +214,30 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
           </ReactSortable>
         )}
       </div>
+
+      {/* Action Bar for multi-select */}
+      {selectedIds.size > 0 && (
+        <div className="p-3 border-t border-primary/20 bg-primary/5 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSelectAll}
+              className="text-[10px] font-bold text-primary hover:underline"
+            >
+              {selectedIds.size === questions.length ? 'BỎ CHỌN TẤT CẢ' : 'CHỌN TẤT CẢ'}
+            </button>
+            <span className="w-1 h-1 bg-primary/30 rounded-full" />
+            <span className="text-[11px] font-bold text-primary uppercase">
+              ĐÃ CHỌN {selectedIds.size} CÂU
+            </span>
+          </div>
+          <button
+            onClick={handleAddSelected}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
+          >
+            THÊM VÀO ĐỀ
+          </button>
+        </div>
+      )}
 
       {/* Pagination */}
       <div className="p-3 border-t border-outline-variant/20 bg-surface-container-low/30">

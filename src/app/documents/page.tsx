@@ -34,7 +34,7 @@ export default function DocumentsPage() {
     <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden bg-surface-container-low">
       {/* Loading Overlay when fetching doc details */}
       {isLoadingDetail && (
-        <div className="fixed inset-0 z-[200] bg-slate-900/20 backdrop-blur-[2px] flex items-center justify-center">
+        <div className="fixed inset-0 z-200 bg-slate-900/20 backdrop-blur-[2px] flex items-center justify-center">
           <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center gap-3">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
             <p className="text-sm font-bold">Đang tải tài liệu...</p>
@@ -57,8 +57,8 @@ export default function DocumentsPage() {
             <button
               onClick={() => setActiveTab('library')}
               className={`flex-1 flex items-center justify-center gap-2 py-4 text-xs font-bold transition-all relative ${activeTab === 'library'
-                  ? 'text-primary'
-                  : 'text-on-surface-variant/60 hover:text-on-surface-variant'
+                ? 'text-primary'
+                : 'text-on-surface-variant/60 hover:text-on-surface-variant'
                 }`}
             >
               <Database className="w-4 h-4" />
@@ -70,8 +70,8 @@ export default function DocumentsPage() {
             <button
               onClick={() => setActiveTab('history')}
               className={`flex-1 flex items-center justify-center gap-2 py-4 text-xs font-bold transition-all relative ${activeTab === 'history'
-                  ? 'text-primary'
-                  : 'text-on-surface-variant/60 hover:text-on-surface-variant'
+                ? 'text-primary'
+                : 'text-on-surface-variant/60 hover:text-on-surface-variant'
                 }`}
             >
               <History className="w-4 h-4" />
@@ -85,7 +85,10 @@ export default function DocumentsPage() {
           {/* Sidebar Content */}
           <div className="flex-1 overflow-hidden">
             {activeTab === 'library' ? (
-              <QuestionLibrary onSelect={(q) => builderRef.current?.addQuestion(q)} />
+              <QuestionLibrary 
+                onSelect={(q) => builderRef.current?.addQuestion(q)}
+                onSelectMany={(qs) => builderRef.current?.addQuestions(qs)}
+              />
             ) : (
               <SavedDocumentsLibrary onLoadDocument={handleLoadDocument} />
             )}

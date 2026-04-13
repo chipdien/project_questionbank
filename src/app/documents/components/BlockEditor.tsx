@@ -79,7 +79,7 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
     return (
       <div
         onClick={handleFocus}
-        className={`${className} cursor-text hover:bg-primary/[0.03] transition-colors rounded-lg p-1 -m-1 min-h-[1.5em] group/field relative`}
+        className={`${className} cursor-text hover:bg-primary/3 transition-colors rounded-lg p-1 -m-1 min-h-[1.5em] group/field relative`}
       >
         <div className="prose prose-sm prose-slate max-w-none pointer-events-none">
           {content.trim() ? (
@@ -106,8 +106,24 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
       return (
         <input
           className="w-full bg-transparent text-xl font-headline font-bold text-on-surface border-none focus:outline-none focus:ring-0 placeholder-on-surface-variant/40"
-          placeholder="Nhập tiêu đề..."
+          placeholder="Nhập tiêu đề mục..."
           value={localText}
+          onFocus={() => setActiveFieldId?.(block.id)}
+          onChange={(e) => {
+            setLocalText(e.target.value);
+            onChange(e.target.value);
+          }}
+        />
+      );
+    }
+
+    if (block.type === 'subheadline') {
+      return (
+        <input
+          className="w-full bg-transparent text-lg font-headline font-bold text-on-surface border-none focus:outline-none focus:ring-0 placeholder-on-surface-variant/40"
+          placeholder="Nhập tiêu đề phụ..."
+          value={localText}
+          onFocus={() => setActiveFieldId?.(block.id)}
           onChange={(e) => {
             setLocalText(e.target.value);
             onChange(e.target.value);
@@ -136,8 +152,9 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
 
       return (
         <div
-          className="flex flex-col gap-3 w-full page-break-inside-avoid cursor-pointer hover:bg-primary/[0.03] p-2 -m-2 rounded-lg transition-colors group/qblock relative"
+          className="flex flex-col gap-1.5 w-full page-break-inside-avoid cursor-pointer hover:bg-primary/3 p-1 -m-1 rounded-lg transition-colors group/qblock relative"
           onClick={() => {
+            setActiveFieldId?.(block.id);
             if (onEditQuestion) onEditQuestion(block);
           }}
         >
@@ -160,7 +177,7 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
 
           {/* Options Grid */}
           {q.options && Array.isArray(q.options) && q.options.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 mt-1 ml-4 pointer-events-none">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 mt-1 ml-4 pointer-events-none">
               {q.options.map((opt: any, idx: number) => {
                 const optContent = opt.content || opt.statement || '';
                 return (
@@ -188,12 +205,12 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
   };
 
   return (
-    <div className="group relative flex items-start gap-2 p-2 -mx-2 rounded-xl hover:bg-surface-container-low/50 transition-colors" data-id={block.id}>
-      <div className="drag-handle w-6 flex items-center justify-center opacity-0 group-hover:opacity-60 hover:!opacity-100 cursor-grab active:cursor-grabbing shrink-0 mt-1 sm:mt-2 no-print text-outline">
+    <div className="group relative flex items-start gap-2 p-1 -mx-2 rounded-xl hover:bg-surface-container-low/50 transition-colors" data-id={block.id}>
+      <div className="drag-handle w-6 flex items-center justify-center opacity-0 group-hover:opacity-60 hover:opacity-100! cursor-grab active:cursor-grabbing shrink-0 mt-1 sm:mt-2 no-print text-outline">
         <GripVertical className="w-4 h-4" />
       </div>
 
-      <div className="flex-1 min-w-0 pt-1 sm:pt-2">
+      <div className="flex-1 min-w-0 pt-0.5">
         {renderContent()}
       </div>
 

@@ -193,7 +193,7 @@
 .a4-page {
   width: 210mm;
   min-height: 297mm;
-  padding: 25mm 15mm 25mm 30mm;
+  padding: 12mm 20mm 20mm 30mm;
   margin: 20px auto;
   background: white;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
@@ -238,7 +238,7 @@
 
 /* Fix for tailwind typography competing with katex */
 .prose :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
   display: block !important; /* Đảm bảo p luôn là block để chứa được katex-display */
 }

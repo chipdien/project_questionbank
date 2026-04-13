@@ -57,6 +57,7 @@ export async function POST(req: Request) {
 
     // Config YAML block cho pandoc
     const pandocYaml = `---
+papersize: a4
 geometry: left=3cm, right=2cm, top=1.2cm, bottom=2cm, headheight=140pt, includehead, includefoot
 ---
 
@@ -123,7 +124,7 @@ ${footerLatex}
     \\vspace{0.3cm}
     \\fbox{\\textbf{TÀI LIỆU HỌC TẬP}} \\\\
     \\vspace{0.2cm}
-    {\\fontsize{8}{9}\\selectfont \\textit{Tài liệu gồm \\textbf{${escapeLatex((metadata.totalPages || '08').toString().padStart(2, '0'))}} trang}}
+    {\\fontsize{8}{9}\\selectfont \\textit{Tài liệu gồm \\textbf{\\pageref{LastPage}} trang}}
     \\end{minipage} &
     \\begin{minipage}[t]{\\linewidth}
     \\fontsize{8.5}{13.5}\\selectfont
