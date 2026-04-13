@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
     }
 
     const [rows] = await db.query<any[]>(
-      "SELECT title FROM lms_documents_custom WHERE content_hash = ? AND title = ?",
-      [contentHash, title]
+      "SELECT title FROM lms_documents_custom WHERE content_hash = ? ORDER BY created_at DESC LIMIT 1",
+      [contentHash]
     );
     const documents = rows as any[];
 

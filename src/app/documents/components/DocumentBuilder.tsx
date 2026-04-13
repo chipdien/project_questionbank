@@ -321,24 +321,86 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
   };
 
   const performExportAndSave = async () => {
+    // 1. Kiểm tra tiêu đề
     if (!docTitle.trim()) {
       alert('Vui lòng nhập tiêu đề tài liệu');
       return;
     }
 
+    // 2. Kiểm tra tài liệu trống
+    if (blocks.length === 0) {
+      alert('Tài liệu đang trống. Vui lòng thêm nội dung trước khi xuất PDF.');
+      return;
+    }
+
+    // 3. Kiểm tra nội dung thực sự
+    const hasValidContent = blocks.some(b => {
+      if (b.type === 'question') return true;
+      if (typeof b.content === 'string') return b.content.trim().length > 0;
+      return !!b.content;
+    });
+
+    if (!hasValidContent) {
+      alert('Tài liệu chỉ chứa các ô trống. Vui lòng nhập nội dung trước khi xuất PDF.');
+      return;
+    }
+
+    // Kết thúc validation mới bắt đầu loading
     setIsExporting(true);
     setSaveStatus('saving');
 
     try {
       // 1. Convert block sang markdown
       const sortedBlocks = [...blocks].sort((a, b) => a.order - b.order);
+      
+      // 2. Tính toán contentHash sớm để kiểm tra trùng lặp trước khi tốn tài nguyên export PDF
+      const contentData = sortedBlocks.map(b => {
+        if (b.type === 'question') {
+          const q = b.content;
+          // Chuẩn hóa options: lấy text, trim, và đảm bảo tính nhất quán
+          const optionsStr = (q.options || [])
+            .map((opt: any) => (String(opt.content || opt.statement || '')).trim())
+            .join('|');
+          // Chuẩn hóa nội dung câu hỏi
+          const questionText = (String(q.statement || q.content || '')).trim();
+          return `question:${q.id}:${questionText}:${optionsStr}`;
+        }
+        // Chuẩn hóa các block văn bản (headline, subheadline, textbox)
+        const normalizedContent = typeof b.content === 'string' ? b.content.trim() : JSON.stringify(b.content);
+        return `${b.type}:${normalizedContent}`;
+      }).join('|');
+
+      const msgBuffer = new TextEncoder().encode(contentData);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const contentHash = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      // 3. Kiểm tra trùng lặp
+      const checkResponse = await fetch('/api/documentcustom/check-duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentHash }),
+      });
+
+      if (checkResponse.ok) {
+        const checkResult = await checkResponse.json();
+        if (checkResult.isDuplicate) {
+          alert(`Nội dung tài liệu này trùng hoàn toàn với file "${checkResult.duplicateTitle}" đã lưu trước đó. Vui lòng kiểm tra lại.`);
+          setIsExporting(false);
+          setSaveStatus('idle');
+          return;
+        }
+      }
+
+      // 4. Thực hiện Export
       const markdown = blocksToMarkdown(sortedBlocks, questionNumbers);
 
       const questionIds = sortedBlocks
         .filter(b => b.type === 'question')
         .map(b => b.content.id);
 
-      // 2. Gọi API để export PDF (Pandoc)
+      // Gọi API để export PDF (Pandoc)
       const exportResponse = await fetch('/api/export/pandoc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -346,7 +408,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
           markdown,
           metadata: {
             ...metadata,
-            totalPages: 0 // Will be handled by LaTeX \pageref{LastPage}
+            totalPages: 0 
           }
         }),
       });
@@ -362,30 +424,14 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
         return;
       }
 
-      // 3. Tính toán contentHash (Chỉ bao gồm nội dung Blocks, không bao gồm tiêu đề)
-      const contentData = sortedBlocks.map(b => {
-        if (b.type === 'question') {
-          const q = b.content;
-          const optionsStr = q.options?.map((opt: any) => opt.content || opt.statement || '').join('|') || '';
-          return `question:${q.id}:${q.statement || q.content || ''}:${optionsStr}`;
-        }
-        return `${b.type}:${b.content}`;
-      }).join('|');
-
-      const msgBuffer = new TextEncoder().encode(contentData);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-      const contentHash = Array.from(new Uint8Array(hashBuffer))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-
-      // 4. Chuẩn bị FormData để gộp Upload S3 và Lưu DB trên server
+      // 5. Chuẩn bị FormData để gộp Upload S3 và Lưu DB trên server
       const formData = new FormData();
       formData.append('title', docTitle);
       formData.append('file', pdfBlob, `${docTitle}.pdf`);
       formData.append('questionIds', JSON.stringify(questionIds));
       formData.append('contentHash', contentHash);
 
-      // 5. Gọi API gộp
+      // 6. Gọi API gộp
       const response = await fetch('/api/documentcustom/upload-and-save', {
         method: 'POST',
         body: formData,
@@ -398,7 +444,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
 
       setSaveStatus('success');
 
-      // 5. Tải file về máy cho người dùng
+      // 7. Tải file về máy cho người dùng
       const downloadUrl = window.URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = downloadUrl;
