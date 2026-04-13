@@ -57,7 +57,7 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
       setQuestions([]);
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const res = await getCollectionQuestions(Number(selectedCollectionId), currentPage, 30);
@@ -145,7 +145,8 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
             {questions.map((q) => (
               <div
                 key={q.id}
-                className="p-3 bg-white border border-outline-variant/40 rounded-xl hover:border-primary/40 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing group relative select-none"
+                onClick={() => onSelect?.(q)}
+                className="p-3 bg-white border border-outline-variant/40 rounded-xl hover:border-primary/40 hover:shadow-md transition-all cursor-pointer active:scale-[0.98] group relative select-none"
                 data-id={q.id}
               >
                 <div className="flex justify-between items-start mb-2">
@@ -158,6 +159,13 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
                       </span>
                     )}
                   </div>
+                  {/* Plus icon on hover to signify "Click to Add" */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary/10 p-1 rounded-lg">
+                    <svg className="w-3.5 h-3.5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </div>
                 </div>
 
                 <div className="text-xs text-on-surface line-clamp-4 prose prose-sm max-w-none [&_p]:my-1 pointer-events-none">
@@ -166,7 +174,6 @@ export default function QuestionLibrary({ onSelect }: QuestionLibraryProps) {
                     remarkPlugins={[remarkMath, remarkGfm]}
                     rehypePlugins={[rehypeKatex, rehypeRaw]}
                   >
-
                     {cleanMathpixData(q.statement)}
                   </ReactMarkdown>
                 </div>

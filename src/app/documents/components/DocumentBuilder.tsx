@@ -19,6 +19,7 @@ export interface Block {
 
 export interface DocumentBuilderRef {
   loadDocument: (title: string, questions: any[]) => void;
+  addQuestion: (questionData: any) => void;
 }
 
 export interface DocumentMetadata {
@@ -140,7 +141,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
   const [isDragging, setIsDragging] = useState(false);
   const [editingQuestionBlock, setEditingQuestionBlock] = useState<Block | null>(null);
 
-  // Expose hàm load dữ liệu cho cha
+  // Expose các phương thức cho component cha
   React.useImperativeHandle(ref, () => ({
     loadDocument: (title, questions) => {
       setDocTitle(title);
@@ -162,6 +163,33 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
 
       // Cuộn lên đầu trang sau khi load
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    addQuestion: (questionData: any) => {
+      const newBlock: Block = {
+        id: 'q_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        type: 'question',
+        content: questionData,
+        order: 0 // Will be recalculated
+      };
+
+      setBlocks(prev => {
+        let newList: Block[] = [];
+        if (activeFieldId) {
+          const index = prev.findIndex(b => b.id === activeFieldId);
+          if (index !== -1) {
+            newList = [...prev];
+            newList.splice(index + 1, 0, newBlock);
+          } else {
+            newList = [...prev, newBlock];
+          }
+        } else {
+          newList = [...prev, newBlock];
+        }
+        return newList.map((b, i) => ({ ...b, order: i }));
+      });
+
+      // Tự động chọn câu hỏi mới sau khi thêm
+      setTimeout(() => setActiveFieldId(newBlock.id), 100);
     }
   }));
 

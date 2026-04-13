@@ -85,7 +85,7 @@ export default function DocumentsPage() {
           {/* Sidebar Content */}
           <div className="flex-1 overflow-hidden">
             {activeTab === 'library' ? (
-              <QuestionLibrary />
+              <QuestionLibrary onSelect={(q) => builderRef.current?.addQuestion(q)} />
             ) : (
               <SavedDocumentsLibrary onLoadDocument={handleLoadDocument} />
             )}

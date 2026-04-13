@@ -135,7 +135,7 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
       const displayNum = (q.manualNumber !== undefined && q.manualNumber !== '') ? q.manualNumber : qNumber;
 
       return (
-        <div 
+        <div
           className="flex flex-col gap-3 w-full page-break-inside-avoid cursor-pointer hover:bg-primary/[0.03] p-2 -m-2 rounded-lg transition-colors group/qblock relative"
           onClick={() => {
             if (onEditQuestion) onEditQuestion(block);
