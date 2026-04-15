@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import DocumentBuilder, { DocumentBuilderRef } from '@/app/documents/components/DocumentBuilder';
-import QuestionLibrary from '@/app/documents/components/QuestionLibrary';
-import SavedDocumentsLibrary from '@/app/documents/components/SavedDocumentsLibrary';
+import DocumentBuilder, { DocumentBuilderRef } from '@/app/(main)/documents/components/DocumentBuilder';
+import QuestionLibrary from '@/app/(main)/documents/components/QuestionLibrary';
+import SavedDocumentsLibrary from '@/app/(main)/documents/components/SavedDocumentsLibrary';
 import { Database, History, Loader2 } from 'lucide-react';
 
 export default function DocumentsPage() {
@@ -98,3 +98,4 @@ export default function DocumentsPage() {
     </div>
   );
 }
+

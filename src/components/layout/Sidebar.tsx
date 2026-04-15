@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import React from 'react';
+import React, { useTransition } from 'react';
 import {
   LayoutDashboard,
   Database,
@@ -16,8 +16,20 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { logoutAction } from '@/actions/auth';
+
 export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   const pathname = usePathname();
+
+  const [isPending, startTransition] = useTransition();
+
+  const handleLogout = () => {
+    if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+      startTransition(async () => {
+        await logoutAction();
+      });
+    }
+  };
 
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
@@ -50,7 +62,7 @@ export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
                   : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-high'
                   }`}
               >
-                <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-primary' : ''}`} />
+                <item.icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-primary' : ''}`} />
                 {!isCollapsed && (
                   <span className="nav-label text-[0.875rem] font-body truncate">{item.label}</span>
                 )}
@@ -67,22 +79,25 @@ export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
             href={item.href}
             className="nav-item flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-200 ease-in-out rounded-xl"
           >
-            <item.icon className="w-5 h-5 flex-shrink-0" />
+            <item.icon className="w-5 h-5 shrink-0" />
             {!isCollapsed && (
               <span className="nav-label text-[0.875rem] font-body">{item.label}</span>
             )}
           </Link>
         ))}
 
-        <Link
-          className="nav-item flex items-center gap-3 px-4 py-3 text-error hover:bg-error-container/20 transition-all duration-200 ease-in-out rounded-xl"
-          href="#"
+        <button
+          onClick={handleLogout}
+          disabled={isPending}
+          className="nav-item w-full flex items-center gap-3 px-4 py-3 text-error hover:bg-error-container/20 transition-all duration-200 ease-in-out rounded-xl disabled:opacity-50 disabled:cursor-wait cursor-pointer"
         >
-          <LogOut className="w-5 h-5 flex-shrink-0" />
+          <LogOut className={`w-5 h-5 shrink-0 ${isPending ? 'animate-pulse' : ''}`} />
           {!isCollapsed && (
-            <span className="nav-label text-[0.875rem] font-body">Logout</span>
+            <span className="nav-label text-[0.875rem] font-body">
+              {isPending ? 'Đang đăng xuất...' : 'Đăng xuất'}
+            </span>
           )}
-        </Link>
+        </button>
       </div>
     </aside>
   );

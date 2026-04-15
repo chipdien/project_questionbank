@@ -11,7 +11,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { toast } from 'react-hot-toast';
 import { Question, Document, Lesson, Pagination } from '@/types';
-import DashboardUploader from '@/app/documents/components/DashboardUploader';
+import DashboardUploader from '@/app/(main)/documents/components/DashboardUploader';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -200,3 +200,4 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
     </div>
   );
 }
+

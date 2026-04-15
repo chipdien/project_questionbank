@@ -1,4 +1,4 @@
-import { Block } from '@/app/documents/components/DocumentBuilder';
+import { Block } from '@/app/(main)/documents/components/DocumentBuilder';
 import { cleanMathpixData } from './math-utils';
 
 /**
@@ -63,3 +63,4 @@ export const blocksToMarkdown = (blocks: Block[], questionNumbers: Record<string
 
   return md;
 };
+

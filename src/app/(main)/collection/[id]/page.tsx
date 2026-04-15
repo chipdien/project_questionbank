@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getCollectionByIdAction, getCollectionQuestionsAction } from '@/actions/collection';
-import QuestionsDataGrid from '@/app/question-bank/components/QuestionsDataGrid';
+import QuestionsDataGrid from '@/app/(main)/question-bank/components/QuestionsDataGrid';
 
 export const dynamic = 'force-dynamic';
 

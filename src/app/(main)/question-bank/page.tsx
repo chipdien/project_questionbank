@@ -1,5 +1,5 @@
 import { query } from '@/lib/db';
-import QuestionBankManager from '@/app/question-bank/components/QuestionBankManager';
+import QuestionBankManager from '@/app/(main)/question-bank/components/QuestionBankManager';
 
 interface Document {
   id: number;
@@ -35,3 +35,4 @@ export default async function QuestionBankPage() {
     </div>
   );
 }
+

@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { query } from '@/lib/db';
-import QuestionsManager from '@/app/question-bank/components/QuestionsManager';
+import QuestionsManager from '@/app/(main)/question-bank/components/QuestionsManager';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -171,3 +171,4 @@ export default async function DashboardPage(props: PageProps) {
     </div>
   );
 }
+

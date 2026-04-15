@@ -7,8 +7,8 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 
-import QuestionModal from '@/app/question-bank/components/QuestionModal';
-import AddToCollectionModal from '@/app/collection/components/AddToCollectionModal';
+import QuestionModal from '@/app/(main)/question-bank/components/QuestionModal';
+import AddToCollectionModal from '@/app/(main)/collection/components/AddToCollectionModal';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { cleanMathpixData } from '@/lib/utils/math-utils';
 
@@ -243,3 +243,4 @@ export default function QuestionsDataGrid({
     </>
   );
 }
+

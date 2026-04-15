@@ -1,5 +1,6 @@
-﻿'use client';
+'use client';
 
+import React, { useState, useEffect } from 'react';
 import { Menu, Search } from 'lucide-react';
 
 interface TopNavBarProps {
@@ -7,6 +8,20 @@ interface TopNavBarProps {
 }
 
 export default function TopNavBar({ toggleSidebar }: TopNavBarProps) {
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    try {
+      // Extract the 'user' cookie value securely
+      const match = document.cookie.match(new RegExp('(^| )user=([^;]+)'));
+      if (match) {
+        const decoded = decodeURIComponent(match[2]);
+        setUser(JSON.parse(decoded));
+      }
+    } catch (e) {
+      console.error("Failed to parse user cookie:", e);
+    }
+  }, []);
 
   return (
     <>
@@ -35,15 +50,25 @@ export default function TopNavBar({ toggleSidebar }: TopNavBarProps) {
 
           <div className="flex items-center gap-3 pl-2 border-l border-outline-variant/20">
             <div className="flex flex-col items-end hidden sm:flex">
-              <span className="text-xs font-bold text-on-surface">Cao Ngoc Giap</span>
-              <span className="text-[10px] text-outline uppercase tracking-wider">Admin</span>
+              <span className="text-xs font-bold text-on-surface">
+                {user?.nickname || user?.username || 'Đang tải...'}
+              </span>
+              <span className="text-[10px] text-outline uppercase tracking-wider">
+                {user?.level_rank === 1 ? 'Giáo viên' : (user?.level_rank === 0 ? 'Admin' : 'Thành viên')}
+              </span>
             </div>
             <div className="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center overflow-hidden border border-primary/10">
-              <img
-                alt="Admin"
-                className="w-full h-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuB060I_706YlyVRXj6R-FcXOCAx18x-5Upy14wrxSntURmERutVYewvmYmJVAMtHZyHMQsjhv_t_X8X3FGW2eOLV_XyYNrUR2k2EDsWwYRpg7HikRPHgajn7NIF680jsTtEhLOJJgR0J6kRI-DS53K8nBzwmPWDXUltePrMMRrHDG3v1fHZ9_E34lKNr4ganWs9j-ywzvEhfacKXOJJCrfFQ2X4OM2o6pnEdWDDIvwf5vR3MJQSMWDzPzkwL4Em8Xrey7MqAfcjK8M"
-              />
+              {user?.avatar ? (
+                <img
+                  alt={user?.nickname || "User Avatar"}
+                  className="w-full h-full object-cover"
+                  src={user.avatar}
+                />
+              ) : (
+                <div className="w-full h-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
+                  {(user?.nickname || user?.username || "A")[0].toUpperCase()}
+                </div>
+              )}
             </div>
           </div>
         </div>

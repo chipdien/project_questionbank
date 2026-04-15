@@ -22,10 +22,10 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { restrictToWindowEdges } from '@dnd-kit/modifiers';
-import SortableQuestionItem from '@/app/question-bank/components/SortableQuestionItem';
+import SortableQuestionItem from '@/app/(main)/question-bank/components/SortableQuestionItem';
 import { getQuestionsByDocId, getLibraryQuestions } from '@/actions/question';
 import { createCollection } from '@/actions/collection';
-import CollectionSaveModal from '@/app/collection/components/CollectionSaveModal';
+import CollectionSaveModal from '@/app/(main)/collection/components/CollectionSaveModal';
 import { FileText, ChevronRight, Hash, Layers, Loader2, Grab, Save, Filter, Search, GraduationCap, BarChart, BookOpen, ChevronDown, X, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -542,3 +542,4 @@ function DroppableColumn({ id, questions, title, icon: Icon, color, children, sh
     </div>
   );
 }
+

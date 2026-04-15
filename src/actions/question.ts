@@ -2,6 +2,7 @@
 
 import { query } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { getCurrentUserId } from '@/lib/utils/user';
 
 export async function classifyQuestions(
   questionIds: number[],
