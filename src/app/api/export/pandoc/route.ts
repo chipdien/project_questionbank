@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     // Config YAML block cho pandoc
     const pandocYaml = `---
 papersize: a4
-geometry: left=3cm, right=2cm, top=1.2cm, bottom=2cm, headheight=140pt, includehead, includefoot
+geometry: left=3cm, right=2cm, top=0.3cm, bottom=2cm, headheight=95pt, headsep=15pt, includehead, includefoot
 ---
 
 \\thispagestyle{firstpage}
@@ -91,6 +91,7 @@ geometry: left=3cm, right=2cm, top=1.2cm, bottom=2cm, headheight=140pt, includeh
 % Secondary Header (Pages 2+)
 \\fancyhead[L]{
   \\begin{minipage}{\\linewidth}
+    \\vspace*{-0.2cm}
     \\begin{tabular*}{\\linewidth}{@{} l @{\\extracolsep{\\fill}} r @{}}
       \\raisebox{-0.3\\height}{\\includegraphics[height=1.1cm]{logo-secondary.png}} & 
       \\begin{minipage}[b]{0.7\\linewidth}
@@ -128,12 +129,12 @@ ${footerLatex}
     \\end{minipage} &
     \\begin{minipage}[t]{\\linewidth}
     \\fontsize{8.5}{13.5}\\selectfont
-    Môn học: \\textbf{\\underline{${escapeLatex(metadata.subject || '................')}}} \\\\
-    Lớp: \\textbf{\\underline{${escapeLatex(metadata.classCode || '..........')}}} \\\\
-    \\textbf{Giáo viên:} \\textbf{\\underline{${escapeLatex(metadata.teacher || '..........................')}}} \\\\
-    \\textbf{Nội dung:} \\textbf{\\textit{${escapeLatex(metadata.topic || '..........................')}}} \\\\
-    \\textbf{Ngày học:} \\textbf{\\underline{${escapeLatex(metadata.dateRange || '..........................')}}} \\\\
-    \\textbf{Học sinh:} \\hrulefill
+    Môn học: \\textbf{${escapeLatex(metadata.subject || '................')}} \\\\
+    Lớp: \\textbf{${escapeLatex(metadata.classCode || '..........')}} \\\\
+    Giáo viên: \\textbf{${escapeLatex(metadata.teacher || '..........................')}} \\\\
+    Nội dung: \\textbf{${escapeLatex(metadata.topic || '..........................')}} \\\\
+    Ngày học: \\textbf{${escapeLatex(metadata.dateRange || '..........................')}} \\\\
+    Học sinh: \\hrulefill
     \\end{minipage}
     \\end{tabular*}
     \\vspace{0.2cm}
