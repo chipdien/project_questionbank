@@ -77,7 +77,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
               </div>
               <div className="flex">
                 <span className="pr-1">Ngày học:</span>
-                <span className="flex-1 border-b border-black/30 border-dotted font-bold">{metadata.dateRange}</span>
+                <span className="flex-1 border-b border-black/30 border-dotted font-bold">{formatDateToVietnamese(metadata.dateRange)}</span>
               </div>
               <div className="flex items-end mt-1">
                 <span className="pr-1">Học sinh:</span>
@@ -133,6 +133,17 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
       </div>
     </div>
   );
+
+  // Helper to format date YYYY-MM-DD to DD/MM/YYYY
+  const formatDateToVietnamese = (dateStr: string) => {
+    if (!dateStr || !dateStr.includes('-')) return dateStr;
+    try {
+      const [year, month, day] = dateStr.split('-');
+      return `${day}/${month}/${year}`;
+    } catch (e) {
+      return dateStr;
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -232,11 +243,11 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
   // VietElite Metadata State
   const [isMetadataModalOpen, setIsMetadataModalOpen] = useState(false);
   const [metadata, setMetadata] = useState<DocumentMetadata>({
-    subject: 'Tên môn',
-    classCode: 'Mã lớp',
-    teacher: 'Tên giáo viên',
-    topic: 'Chuyên đề',
-    dateRange: 'Ngày học'
+    subject: 'Toán học',
+    classCode: 'Lớp 6A1',
+    teacher: 'Thầy ABC',
+    topic: 'Chuyên đề 1',
+    dateRange: new Date().toISOString().split('T')[0] // Mặc định là ngày hôm nay dạng YYYY-MM-DD
   });
 
   useEffect(() => {
@@ -408,6 +419,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
           markdown,
           metadata: {
             ...metadata,
+            dateRange: formatDateToVietnamese(metadata.dateRange), // Gửi ngày đã format sang API
             totalPages: 0 
           }
         }),
@@ -818,7 +830,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
                     Ngày học / Khoảng thời gian
                   </label>
                   <input
-                    type="text"
+                    type="date"
                     value={metadata.dateRange}
                     onChange={(e) => setMetadata(prev => ({ ...prev, dateRange: e.target.value }))}
                     className="w-full px-4 py-2 bg-surface-container rounded-xl border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium"

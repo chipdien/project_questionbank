@@ -38,6 +38,6 @@ export interface Lesson {
 export interface Pagination {
   currentPage: number;
   totalPages: number;
-  totalQuestions: number;
+  totalItems: number;
   pageSize: number;
 }

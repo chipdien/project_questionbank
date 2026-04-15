@@ -36,7 +36,7 @@ export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     { icon: Database, label: 'Question Bank', href: '/question-bank' },
     { icon: LibraryBig, label: 'Collections', href: '/collection' },
     { icon: FileText, label: 'Documents', href: '/documents' },
-    { icon: Settings, label: 'Settings', href: '#' },
+    // { icon: Settings, label: 'Settings', href: '#' },
   ];
 
   const bottomItems = [

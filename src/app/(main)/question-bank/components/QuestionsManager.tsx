@@ -23,9 +23,10 @@ interface QuestionsManagerProps {
   activeDocId: number | null;
   lessons: Lesson[];
   pagination: Pagination;
+  docPagination: Pagination;
 }
 
-export default function QuestionsManager({ questions, documents, activeDocId, lessons, pagination }: QuestionsManagerProps) {
+export default function QuestionsManager({ questions, documents, activeDocId, lessons, pagination, docPagination }: QuestionsManagerProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const router = useRouter();
 
@@ -35,6 +36,14 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
 
   const handleSelectionChange = (newSelectedIds: Set<number>) => {
     setSelectedIds(newSelectedIds);
+  };
+
+  const handleDocPageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > docPagination.totalPages) return;
+    const params = new URLSearchParams(window.location.search);
+    params.set('docPage', newPage.toString());
+    // Giữ nguyên docId hiện tại nếu có
+    router.push(`/?${params.toString()}`);
   };
 
   const handleApplyClassification = async (classification: {
@@ -92,11 +101,14 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
         <DashboardUploader />
 
         {/* Recent File Uploads Card (Client component logic for active highlighting) */}
-        <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col min-h-[400px]">
+        <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col min-h-[420px]">
           <div className="flex justify-between items-center mb-6 text-on-surface">
             <h4 className="font-bold flex items-center gap-2 text-lg font-headline">
               Tệp đã tải gần đây
             </h4>
+            <div className="text-[10px] font-bold text-outline-variant uppercase tracking-widest bg-surface-container px-2 py-1 rounded">
+              Trang {docPagination.currentPage}/{docPagination.totalPages}
+            </div>
           </div>
 
           <div className="space-y-4 flex-grow">
@@ -108,7 +120,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
               const isCsv = docTitle.toLowerCase().endsWith('.csv');
 
               return (
-                <Link href={`/?docId=${doc.id}`} key={doc.id} className="block">
+                <Link href={`/?docId=${doc.id}&docPage=${docPagination.currentPage}`} key={doc.id} className="block">
                   <div className={`flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-colors group ${isActive ? 'bg-primary/5 border border-primary/20' : ''}`}>
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className={cn(
@@ -172,8 +184,29 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
             )}
           </div>
 
-          <button onClick={() => router.push('/question-bank')} className="w-full mt-6 py-3 text-[11px] cursor-pointer font-extrabold uppercase tracking-[0.15em] text-primary bg-primary/5 border border-primary/30 rounded-xl hover:bg-primary/10 hover:border-primary/50 transition-all flex items-center justify-center gap-2 group">
-            Xem toàn bộ tệp
+          {/* Document Pagination Controls */}
+          <div className="flex items-center justify-between mt-6 px-1">
+            <button
+              onClick={() => handleDocPageChange(docPagination.currentPage - 1)}
+              disabled={docPagination.currentPage <= 1}
+              className="p-2 rounded-lg hover:bg-surface-container-high disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-primary"
+            >
+              <span className="material-symbols-outlined font-bold">chevron_left</span>
+            </button>
+            <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
+              Tài liệu {Math.min((docPagination.currentPage - 1) * docPagination.pageSize + 1, docPagination.totalItems)} - {Math.min(docPagination.currentPage * docPagination.pageSize, docPagination.totalItems)} / {docPagination.totalItems}
+            </div>
+            <button
+              onClick={() => handleDocPageChange(docPagination.currentPage + 1)}
+              disabled={docPagination.currentPage >= docPagination.totalPages}
+              className="p-2 rounded-lg hover:bg-surface-container-high disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-primary"
+            >
+              <span className="material-symbols-outlined font-bold">chevron_right</span>
+            </button>
+          </div>
+
+          <button onClick={() => router.push('/question-bank')} className="w-full mt-4 py-2.5 text-[10px] cursor-pointer font-extrabold uppercase tracking-[0.15em] text-outline-variant hover:text-primary bg-surface-container-low border border-outline-variant/20 rounded-xl hover:bg-primary/5 hover:border-primary/30 transition-all flex items-center justify-center gap-2 group">
+            Xem toàn bộ tệp trong Kho
             <span className="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1 font-bold">arrow_forward</span>
           </button>
         </div>

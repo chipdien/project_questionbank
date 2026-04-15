@@ -52,7 +52,7 @@ export default function QuestionsDataGrid({
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const { currentPage, totalPages, totalQuestions, pageSize } = pagination;
+  const { currentPage, totalPages, totalItems, pageSize } = pagination;
 
   // Use external selection if provided
   const selectedIds = externalSelectedIds || internalSelectedIds;
@@ -93,7 +93,7 @@ export default function QuestionsDataGrid({
 
   // Calculate slice indicators
   const startIdx = (currentPage - 1) * pageSize + 1;
-  const endIdx = Math.min(currentPage * pageSize, totalQuestions);
+  const endIdx = Math.min(currentPage * pageSize, totalItems);
 
   return (
     <>
@@ -196,7 +196,7 @@ export default function QuestionsDataGrid({
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 border-outline-variant/10">
         <div className="text-sm text-on-surface-variant font-medium">
-          Hiển thị&nbsp;<span className="font-bold text-on-surface">{startIdx}-{endIdx}</span>&nbsp;trong tổng số&nbsp;<span className="font-bold text-on-surface">{totalQuestions}</span>&nbsp;câu hỏi
+          Hiển thị&nbsp;<span className="font-bold text-on-surface">{startIdx}-{endIdx}</span>&nbsp;trong tổng số&nbsp;<span className="font-bold text-on-surface">{totalItems}</span>&nbsp;câu hỏi
         </div>
         <nav className="flex items-center gap-1 justify-between w-full sm:w-auto sm:gap-4">
           <button

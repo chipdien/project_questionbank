@@ -25,12 +25,12 @@ export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
             VietElite
           </div>
           <div className="hidden md:flex items-center ml-4 text-outline cursor-pointer hover:text-primary transition-colors">
-            <Search className="w-5 h-5" />
+            <Search className="w-5 h-5" onClick={() => window.alert('Chức năng đang cập nhật!')} />
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant relative">
+          <button onClick={() => window.alert('Chức năng đang cập nhật!')} className="p-2 rounded-full cursor-pointer hover:bg-surface-container-high transition-colors text-on-surface-variant relative">
             <span className="material-symbols-outlined">notifications</span>
             <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
           </button>

@@ -68,6 +68,13 @@ export default async function DashboardPage(props: PageProps) {
   const docIdParam = searchParams?.docId ? searchParams.docId.toString() : null;
 
   // 1. Lấy danh sách Document & Lessons
+  const DOC_PAGE_SIZE = 5;
+  const docPageParam = searchParams?.docPage ? searchParams.docPage.toString() : '1';
+  const currentDocPage = Math.max(1, parseInt(docPageParam, 10) || 1);
+  const docOffset = (currentDocPage - 1) * DOC_PAGE_SIZE;
+  let totalDocuments = 0;
+  let totalDocPages = 0;
+
   let documents: Document[] = [];
   let lessons: Lesson[] = [];
   try {
@@ -75,13 +82,23 @@ export default async function DashboardPage(props: PageProps) {
     const userId = user?.id || null;
     const levelRank = user?.level_rank || 0;
 
+    // Lấy tổng số document để phân trang
+    const docCountResult = await query<{ total: number }[]>(
+      `SELECT COUNT(*) as total 
+       FROM lms_documents 
+       WHERE created_by_id = ? OR \`public\` = '1' OR created_by_id IS NULL OR ? >= 5`,
+      [userId, levelRank]
+    );
+    totalDocuments = docCountResult[0]?.total || 0;
+    totalDocPages = Math.ceil(totalDocuments / DOC_PAGE_SIZE);
+
     documents = await query<Document[]>(
       `SELECT id, title, created_at, is_ai_classified, \`public\`, link_s3 
        FROM lms_documents 
        WHERE created_by_id = ? OR \`public\` = '1' OR created_by_id IS NULL OR ? >= 5
        ORDER BY created_at DESC 
-       LIMIT 5`,
-      [userId, levelRank]
+       LIMIT ? OFFSET ?`,
+      [userId, levelRank, DOC_PAGE_SIZE, docOffset]
     );
 
     lessons = await query<Lesson[]>('SELECT id, name, grade FROM lms_lessons ORDER BY name ASC');
@@ -92,7 +109,7 @@ export default async function DashboardPage(props: PageProps) {
   // Nếu không có docId trên URL, tự động chọn Document mới nhất (hàng đầu tiên)
   const activeDocId = docIdParam ? parseInt(docIdParam, 10) : (documents.length > 0 ? documents[0].id : null);
 
-  // --- LOGIC PHÂN TRANG ---
+  // --- LOGIC PHÂN TRANG CÂU HỎI ---
   const PAGE_SIZE = 30;
   const pageParam = searchParams?.page ? searchParams.page.toString() : '1';
   const currentPage = Math.max(1, parseInt(pageParam, 10) || 1);
@@ -177,8 +194,14 @@ export default async function DashboardPage(props: PageProps) {
         pagination={{
           currentPage,
           totalPages,
-          totalQuestions,
+          totalItems: totalQuestions,
           pageSize: PAGE_SIZE
+        }}
+        docPagination={{
+          currentPage: currentDocPage,
+          totalPages: totalDocPages,
+          totalItems: totalDocuments,
+          pageSize: DOC_PAGE_SIZE
         }}
       />
     </div>
