@@ -1,5 +1,8 @@
+export const dynamic = 'force-dynamic';
+
 import { query } from '@/lib/db';
 import QuestionBankManager from '@/app/(main)/question-bank/components/QuestionBankManager';
+import { getCurrentUser } from '@/lib/utils/auth-utils';
 
 interface Document {
   id: number;
@@ -19,7 +22,19 @@ export default async function QuestionBankPage() {
   let lessons: Lesson[] = [];
 
   try {
-    documents = await query<Document[]>('SELECT id, title, created_at FROM lms_documents ORDER BY created_at DESC');
+    const user = await getCurrentUser();
+    const userId = user?.id || null;
+    const levelRank = user?.level_rank || 0;
+
+    // Lọc: của mình OR public OR cũ (NULL) OR Admin
+    documents = await query<Document[]>(
+      `SELECT id, title, created_at 
+       FROM lms_documents 
+       WHERE created_by_id = ? OR \`public\` = '1' OR created_by_id IS NULL OR ? >= 5
+       ORDER BY created_at DESC`,
+      [userId, levelRank]
+    );
+
     lessons = await query<Lesson[]>('SELECT id, name, grade FROM lms_lessons ORDER BY name ASC');
   } catch (error) {
     console.error("Failed to load data:", error);

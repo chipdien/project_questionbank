@@ -16,27 +16,38 @@ export async function loginAction(prevState: any, formData: FormData) {
 
   if (response?.data?.token) {
     const cookieStore = await cookies();
-    
+
     // Store the auth token securely
     cookieStore.set('token', response.data.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Tạm thời để false để hỗ trợ cả localhost mode production
       maxAge: 30 * 24 * 60 * 60, // 30 days
       path: '/',
+      sameSite: 'lax',
     });
-    
+
+    // Minimal user data to avoid "Cookie Too Large" issues (limit 4KB)
+    const minimalUser = {
+      id: response.data.user.id,
+      email: response.data.user.email,
+      username: response.data.user.username,
+      nickname: response.data.user.nickname,
+      level_rank: response.data.user.level_rank,
+    };
+
     // Store user data stringified
-    cookieStore.set('user', JSON.stringify(response.data.user), {
-      httpOnly: false, // Accessible to client-side scripts if necessary for fast UI rendering
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 30 * 24 * 60 * 60, 
+    cookieStore.set('user', JSON.stringify(minimalUser), {
+      httpOnly: true, // Switched to true for better server-side stability
+      secure: false, // Set to true in production with HTTPS
+      maxAge: 30 * 24 * 60 * 60,
       path: '/',
+      sameSite: 'lax',
     });
   } else {
     // Return error message to display in the UI
     return { error: response?.message || 'Đăng nhập thất bại. Email hoặc mật khẩu không chính xác.' };
   }
-  
+
   redirect('/');
 }
 

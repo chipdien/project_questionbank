@@ -2,7 +2,7 @@
 
 import { query } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-import { getCurrentUserId } from '@/lib/utils/user';
+import { getCurrentUser } from '@/lib/utils/auth-utils';
 
 export async function classifyQuestions(
   questionIds: number[],
@@ -72,6 +72,21 @@ export async function getQuestionsByDocId(
   excludeIds: number[] = []
 ) {
   try {
+    const user = await getCurrentUser();
+    const userId = user?.id || null;
+    const levelRank = user?.level_rank || 0;
+
+    // Check ownership/public access for this specific docId
+    const docAccess = await query<any[]>(
+      `SELECT id FROM lms_documents 
+       WHERE id = ? AND (created_by_id = ? OR \`public\` = '1' OR created_by_id IS NULL OR ? >= 5)`,
+      [docId, userId, levelRank]
+    );
+
+    if (docAccess.length === 0) {
+      return { data: [], total: 0, page: 1, pageSize: 30, totalPages: 0 };
+    }
+
     const safePage = Math.max(1, Number(page));
     const safePageSize = Math.max(1, Number(pageSize));
     const offset = (safePage - 1) * safePageSize;
@@ -142,18 +157,29 @@ export async function getLibraryQuestions(
   const { grade = '', difficulty = '', lessonId = '' } = filters;
 
   try {
+    const user = await getCurrentUser();
+    const userId = user?.id || null;
+    const levelRank = user?.level_rank || 0;
+
     const safePage = Math.max(1, Number(page));
     const safePageSize = Math.max(1, Number(pageSize));
     const offset = (safePage - 1) * safePageSize;
+
+    // Base conditions for ownership/visibility
+    const authWhere = `(d.created_by_id = ? OR d.public = '1' OR d.created_by_id IS NULL OR ? >= 5)`;
+    const authParams = [userId, levelRank];
 
     // Count total
     let countSql = `
       SELECT COUNT(DISTINCT q.id) as total 
       FROM lms_questions q
       LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
-      WHERE 1=1
+      JOIN lms_questions_documents qd ON q.id = qd.question_id
+      JOIN lms_documents d ON qd.document_id = d.id
+      WHERE ${authWhere}
     `;
-    const countParams: any[] = [];
+    const countParams: any[] = [...authParams];
+
     if (grade) {
       countSql += ' AND q.grade = ?';
       countParams.push(grade);
@@ -177,13 +203,16 @@ export async function getLibraryQuestions(
     
     // Fetch pagination
     let paginatedSql = `
-      SELECT q.*, GROUP_CONCAT(l.name SEPARATOR ', ') as lesson_name
+      SELECT q.*, GROUP_CONCAT(DISTINCT l.name SEPARATOR ', ') as lesson_name
       FROM lms_questions q
       LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
       LEFT JOIN lms_lessons l ON ql.lesson_id = l.id
-      WHERE 1=1
+      JOIN lms_questions_documents qd ON q.id = qd.question_id
+      JOIN lms_documents d ON qd.document_id = d.id
+      WHERE ${authWhere}
     `;
-    const queryParams: any[] = [];
+    const queryParams: any[] = [...authParams];
+
     if (grade) {
       paginatedSql += ` AND q.grade = ?`;
       queryParams.push(grade);

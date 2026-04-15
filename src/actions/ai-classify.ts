@@ -3,6 +3,7 @@
 import { query } from '@/lib/db';
 import { QuestionClassifierService } from '@/lib/services/ai';
 import { revalidatePath } from 'next/cache';
+import { getCurrentUser } from '@/lib/utils/auth-utils';
 
 export async function autoClassifyWithAI(documentId: number) {
   if (!documentId) {
@@ -10,11 +11,20 @@ export async function autoClassifyWithAI(documentId: number) {
   }
 
   try {
-    // 1. Kiểm tra xem tài liệu đã được phân loại chưa
+    const user = await getCurrentUser();
+    const userId = user?.id || null;
+    const levelRank = user?.level_rank || 0;
+
+    // 1. Kiểm tra xem tài liệu đã được phân loại chưa + Quyền truy cập
     const docResult = await query<{ is_ai_classified: number }[]>(
-      'SELECT is_ai_classified FROM lms_documents WHERE id = ?',
-      [documentId]
+      `SELECT is_ai_classified FROM lms_documents 
+       WHERE id = ? AND (created_by_id = ? OR \`public\` = '1' OR created_by_id IS NULL OR ? >= 5)`,
+      [documentId, userId, levelRank]
     );
+
+    if (docResult.length === 0) {
+      return { success: false, error: 'Không tìm thấy tài liệu hoặc bạn không có quyền truy cập.' };
+    }
 
     if (docResult.length > 0 && docResult[0].is_ai_classified === 1) {
       return { success: false, error: 'Tài liệu này đã được phân loại bằng AI rồi.' };

@@ -2,6 +2,7 @@
 
 import { query } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { getCurrentUserId, getCurrentUser } from '@/lib/utils/auth-utils';
 
 export const createCollectionAction = createCollection;
 
@@ -15,12 +16,17 @@ export async function createCollection(title: string, questionIds: number[]) {
   }
 
   try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return { success: false, error: 'Bạn cần đăng nhập để thực hiện chức năng này.' };
+    }
+
     const now = new Date();
     
     // 1. Tạo bộ sưu tập mới
     const result = await query(
-      'INSERT INTO lms_collections (title, created_at, updated_at) VALUES (?, ?, ?)',
-      [title, now, now]
+      'INSERT INTO lms_collections (title, created_at, updated_at, created_by_id, updated_by_id) VALUES (?, ?, ?, ?, ?)',
+      [title, now, now, userId, userId]
     ) as any;
 
     const collectionId = result.insertId;
@@ -30,7 +36,6 @@ export async function createCollection(title: string, questionIds: number[]) {
     }
 
     // 2. Chèn các câu hỏi vào bảng trung gian
-    // Bulk insert: INSERT INTO lms_questions_collections (collection_id, question_id, created_at, updated_at) VALUES (?, ?, ?, ?), (?, ?, ?, ?)
     const placeholders = questionIds.map(() => '(?, ?, ?, ?)').join(', ');
     const values = questionIds.flatMap(qId => [collectionId, qId, now, now]);
 
@@ -39,7 +44,7 @@ export async function createCollection(title: string, questionIds: number[]) {
       values
     );
 
-    revalidatePath('/collections'); // Giả sử sẽ có trang danh sách collections
+    revalidatePath('/collection');
 
     return { success: true, collectionId };
   } catch (error: any) {
@@ -52,15 +57,22 @@ export const getCollectionsAction = getCollections;
 
 export async function getCollections() {
   try {
+    const user = await getCurrentUser();
+    const userId = user?.id || null;
+    const levelRank = user?.level_rank || 0;
+
+    if (!userId) return [];
+
     const rows = await query(`
       SELECT 
         c.*, 
         COUNT(qc.question_id) as question_count 
       FROM lms_collections c 
       LEFT JOIN lms_questions_collections qc ON c.id = qc.collection_id 
+      WHERE c.created_by_id = ? OR ? >= 5
       GROUP BY c.id 
       ORDER BY c.created_at DESC
-    `) as any[];
+    `, [userId, levelRank]) as any[];
 
     return rows;
   } catch (error) {
@@ -73,15 +85,21 @@ export const getCollectionByIdAction = getCollectionById;
 
 export async function getCollectionById(id: number) {
   try {
+    const user = await getCurrentUser();
+    const userId = user?.id || null;
+    const levelRank = user?.level_rank || 0;
+
+    if (!userId) return null;
+
     const rows = await query(`
       SELECT 
         c.*, 
         COUNT(qc.question_id) as question_count 
       FROM lms_collections c 
       LEFT JOIN lms_questions_collections qc ON c.id = qc.collection_id 
-      WHERE c.id = ?
+      WHERE c.id = ? AND (c.created_by_id = ? OR ? >= 5)
       GROUP BY c.id 
-    `, [id]) as any[];
+    `, [id, userId, levelRank]) as any[];
 
     return rows.length > 0 ? rows[0] : null;
   } catch (error) {
@@ -94,6 +112,22 @@ export const getCollectionQuestionsAction = getCollectionQuestions;
 
 export async function getCollectionQuestions(collectionId: number, page = 1, pageSize = 30) {
   try {
+    const user = await getCurrentUser();
+    const userId = user?.id || null;
+    const levelRank = user?.level_rank || 0;
+
+    if (!userId) return { data: [], totalPages: 0, totalCount: 0, page: 1 };
+
+    // Kiểm tra quyền sở hữu bộ sưu tập
+    const collectionAccess = await query<any[]>(
+      'SELECT id FROM lms_collections WHERE id = ? AND (created_by_id = ? OR ? >= 5)',
+      [collectionId, userId, levelRank]
+    );
+
+    if (collectionAccess.length === 0) {
+      return { data: [], totalPages: 0, totalCount: 0, page: 1 };
+    }
+
     const offset = (page - 1) * pageSize;
 
     // 1. Lấy tổng số câu hỏi để tính totalPages

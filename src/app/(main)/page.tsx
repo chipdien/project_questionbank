@@ -4,6 +4,7 @@ import { query } from '@/lib/db';
 import QuestionsManager from '@/app/(main)/question-bank/components/QuestionsManager';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { getCurrentUser } from '@/lib/utils/auth-utils';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -70,7 +71,19 @@ export default async function DashboardPage(props: PageProps) {
   let documents: Document[] = [];
   let lessons: Lesson[] = [];
   try {
-    documents = await query<Document[]>('SELECT id, title, created_at, is_ai_classified, `public`, link_s3 FROM lms_documents ORDER BY created_at DESC LIMIT 5');
+    const user = await getCurrentUser();
+    const userId = user?.id || null;
+    const levelRank = user?.level_rank || 0;
+
+    documents = await query<Document[]>(
+      `SELECT id, title, created_at, is_ai_classified, \`public\`, link_s3 
+       FROM lms_documents 
+       WHERE created_by_id = ? OR \`public\` = '1' OR created_by_id IS NULL OR ? >= 5
+       ORDER BY created_at DESC 
+       LIMIT 5`,
+      [userId, levelRank]
+    );
+
     lessons = await query<Lesson[]>('SELECT id, name, grade FROM lms_lessons ORDER BY name ASC');
   } catch (error) {
     console.error("Failed to load documents or lessons:", error);

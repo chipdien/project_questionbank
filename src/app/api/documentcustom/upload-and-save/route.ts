@@ -3,6 +3,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import db from "@/lib/db";
 import { ResultSetHeader } from "mysql2";
 import crypto from "crypto";
+import { getCurrentUserId } from "@/lib/utils/auth-utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,6 +12,7 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file") as File;
     const questionIdsRaw = formData.get("questionIds") as string;
     const questionIds = JSON.parse(questionIdsRaw || "[]");
+    const userId = await getCurrentUserId();
 
     if (!title || !file) {
       return NextResponse.json({ error: "Thiếu dữ liệu: title hoặc file" }, { status: 400 });
@@ -77,9 +79,9 @@ export async function POST(req: NextRequest) {
 
       // Lưu bảng chính
       const [docResult] = await connection.execute<ResultSetHeader>(
-        `INSERT INTO lms_documents_custom (title, created_at, updated_at, pdf_url, s3_object_key, content_hash) 
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [title, now, now, s3Url, objectKey, contentHash]
+        `INSERT INTO lms_documents_custom (title, created_at, updated_at, pdf_url, s3_object_key, content_hash, created_by_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [title, now, now, s3Url, objectKey, contentHash, userId]
       );
 
       const documentId = docResult.insertId;

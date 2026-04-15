@@ -3,6 +3,7 @@ import mammoth from 'mammoth';
 import crypto from 'crypto';
 import { IngestService } from '@/lib/services/ingest';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getCurrentUserId } from '@/lib/utils/auth-utils';
 
 export const maxDuration = 300; // 5 minutes
 
@@ -12,6 +13,7 @@ export async function POST(req: NextRequest) {
     const file = formData.get('document') as File | null;
     const isPublicPath = formData.get('is_public');
     const isPublic = isPublicPath === '1' || isPublicPath === 'true';
+    const userId = await getCurrentUserId();
 
     if (!file) {
       return NextResponse.json({ success: false, error: 'Không tìm thấy file tải lên.' }, { status: 400 });
@@ -158,7 +160,7 @@ export async function POST(req: NextRequest) {
       }
 
       // 6. Save to Main DB
-      const result = await IngestService.saveToDatabase(taskId, name, rawText, structuredData, isPublic, link_s3);
+      const result = await IngestService.saveToDatabase(taskId, name, rawText, structuredData, isPublic, link_s3, userId);
 
       return NextResponse.json({
         success: true,

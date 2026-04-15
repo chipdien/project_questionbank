@@ -1,27 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { Menu, Search } from 'lucide-react';
+import { User } from '@/lib/utils/auth-utils';
 
 interface TopNavBarProps {
   toggleSidebar: () => void;
+  user: User | null;
 }
 
-export default function TopNavBar({ toggleSidebar }: TopNavBarProps) {
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    try {
-      // Extract the 'user' cookie value securely
-      const match = document.cookie.match(new RegExp('(^| )user=([^;]+)'));
-      if (match) {
-        const decoded = decodeURIComponent(match[2]);
-        setUser(JSON.parse(decoded));
-      }
-    } catch (e) {
-      console.error("Failed to parse user cookie:", e);
-    }
-  }, []);
+export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
 
   return (
     <>

@@ -61,7 +61,7 @@ export class IngestService {
   /**
    * Lưu dữ liệu đã có cấu trúc vào CSDL.
    */
-  static async saveToDatabase(taskId: number, fileName: string, rawText: string, structuredData: any, isPublic: boolean = false, linkS3: string | null = null) {
+  static async saveToDatabase(taskId: number, fileName: string, rawText: string, structuredData: any, isPublic: boolean = false, linkS3: string | null = null, userId: number | null = null) {
     const connection = await pool.getConnection();
 
     try {
@@ -71,8 +71,8 @@ export class IngestService {
 
       // 1. Insert into lms_documents
       const [docResult] = await connection.execute<ResultSetHeader>(
-        'INSERT INTO lms_documents (title, content, `public`, link_s3, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())',
-        [fileName, rawText, publicVal, linkS3]
+        'INSERT INTO lms_documents (title, content, `public`, link_s3, created_at, updated_at, created_by_id) VALUES (?, ?, ?, ?, NOW(), NOW(), ?)',
+        [fileName, rawText, publicVal, linkS3, userId]
       );
       const documentId = docResult.insertId;
 

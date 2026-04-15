@@ -4,14 +4,20 @@ import React, { useState } from 'react';
 import TopNavBar from './TopNavBar';
 import Sidebar from './Sidebar';
 import { Toaster } from 'react-hot-toast';
+import { User } from '@/lib/utils/auth-utils';
 
-export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
+interface LayoutWrapperProps {
+  children: React.ReactNode;
+  user: User | null;
+}
+
+export default function LayoutWrapper({ children, user }: LayoutWrapperProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
     <>
       <Toaster position="top-right" />
-      <TopNavBar toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
+      <TopNavBar user={user} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
       <Sidebar isCollapsed={isCollapsed} />
       <main 
         id="main-content"

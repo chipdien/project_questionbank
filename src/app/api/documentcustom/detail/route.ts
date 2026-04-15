@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
+import { getCurrentUser } from "@/lib/utils/auth-utils";
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,10 +11,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Thiếu ID tài liệu" }, { status: 400 });
     }
 
-    // 1. Lấy thông tin tài liệu
+    const user = await getCurrentUser();
+    const userId = user?.id || null;
+    const levelRank = user?.level_rank || 0;
+
+    // 1. Lấy thông tin tài liệu kèm kiểm tra quyền sở hữu
     const [docs] = await db.query(
-      `SELECT id, title, pdf_url FROM lms_documents_custom WHERE id = ?`,
-      [id]
+      `SELECT id, title, pdf_url, created_by_id 
+       FROM lms_documents_custom 
+       WHERE id = ? AND (created_by_id = ? OR created_by_id IS NULL OR ? >= 5)`,
+      [id, userId, levelRank]
     );
 
     const docList = docs as any[];
