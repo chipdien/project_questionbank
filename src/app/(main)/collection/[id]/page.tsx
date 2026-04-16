@@ -25,12 +25,12 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
   
   const questionsResponse = await getCollectionQuestionsAction(collectionId, page, pageSize);
 
-  const totalQuestions = questionsResponse.totalCount;
+  const totalItems = questionsResponse.totalCount;
   
   const pagination = {
     currentPage: questionsResponse.page,
     totalPages: questionsResponse.totalPages,
-    totalQuestions: totalQuestions,
+    totalItems: totalItems,
     pageSize: pageSize,
   };
 
@@ -50,14 +50,14 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
             </div>
             <p className="text-on-surface-variant font-body text-sm flex items-center gap-4">
               <span>Được tạo ngày: {new Date(collection.created_at).toLocaleDateString('vi-VN')}</span>
-              <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">quiz</span>{totalQuestions} câu hỏi</span>
+              <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">quiz</span>{totalItems} câu hỏi</span>
             </p>
           </div>
         </div>
       </div>
 
       <div className="mt-8">
-        {totalQuestions > 0 ? (
+        {totalItems > 0 ? (
           <QuestionsDataGrid
             questions={paginatedQuestions}
             pagination={pagination}

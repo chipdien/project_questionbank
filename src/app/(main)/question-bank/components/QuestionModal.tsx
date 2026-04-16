@@ -117,13 +117,13 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
                       <div
                         key={opt.id}
                         className={`flex gap-3 p-4 rounded-xl border-2 transition-all ${isCorrect
-                            ? 'bg-green-50 border-green-500/50 shadow-sm'
-                            : 'bg-surface-container-low border-outline-variant/20 hover:border-outline-variant/40'
+                          ? 'bg-green-50 border-green-500/50 shadow-sm'
+                          : 'bg-surface-container-low border-outline-variant/20 hover:border-outline-variant/40'
                           }`}
                       >
                         <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm border-2 ${isCorrect
-                            ? 'bg-green-100 text-green-700 border-green-500/50'
-                            : 'bg-white text-outline border-outline-variant/30'
+                          ? 'bg-green-100 text-green-700 border-green-500/50'
+                          : 'bg-white text-outline border-outline-variant/30'
                           }`}>
                           {charLabel}
                         </div>
@@ -157,9 +157,9 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
 
           <div className="p-4 border-t border-outline-variant/20 bg-surface-container-lowest flex justify-end gap-3">
             <button onClick={onClose} className="px-5 py-2.5 rounded-lg text-sm font-bold text-on-surface hover:bg-surface-container-low transition-colors">Đóng</button>
-            <button className="px-5 py-2.5 rounded-lg text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2">
+            {/* <button className="px-5 py-2.5 rounded-lg text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2">
               <span className="material-symbols-outlined text-sm">edit</span> Sửa câu hỏi
-            </button>
+            </button> */}
           </div>
         </motion.div>
       </div>
