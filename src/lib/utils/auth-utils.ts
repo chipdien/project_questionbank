@@ -14,35 +14,32 @@ export interface User {
  * Works only in Server Components, Server Actions, and Route Handlers.
  */
 export async function getCurrentUser(): Promise<User | null> {
+  const cookieStore = await cookies();
+  const headersList = await headers();
+  const userAgent = headersList.get('user-agent') || 'unknown';
+  const isPrefetch = headersList.get('x-nextjs-prefetch') === '1' || headersList.get('purpose') === 'prefetch';
+  const userCookie = cookieStore.get('user')?.value;
+
+  if (!userCookie) return null;
+
+  // Decode URI component because Next.js encodes cookie values
+  let decodedValue = userCookie;
   try {
-    const cookieStore = await cookies();
-    const headersList = await headers();
-    const userAgent = headersList.get('user-agent') || 'unknown';
-    const isPrefetch = headersList.get('x-nextjs-prefetch') === '1' || headersList.get('purpose') === 'prefetch';
-    const userCookie = cookieStore.get('user')?.value;
+    decodedValue = decodeURIComponent(userCookie || '');
+  } catch (e) {
+    // Fallback if not encoded
+  }
 
-    // Decode URI component because Next.js encodes cookie values
-    let decodedValue = userCookie;
-    try {
-      decodedValue = decodeURIComponent(userCookie || '');
-    } catch (e) {
-      // Fallback if not encoded
+  try {
+    if (!decodedValue) return null;
+    const parsedUser = JSON.parse(decodedValue) as User;
+    // Log only on non-prefetch requests to reduce noise
+    if (!isPrefetch) {
+      console.log(`--- [AUTH] User Authenticated: ${parsedUser.username} (ID: ${parsedUser.id}) ---`);
     }
-
-    try {
-      if (!decodedValue) return null;
-      const parsedUser = JSON.parse(decodedValue) as User;
-      // Log only on non-prefetch requests to reduce noise
-      if (!isPrefetch) {
-        console.log(`--- [AUTH] User Authenticated: ${parsedUser.username} (ID: ${parsedUser.id}) ---`);
-      }
-      return parsedUser;
-    } catch (e) {
-      console.error('--- [AUTH] JSON Parse Error for user cookie:', e);
-      return null;
-    }
-  } catch (error) {
-    console.error('--- [AUTH] Global Error in getCurrentUser:', error);
+    return parsedUser;
+  } catch (e) {
+    console.error('--- [AUTH] JSON Parse Error for user cookie:', e);
     return null;
   }
 }
