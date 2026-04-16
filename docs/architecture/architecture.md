@@ -33,19 +33,25 @@ graph TD
     B -- PDF/Image --> D[Nhận diện Mathpix OCR]
     C --> E[Trích xuất văn bản thô]
     D --> E
-    E --> F[Băm SHA-256 Chống trùng]
-    F -- Hợp lệ --> G[Cấu trúc hóa bằng Gemini AI]
-    F -- Trùng lặp --> H[Trả về tài liệu đã tồn tại]
-    G --> I[Lưu vào MySQL]
-    I --> J[Hiển thị trên DataGrid (KaTeX Render)]
+    E --> F[Băm SHA-256]
+    F --> G{Đã tồn tại?}
+    G -- Cùng User --> H[Trả về ID cũ]
+    G -- User khác --> I[Clone Metadata & Link S3 cũ]
+    G -- Mới --> K[Cấu trúc Gemini AI]
+    K --> L[Upload S3 & Lưu DB]
+    I --> M[Hiển thị trên DataGrid]
+    L --> M
+    H --> M
 ```
 
 ### Các bước quan trọng trong Workflow:
 1.  **Tiếp nhận (Ingestion)**: File được nhận qua chuẩn `multipart/form-data` tại endpoint `/api/convert`.
-2.  **Chống trùng (Deduplication)**: Hash file bằng SHA-256 để tránh xử lý lại các nội dung giống hệt nhau.
+2.  **Chống trùng (Deduplication)**: Hash file bằng SHA-256. Hệ thống áp dụng chiến lược **Ownership-Separated Deduplication**: Nếu file đã tồn tại trên S3 (do user khác upload), hệ thống sẽ reuse link S3 đó và chỉ tạo bản ghi Database mới để tiết kiệm tài nguyên.
 3.  **Bóc tách (Parsing)**: Sử dụng Mathpix đặc biệt để đảm bảo độ chính xác cao cho các biểu thức Toán học LaTeX.
 4.  **Trí tuệ nhân tạo (AI Intelligence)**: Gemini cấu trúc hóa chuỗi thô thành đối tượng JSON chứa câu hỏi, phương án và metadata.
-5.  **Lưu trữ (Storage)**: Sử dụng giao dịch MySQL để lưu đồng thời câu hỏi, các phương án và các liên kết tài liệu.
+5.  **Lưu trữ (Storage)**: 
+    - **Database**: Lưu trữ quan hệ trong MySQL cho metadata và questions.
+    - **Filesystem**: Lưu trữ file nhị phân raw trên **AWS S3** giúp hệ thống mở rộng linh hoạt.
 6.  **Hiển thị (Rendering)**: Sử dụng KaTeX để chuyển đổi các chuỗi LaTeX thành biểu thức toán học trực quan trên giao diện người dùng.
 
 ---

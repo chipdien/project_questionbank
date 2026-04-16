@@ -9,7 +9,10 @@ Tài liệu chi tiết về các endpoint RESTful và các thao tác phía serve
 ### `POST /api/convert`
 Tiếp nhận file tải lên và chuyển đổi.
 
-- **Mô tả**: Chấp nhận các định dạng `.pdf`, `.png`, `.jpg`. Sử dụng Mathpix và Gemini để trích xuất câu hỏi.
+- **Mô tả**: Chấp nhận các định dạng `.pdf`, `.docx`, `.png`, `.jpg`. Sử dụng Mathpix và Gemini để trích xuất câu hỏi.
+- **Xử lý trùng lặp**:
+    - Nếu trùng hash của cùng user: Trả về 200 kèm `documentId` cũ.
+    - Nếu trùng hash của user khác: Clone metadata, tạo `documentId` mới trỏ chung S3 link và trả về 200.
 - **Request Body (Nội dung yêu cầu)**: `multipart/form-data`
   - `document`: File nhị phân cần trích xuất.
 - **Phản hồi thành công (200)**:
@@ -29,6 +32,21 @@ Lấy danh sách các câu hỏi liên kết với một tài liệu cụ thể.
 
 - **Tham số đường dẫn (Path Parameters)**: `id` - ID của tài liệu.
 - **Phản hồi (Response)**: Danh sách các câu hỏi có cấu trúc.
+
+---
+
+## 2. API Tài liệu Custom (Document Custom)
+
+### `POST /api/documentcustom/check-duplicate`
+Kiểm tra xem file đã từng được user hiện tại tải lên chưa.
+
+- **Request Body**: `JSON { "contentHash": "sha256_hash" }`
+- **Phản hồi**: `200` nếu chưa có, `409 Conflict` nếu đã tồn tại bản ghi của user này.
+
+### `POST /api/documentcustom/upload-and-save`
+Tải lên và lưu trữ tài liệu custom. 
+
+- **Deduplication**: Kiểm tra toàn hệ thống. Nếu trùng file của user khác, hệ thống reuse S3 link và chỉ tạo bản ghi DB mới.
 
 ---
 
