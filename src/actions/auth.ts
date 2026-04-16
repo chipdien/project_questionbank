@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { signInAPI, signOutAPI } from '@/services/auth';
+import { query } from '@/lib/db';
 
 export async function loginAction(prevState: any, formData: FormData) {
   const email = formData.get('email') as string;
@@ -16,38 +17,44 @@ export async function loginAction(prevState: any, formData: FormData) {
 
   if (response?.data?.token) {
     const cookieStore = await cookies();
+    const user = response.data.user;
 
-    // Store the auth token securely
-    cookieStore.set('token', response.data.token, {
+    // 1. Đồng bộ DB trước
+    try {
+      await query(
+        `INSERT INTO lms_users (id, email, username, nickname, level_rank) 
+         VALUES (?, ?, ?, ?, ?) 
+         ON DUPLICATE KEY UPDATE 
+           email = VALUES(email), 
+           username = VALUES(username), 
+           nickname = VALUES(nickname), 
+           level_rank = VALUES(level_rank)`,
+        [user.id, user.email, user.username, user.nickname, user.level_rank || 0]
+      );
+    } catch (e) {
+      console.error('Database Sync Error:', e);
+    }
+
+    // 2. Set Cookie đồng nhất
+    const cookieOptions = {
       httpOnly: true,
-      secure: false, // Tạm thời để false để hỗ trợ cả localhost mode production
-      maxAge: 30 * 24 * 60 * 60, // 30 days
-      path: '/',
-      sameSite: 'lax',
-    });
-
-    // Minimal user data to avoid "Cookie Too Large" issues (limit 4KB)
-    const minimalUser = {
-      id: response.data.user.id,
-      email: response.data.user.email,
-      username: response.data.user.username,
-      nickname: response.data.user.nickname,
-      level_rank: response.data.user.level_rank,
-    };
-
-    // Store user data stringified
-    cookieStore.set('user', JSON.stringify(minimalUser), {
-      httpOnly: true, // Switched to true for better server-side stability
-      secure: false, // Set to true in production with HTTPS
+      secure: false, // Vì bạn đang chạy local, để false là an toàn nhất
       maxAge: 30 * 24 * 60 * 60,
       path: '/',
-      sameSite: 'lax',
-    });
+      sameSite: 'lax' as const, // Ép kiểu để tránh lỗi TypeScript
+    };
+
+    cookieStore.set('token', response.data.token, cookieOptions);
+    cookieStore.set('userId', user.id.toString(), cookieOptions);
+
+    // Xóa cookie cũ 'user' (nếu nó đang bị lỗi năm 1970)
+    cookieStore.set('user', '', { ...cookieOptions, maxAge: 0 });
+
   } else {
-    // Return error message to display in the UI
-    return { error: response?.message || 'Đăng nhập thất bại. Email hoặc mật khẩu không chính xác.' };
+    return { error: response?.message || 'Đăng nhập thất bại.' };
   }
 
+  // 3. Redirect PHẢI nằm ngoài mọi block logic xử lý dữ liệu
   redirect('/');
 }
 
@@ -56,10 +63,15 @@ export async function logoutAction() {
   const token = cookieStore.get('token')?.value;
 
   if (token) {
-    await signOutAPI(token);
+    try {
+      await signOutAPI(token);
+    } catch (e) {
+      console.warn('Sign out API failed:', e);
+    }
   }
 
   cookieStore.delete('token');
-  cookieStore.delete('user');
+  cookieStore.delete('userId');
+  cookieStore.delete('user'); // Đề phòng user cũ
   redirect('/auth/login');
 }

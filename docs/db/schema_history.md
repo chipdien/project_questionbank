@@ -4,15 +4,27 @@ Tài liệu này ghi lại các bước thay đổi cấu trúc cơ sở dữ li
 
 ---
 
-## [2026-04-16] - Async Processing Tasks & S3 Link
+## [2026-04-16] - Local Users Synchronization & Async Tasks
 ### 📝 Mô tả thay đổi
+- Chuyển đổi phương thức lưu trữ Cookie User bằng đồng bộ Database cục bộ. Tạo bảng `lms_users` làm bản sao hồ sơ của người dùng từ API đăng nhập, giúp giải quyết triệt để lỗi "JSON parse/encode" từ Cookie.
 - Bổ sung cột `link_s3` vào bảng `lms_documents` nhằm mục đích lưu link file thô trên S3 cho những lần tải lên (sử dụng ở Backend Ingestion Server).
 - Tạo bảng `lms_processing_tasks` để theo dõi tiến trình upload và phân tích AI (Ingestion Pipeline) ở chế độ Async, giúp tránh bị timeout khi parsing dữ liệu thô lớn.
 
 ### 🛠️ Câu lệnh SQL (DDL)
 ```sql
+CREATE TABLE lms_users (
+  id INT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  username VARCHAR(255) NOT NULL,
+  nickname VARCHAR(255),
+  level_rank INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 ALTER TABLE lms_documents 
 ADD COLUMN link_s3 TEXT DEFAULT NULL;
+
 
 CREATE TABLE lms_processing_tasks (
   id INT AUTO_INCREMENT PRIMARY KEY,
