@@ -4,6 +4,30 @@ Tài liệu này ghi lại các bước thay đổi cấu trúc cơ sở dữ li
 
 ---
 
+## [2026-04-16] - Async Processing Tasks & S3 Link
+### 📝 Mô tả thay đổi
+- Bổ sung cột `link_s3` vào bảng `lms_documents` nhằm mục đích lưu link file thô trên S3 cho những lần tải lên (sử dụng ở Backend Ingestion Server).
+- Tạo bảng `lms_processing_tasks` để theo dõi tiến trình upload và phân tích AI (Ingestion Pipeline) ở chế độ Async, giúp tránh bị timeout khi parsing dữ liệu thô lớn.
+
+### 🛠️ Câu lệnh SQL (DDL)
+```sql
+ALTER TABLE lms_documents 
+ADD COLUMN link_s3 TEXT DEFAULT NULL;
+
+CREATE TABLE lms_processing_tasks (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  file_hash VARCHAR(64) NOT NULL,
+  file_name VARCHAR(255) NOT NULL,
+  status VARCHAR(50) DEFAULT 'PENDING',
+  raw_text LONGTEXT DEFAULT NULL,
+  document_id INT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_file_hash (file_hash)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+---
+
 ## [2026-04-08] - Custom PDF Export & History
 
 ### 📝 Mô tả thay đổi
