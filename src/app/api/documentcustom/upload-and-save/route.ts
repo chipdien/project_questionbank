@@ -35,41 +35,55 @@ export async function POST(req: NextRequest) {
     }
 
     const [rows] = await db.query<any[]>(
-      "SELECT title FROM lms_documents_custom WHERE content_hash = ? ORDER BY created_at DESC LIMIT 1",
+      "SELECT title, pdf_url, s3_object_key, created_by_id FROM lms_documents_custom WHERE content_hash = ? ORDER BY created_at DESC LIMIT 1",
       [contentHash]
     );
     const documents = rows as any[];
 
+    let s3Url = "";
+    let objectKey = "";
+    let needsS3Upload = true;
+
     if (documents && documents.length > 0) {
-      const fileName = documents[0].title || "Tài liệu cũ";
-      return NextResponse.json({ 
-        error: `Nội dung tài liệu này trùng hoàn toàn với file "${fileName}" đã lưu trước đó trong hệ thống.` 
-      }, { status: 409 });
+      const existingDoc = documents[0];
+      if (existingDoc.created_by_id === userId) {
+        // Cùng 1 user tải lên -> chặn để tránh rác DB (giao diện đã có bước check-duplicate)
+        return NextResponse.json({
+          error: `Tài liệu này đã có trong không gian của bạn với tên "${existingDoc.title}".`
+        }, { status: 409 });
+      } else {
+        // Của user khác tải lên -> tái sử dụng file trên S3, không upload lại
+        s3Url = existingDoc.pdf_url;
+        objectKey = existingDoc.s3_object_key;
+        needsS3Upload = false;
+      }
     }
 
-    // 1. Upload lên S3 từ Server
-    const s3Client = new S3Client({
-      region: process.env.AWS_REGION!,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-      },
-    });
+    if (needsS3Upload) {
+      // 1. Upload lên S3 từ Server
+      const s3Client = new S3Client({
+        region: process.env.AWS_REGION!,
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        },
+      });
 
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
-    const objectKey = `documents/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
+      objectKey = `documents/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
 
-    await s3Client.send(new PutObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET_NAME!,
-      Key: objectKey,
-      Body: buffer,
-      ContentType: file.type || "application/pdf",
-    }));
+      await s3Client.send(new PutObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET_NAME!,
+        Key: objectKey,
+        Body: buffer,
+        ContentType: file.type || "application/pdf",
+      }));
 
-    const s3Url = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${objectKey}`;
+      s3Url = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${objectKey}`;
+    }
 
     // 2. Lưu vào Database
     const connection = await db.getConnection();
@@ -107,15 +121,15 @@ export async function POST(req: NextRequest) {
         message: "Upload và lưu tài liệu thành công!"
       });
 
-      } catch (dbError) {
-        await connection.rollback();
-        throw dbError;
-      } finally {
-        connection.release();
-      }
-
-    } catch (error: any) {
-      console.error("Error in upload-and-save API:", error);
-      return NextResponse.json({ error: error.message || "Lỗi server" }, { status: 500 });
+    } catch (dbError) {
+      await connection.rollback();
+      throw dbError;
+    } finally {
+      connection.release();
     }
+
+  } catch (error: any) {
+    console.error("Error in upload-and-save API:", error);
+    return NextResponse.json({ error: error.message || "Lỗi server" }, { status: 500 });
+  }
 }

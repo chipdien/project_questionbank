@@ -36,7 +36,7 @@ export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
           </button>
 
           <div className="flex items-center gap-3 pl-2 border-l border-outline-variant/20">
-            <div className="flex flex-col items-end hidden sm:flex">
+            <div className="flex-col items-end hidden sm:flex">
               <span className="text-xs font-bold text-on-surface">
                 {user?.nickname || user?.username || 'Đang tải...'}
               </span>

@@ -111,7 +111,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
             </div>
           </div>
 
-          <div className="space-y-4 flex-grow">
+          <div className="space-y-4 grow">
             {documents.map((doc) => {
               const isActive = doc.id === activeDocId;
               const docTitle = doc.title || `Document #${doc.id}`;
@@ -124,7 +124,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
                   <div className={`flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-colors group ${isActive ? 'bg-primary/5 border border-primary/20' : ''}`}>
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className={cn(
-                        "flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center",
+                        "shrink-0 w-10 h-10 rounded-lg flex items-center justify-center",
                         isPdf ? "bg-error-container/30 text-error" :
                           isDocx ? "bg-primary-fixed/30 text-primary" :
                             isCsv ? "bg-secondary-container/50 text-secondary" :
@@ -156,7 +156,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
                     </div>
                     {doc.link_s3 ? (
                       <span
-                        className={`cursor-pointer flex-shrink-0 ml-4 text-xs font-bold text-primary flex items-center gap-1 transition-opacity hover:underline ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                        className={`cursor-pointer shrink-0 ml-4 text-xs font-bold text-primary flex items-center gap-1 transition-opacity hover:underline ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -167,7 +167,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
                       </span>
                     ) : (
                       <span
-                        className={`flex-shrink-0 ml-4 text-xs font-bold text-on-surface-variant/40 flex items-center gap-1 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                        className={`shrink-0 ml-4 text-xs font-bold text-on-surface-variant/40 flex items-center gap-1 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                         title="Tài liệu cũ không có link hiển thị"
                       >
                         Xem <span className="material-symbols-outlined text-sm">open_in_new</span>
@@ -184,31 +184,33 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
             )}
           </div>
 
-          {/* Document Pagination Controls */}
-          <div className="flex items-center justify-between mt-6 px-1">
-            <button
-              onClick={() => handleDocPageChange(docPagination.currentPage - 1)}
-              disabled={docPagination.currentPage <= 1}
-              className="p-2 rounded-lg hover:bg-surface-container-high disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-primary"
-            >
-              <span className="material-symbols-outlined font-bold">chevron_left</span>
-            </button>
-            <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
-              Tài liệu {Math.min((docPagination.currentPage - 1) * docPagination.pageSize + 1, docPagination.totalItems)} - {Math.min(docPagination.currentPage * docPagination.pageSize, docPagination.totalItems)} / {docPagination.totalItems}
+          {/* Document Pagination & View All Controls Combined */}
+          <div className="flex items-center justify-between mt-6 px-0.5 gap-3">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => handleDocPageChange(docPagination.currentPage - 1)}
+                disabled={docPagination.currentPage <= 1}
+                className="p-1.5 rounded-lg hover:bg-surface-container-high transition-colors text-primary disabled:opacity-20 cursor-pointer flex items-center"
+              >
+                <span className="material-symbols-outlined text-[18px] font-bold">chevron_left</span>
+              </button>
+              <button
+                onClick={() => handleDocPageChange(docPagination.currentPage + 1)}
+                disabled={docPagination.currentPage >= docPagination.totalPages}
+                className="p-1.5 rounded-lg hover:bg-surface-container-high transition-colors text-primary disabled:opacity-20 cursor-pointer flex items-center"
+              >
+                <span className="material-symbols-outlined text-[18px] font-bold">chevron_right</span>
+              </button>
             </div>
+
             <button
-              onClick={() => handleDocPageChange(docPagination.currentPage + 1)}
-              disabled={docPagination.currentPage >= docPagination.totalPages}
-              className="p-2 rounded-lg hover:bg-surface-container-high disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-primary"
+              onClick={() => router.push('/question-bank')}
+              className="shrink-0 px-3 py-2 text-[9px] cursor-pointer font-extrabold uppercase tracking-widest text-outline-variant hover:text-primary bg-surface-container-low border border-outline-variant/20 rounded-xl hover:bg-primary/5 hover:border-primary/30 transition-all flex items-center justify-center gap-1.5 group"
             >
-              <span className="material-symbols-outlined font-bold">chevron_right</span>
+              Xem Kho
+              <span className="material-symbols-outlined text-sm transition-transform group-hover:translate-x-0.5 font-bold">arrow_forward</span>
             </button>
           </div>
-
-          <button onClick={() => router.push('/question-bank')} className="w-full mt-4 py-2.5 text-[10px] cursor-pointer font-extrabold uppercase tracking-[0.15em] text-outline-variant hover:text-primary bg-surface-container-low border border-outline-variant/20 rounded-xl hover:bg-primary/5 hover:border-primary/30 transition-all flex items-center justify-center gap-2 group">
-            Xem toàn bộ tệp trong Kho
-            <span className="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1 font-bold">arrow_forward</span>
-          </button>
         </div>
 
         {/* Question Classification Card */}

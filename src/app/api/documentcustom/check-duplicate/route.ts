@@ -1,18 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
+import { getCurrentUserId } from "@/lib/utils/auth-utils";
 
 export async function POST(req: NextRequest) {
   try {
     const { contentHash } = await req.json();
+    const userId = await getCurrentUserId();
 
     if (!contentHash) {
       return NextResponse.json({ error: "Thiếu contentHash" }, { status: 400 });
     }
 
-    // Chỉ check theo content_hash, không quan tâm title
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Chỉ check trùng lặp đối với bản ghi của user hiện tại
     const [rows] = await db.query<any[]>(
-      "SELECT title FROM lms_documents_custom WHERE content_hash = ? ORDER BY created_at DESC LIMIT 1",
-      [contentHash]
+      "SELECT title FROM lms_documents_custom WHERE content_hash = ? AND created_by_id = ? ORDER BY created_at DESC LIMIT 1",
+      [contentHash, userId]
     );
 
     if (rows && rows.length > 0) {

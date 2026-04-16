@@ -27,18 +27,33 @@ export async function POST(req: NextRequest) {
     const fileHash = crypto.createHash('sha256').update(buffer).digest('hex');
 
     // 2. Check for duplicate in completed tasks
-    const existingDocumentId = await IngestService.checkDuplicate(fileHash);
-    if (existingDocumentId) {
-      // We can return the existing document directly
-      // But we need to pretend we processed it or just return the ID
-      return NextResponse.json({
-        success: true,
-        data: {
-          text: "Đã trích xuất trước đó (Deduplicated)",
-          documentId: existingDocumentId,
-          questionsCount: 0 // We don't have the count here easily, but it's fine
-        }
-      });
+    const existingData = await IngestService.checkDuplicate(fileHash);
+    if (existingData) {
+      if (existingData.created_by_id === userId) {
+        // Cùng 1 user tải lên -> trả về ID cũ (đã có trong danh sách của họ)
+        return NextResponse.json({
+          success: true,
+          data: {
+            text: "Đã trích xuất trước đó (Deduplicated)",
+            documentId: existingData.document_id,
+            questionsCount: 0
+          }
+        });
+      } else {
+        // Khác user tải lên -> clone bản ghi mới để user hiện tại cũng sở hữu document đó
+        // Cần tạo 1 taskId ảo hoặc taskId mới để lưu vết
+        const taskId = await IngestService.createTask(name, fileHash);
+        const result = await IngestService.reuseDocument(taskId, name, existingData, isPublic, userId);
+        
+        return NextResponse.json({
+          success: true,
+          data: {
+            text: existingData.content,
+            documentId: result.documentId,
+            questionsCount: result.questionsCount
+          }
+        });
+      }
     }
 
     // 3. Create a new task
