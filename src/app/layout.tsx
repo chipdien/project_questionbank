@@ -7,8 +7,11 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope' })
 
 export const metadata: Metadata = {
-  title: 'VietElite Dashboard',
-  description: 'Trích xuất văn bản từ tài liệu PDF (kể cả scanned) và Word nhanh chóng.',
+  title: 'VietElite - Question Bank',
+  description: 'Trích xuất văn bản từ tài liệu PDF (kể cả scanned) nhanh chóng.',
+  icons: {
+    icon: '/images/logo-template-docx.png',
+  },
 }
 
 export default function RootLayout({
