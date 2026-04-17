@@ -17,6 +17,30 @@ export async function classifyQuestions(
   }
 
   try {
+    const user = await getCurrentUser();
+    const userId = user?.id || null;
+    const levelRank = user?.level_rank || 0;
+
+    // Check ownership before classifying
+    if (levelRank < 5) { // Admin (level >= 5) bypasses this check
+      const placeholders = questionIds.map(() => '?').join(',');
+      const accessCheck = await query<{ id: number }[]>(`
+        SELECT q.id
+        FROM lms_questions q
+        JOIN lms_questions_documents qd ON q.id = qd.question_id
+        JOIN lms_documents d ON qd.document_id = d.id
+        WHERE q.id IN (${placeholders})
+        AND (d.created_by_id = ? OR d.teacher_owned = ?)
+      `, [...questionIds, userId, userId]);
+
+      const accessIds = new Set(accessCheck.map(r => r.id));
+      for (const id of questionIds) {
+        if (!accessIds.has(id)) {
+          return { success: false, error: 'Bạn không có quyền phân loại một số câu hỏi (Vì không phải người tải lên).' };
+        }
+      }
+    }
+
     const { grade, lessonId, difficulty } = classification;
 
     // 1. Cập nhật bảng lms_questions (Khối lớp và Độ khó)

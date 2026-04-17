@@ -35,6 +35,10 @@ interface Document {
   created_at: string;
   is_ai_classified: number;
   public?: string | null;
+  link_s3?: string | null;
+  teacher_name?: string | null;
+  teacher_owned?: number | null;
+  created_by_id?: number | null;
 }
 
 interface Lesson {
@@ -77,10 +81,13 @@ export default async function DashboardPage(props: PageProps) {
 
   let documents: Document[] = [];
   let lessons: Lesson[] = [];
+  let userId: number | null = null;
+  let levelRank = 0;
+  
   try {
     const user = await getCurrentUser();
-    const userId = user?.id || null;
-    const levelRank = user?.level_rank || 0;
+    userId = user?.id || null;
+    levelRank = user?.level_rank || 0;
 
     // Lấy tổng số document để phân trang
     const docCountResult = await query<{ total: number }[]>(
@@ -93,10 +100,11 @@ export default async function DashboardPage(props: PageProps) {
     totalDocPages = Math.ceil(totalDocuments / DOC_PAGE_SIZE);
 
     documents = await query<Document[]>(
-      `SELECT id, title, created_at, is_ai_classified, \`public\`, link_s3 
-       FROM lms_documents 
-       WHERE created_by_id = ? OR \`public\` = '1' OR created_by_id IS NULL OR ? >= 5
-       ORDER BY created_at DESC 
+      `SELECT d.id, d.title, d.created_at, d.is_ai_classified, d.\`public\`, d.link_s3, COALESCE(u.nickname, u.username) as teacher_name, d.teacher_owned, d.created_by_id 
+       FROM lms_documents d
+       LEFT JOIN lms_users u ON d.created_by_id = u.id
+       WHERE d.created_by_id = ? OR d.\`public\` = '1' OR d.created_by_id IS NULL OR ? >= 5
+       ORDER BY d.created_at DESC 
        LIMIT ? OFFSET ?`,
       [userId, levelRank, DOC_PAGE_SIZE, docOffset]
     );
@@ -203,6 +211,7 @@ export default async function DashboardPage(props: PageProps) {
           totalItems: totalDocuments,
           pageSize: DOC_PAGE_SIZE
         }}
+        currentUserId={userId}
       />
     </div>
   );

@@ -16,14 +16,20 @@ export async function autoClassifyWithAI(documentId: number) {
     const levelRank = user?.level_rank || 0;
 
     // 1. Kiểm tra xem tài liệu đã được phân loại chưa + Quyền truy cập
-    const docResult = await query<{ is_ai_classified: number }[]>(
-      `SELECT is_ai_classified FROM lms_documents 
-       WHERE id = ? AND (created_by_id = ? OR \`public\` = '1' OR created_by_id IS NULL OR ? >= 5)`,
-      [documentId, userId, levelRank]
+    const docResult = await query<{ is_ai_classified: number; teacher_owned: number | null; created_by_id: number | null }[]>(
+      `SELECT is_ai_classified, teacher_owned, created_by_id FROM lms_documents WHERE id = ?`,
+      [documentId]
     );
 
     if (docResult.length === 0) {
-      return { success: false, error: 'Không tìm thấy tài liệu hoặc bạn không có quyền truy cập.' };
+      return { success: false, error: 'Không tìm thấy tài liệu.' };
+    }
+
+    const doc = docResult[0];
+    const isOwner = doc.created_by_id === userId || doc.teacher_owned === userId;
+
+    if (!isOwner && levelRank < 5) { // Chỉ owner hoặc admin mới được phân loại
+      return { success: false, error: 'Bạn không có quyền phân loại câu hỏi của tài liệu này.' };
     }
 
     if (docResult.length > 0 && docResult[0].is_ai_classified === 1) {

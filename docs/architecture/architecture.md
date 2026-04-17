@@ -36,17 +36,19 @@ graph TD
     E --> F[Băm SHA-256]
     F --> G{Đã tồn tại?}
     G -- Cùng User --> H[Trả về ID cũ]
-    G -- User khác --> I[Clone Metadata & Link S3 cũ]
-    G -- Mới --> K[Cấu trúc Gemini AI]
+    G -- User khác (Public) --> I[Báo 409 & Public ID]
+    G -- Mới / User khác (Private) --> K[Cấu trúc Gemini AI]
     K --> L[Upload S3 & Lưu DB]
-    I --> M[Hiển thị trên DataGrid]
-    L --> M
+    L --> M[Hiển thị trên DataGrid]
     H --> M
+    I --> M
 ```
 
 ### Các bước quan trọng trong Workflow:
-1.  **Tiếp nhận (Ingestion)**: File được nhận qua chuẩn `multipart/form-data` tại endpoint `/api/convert`.
-2.  **Chống trùng (Deduplication)**: Hash file bằng SHA-256. Hệ thống áp dụng chiến lược **Ownership-Separated Deduplication**: Nếu file đã tồn tại trên S3 (do user khác upload), hệ thống sẽ reuse link S3 đó và chỉ tạo bản ghi Database mới để tiết kiệm tài nguyên.
+1.  **Tiếp nhận (Ingestion)**: File được nhận qua chuẩn `multipart/form-data` tại endpoint `/api/convert` hoặc `/api/documentcustom/upload-and-save`.
+2.  **Chống trùng (Deduplication)**: Hash file bằng SHA-256. Hệ thống áp dụng chiến lược **Ownership-Separated Deduplication** tùy thuộc luồng xử lý:
+    - *Với luồng AI Ingestion*: Chặn tải lên lại file Public; tiếp tục upload độc lập với file Private của user khác.
+    - *Với luồng Document Custom*: Reuse link S3 của file cũ, chỉ tạo bản ghi DB sao chép độc lập để tối ưu dung lượng.
 3.  **Bóc tách (Parsing)**: Sử dụng Mathpix đặc biệt để đảm bảo độ chính xác cao cho các biểu thức Toán học LaTeX.
 4.  **Trí tuệ nhân tạo (AI Intelligence)**: Gemini cấu trúc hóa chuỗi thô thành đối tượng JSON chứa câu hỏi, phương án và metadata.
 5.  **Lưu trữ (Storage)**: 

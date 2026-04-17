@@ -29,14 +29,10 @@ graph LR
 ### 1. Kiểm tra trùng lặp (Deduplication)
 Khi file được tải lên, hệ thống sẽ tạo mã băm SHA-256 của file nhị phân. Cơ chế xử lý trùng lặp phụ thuộc vào đối tượng sở hữu:
 
-- **Trùng lặp cá nhân (Personal Duplicate)**: Nếu user hiện tại đã tải file này lên trước đó, API `check-duplicate` sẽ báo trùng và ngăn chặn việc tạo thêm dữ liệu rác.
-- **Trùng lặp hệ thống (Global Deduplication)**: Nếu file đã được tải lên bởi một user khác:
-    - Hệ thống **không** tải file vật lý mới lên AWS S3 (Tiết kiệm tài nguyên).
-    - Hệ thống tự động tạo một bản ghi Document mới cho user hiện tại trong Database.
-    - Bản ghi mới trỏ về cùng nội dung văn bản (content) và đường dẫn S3 (`link_s3`) của file gốc.
-    - Các câu hỏi đã được trích xuất trước đó sẽ được "link" sang Document mới của user hiện tại.
-
-*Lợi ích: Mỗi user vẫn thấy tài liệu trong thư viện riêng của mình, trong khi dung lượng lưu trữ S3 chỉ tốn cho 1 bản copy duy nhất.*
+- **Trùng lặp cá nhân (Personal Duplicate)**: Nếu user hiện tại đã tải file này lên hợp lệ trước đó, API xử lý sẽ trả về `documentId` cũ và báo thành công, ngăn tạo thêm dữ liệu rác.
+- **Trùng lặp hệ thống (Global Deduplication)**: Xử lý dựa theo quyền truy cập của tài liệu gốc đã được tải lên:
+    - **Tài liệu gốc là Public (Công khai)**: Hệ thống ngăn tải trùng bằng cách chặn không tạo bản ghi mới để tránh rác dữ liệu, thông báo cho user biết hệ thống đã có file này được Public và tự động cung cấp `publicDocumentId` để redirect.
+    - **Tài liệu gốc là Private (Riêng tư)**: Hệ thống bỏ qua bước deduplication. Xem như đây là một người dùng mới up một file mới hoàn toàn: thực hiện OCR, cấu trúc hoá Gemini và lưu object mới lên S3 độc lập. Điều này giúp bảo mật danh tính người upload bản Private ban đầu.
 
 ### 2. Trích xuất văn bản (Parsing)
 - **PDF/Ảnh**: Được gửi trực tiếp lên Mathpix API.

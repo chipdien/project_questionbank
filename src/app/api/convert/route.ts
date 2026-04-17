@@ -27,33 +27,35 @@ export async function POST(req: NextRequest) {
     const fileHash = crypto.createHash('sha256').update(buffer).digest('hex');
 
     // 2. Check for duplicate in completed tasks
-    const existingData = await IngestService.checkDuplicate(fileHash);
-    if (existingData) {
-      if (existingData.created_by_id === userId) {
-        // Cùng 1 user tải lên -> trả về ID cũ (đã có trong danh sách của họ)
+    const existingDocs = await IngestService.checkDuplicatesByHash(fileHash);
+    
+    if (existingDocs && existingDocs.length > 0) {
+      // 1. Kiểm tra nếu user hiện tại đã có file này rồi -> Trả về ID cũ
+      const currentUserDoc = existingDocs.find(d => d.created_by_id === userId);
+      if (currentUserDoc) {
         return NextResponse.json({
           success: true,
           data: {
             text: "Đã trích xuất trước đó (Deduplicated)",
-            documentId: existingData.document_id,
+            documentId: currentUserDoc.document_id,
             questionsCount: 0
           }
         });
-      } else {
-        // Khác user tải lên -> clone bản ghi mới để user hiện tại cũng sở hữu document đó
-        // Cần tạo 1 taskId ảo hoặc taskId mới để lưu vết
-        const taskId = await IngestService.createTask(name, fileHash);
-        const result = await IngestService.reuseDocument(taskId, name, existingData, isPublic, userId);
-        
-        return NextResponse.json({
-          success: true,
-          data: {
-            text: existingData.content,
-            documentId: result.documentId,
-            questionsCount: result.questionsCount
-          }
-        });
       }
+
+      // 2. Kiểm tra nếu có user khác đã up file này dưới dạng PUBLIC
+      const publicDoc = existingDocs.find(d => String(d.public) === '1' || d.public === true || d.public === 1);
+      if (publicDoc) {
+        return NextResponse.json({
+          success: false,
+          error: `Tài liệu này đã được tải lên với quyền công khai bởi người dùng: ${publicDoc.uploader_name || 'Khác'}. Bạn có thể xem ngay tài liệu này.`,
+          publicDocumentId: publicDoc.document_id
+        }, { status: 409 });
+      }
+
+      // 3. Nếu file có tồn tại nhưng là Private của user KHÁC, CỨ BỎ QUA.
+      // (Không return, không tạo clone. Mã sẽ tự động rớt xuống code bên dưới
+      // để chạy luồng upload/Mathpix/Gemini như một file mới tinh như yêu cầu).
     }
 
     // 3. Create a new task
@@ -157,17 +159,17 @@ export async function POST(req: NextRequest) {
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
           }
         });
-        
+
         const fileExt = name.split('.').pop() || 'pdf';
         const objectKey = `documents/${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${fileExt}`;
-        
+
         await s3Client.send(new PutObjectCommand({
           Bucket: process.env.AWS_S3_BUCKET_NAME!,
           Key: objectKey,
           Body: buffer,
           ContentType: type || 'application/pdf'
         }));
-        
+
         link_s3 = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${objectKey}`;
         console.log("Đã upload raw document lên S3:", link_s3);
       } catch (s3Error) {

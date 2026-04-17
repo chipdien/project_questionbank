@@ -51,10 +51,16 @@ export default function DashboardUploader() {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Đã xảy ra lỗi khi xử lý.');
+        const errorMsg = data.error || 'Đã xảy ra lỗi khi xử lý.';
+        if (data.publicDocumentId) {
+          const customError: any = new Error(errorMsg);
+          customError.publicDocumentId = data.publicDocumentId;
+          throw customError;
+        }
+        throw new Error(errorMsg);
       }
 
-      setCurrentStep(3); // Bư›c lưu xong
+      setCurrentStep(3); // Bước lưu xong
       toast.success('Tải và xử lý tài liệu phân tích thành công!');
 
       // Sau 1s thì refresh UI
@@ -68,10 +74,39 @@ export default function DashboardUploader() {
       }, 1000);
 
     } catch (err: any) {
-      toast.error(err.message || 'Lỗi kết nối máy chủ.');
-      setErrorMsg(err.message || 'Lỗi kết nối máy chủ.');
-      setIsUploading(false);
-      setCurrentStep(-1);
+      if (err.publicDocumentId) {
+        toast.custom((t) => (
+          <div className={`${t.visible ? 'animate-in fade-in slide-in-from-top-4' : 'animate-out fade-out slide-out-to-top-4'} max-w-sm w-full bg-surface-container-highest shadow-xl rounded-2xl pointer-events-auto border border-outline-variant/30 flex overflow-hidden`}>
+            <div className="flex-1 p-4">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-primary text-xl">auto_stories</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-bold text-on-surface font-headline mb-1">Tài liệu đã tồn tại</p>
+                  <p className="text-sm text-on-surface-variant">
+                    {err.message}
+                  </p>
+                  <div className="mt-3 flex items-center gap-2 text-primary font-semibold text-xs">
+                    <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                    <span>Đang chỉ hướng tới tài liệu...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ), { duration: 2500, position: 'top-center' });
+        setIsUploading(false);
+        setCurrentStep(-1);
+        setTimeout(() => {
+          router.push(`/?docId=${err.publicDocumentId}`);
+        }, 2000);
+      } else {
+        toast.error(err.message || 'Lỗi kết nối máy chủ.');
+        setErrorMsg(err.message || 'Lỗi kết nối máy chủ.');
+        setIsUploading(false);
+        setCurrentStep(-1);
+      }
     }
   };
 

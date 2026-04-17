@@ -24,15 +24,16 @@ interface QuestionsManagerProps {
   lessons: Lesson[];
   pagination: Pagination;
   docPagination: Pagination;
+  currentUserId: number | null;
 }
 
-export default function QuestionsManager({ questions, documents, activeDocId, lessons, pagination, docPagination }: QuestionsManagerProps) {
+export default function QuestionsManager({ questions, documents, activeDocId, lessons, pagination, docPagination, currentUserId }: QuestionsManagerProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const router = useRouter();
 
-  // Xác định trạng thái đã phân loại của tài liệu hiện tại
   const activeDoc = documents.find(d => d.id === activeDocId);
   const isAiClassified = activeDoc?.is_ai_classified === 1;
+  const isOwner = activeDoc ? (activeDoc.created_by_id === currentUserId || activeDoc.teacher_owned === currentUserId) : false;
 
   const handleSelectionChange = (newSelectedIds: Set<number>) => {
     setSelectedIds(newSelectedIds);
@@ -145,6 +146,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
                           {doc.public === '1' || doc.public === 'true' ? (
                             <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[8px] font-bold uppercase tracking-wider border border-primary/20">
                               Công khai
+                              {doc.teacher_name && <span className="ml-1 font-medium normal-case text-[9px] opacity-80">(bởi {doc.teacher_name})</span>}
                             </span>
                           ) : (
                             <span className="px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant border border-outline-variant/40 text-[8px] font-bold uppercase tracking-wider">
@@ -160,7 +162,9 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          window.open(doc.link_s3, '_blank');
+                          if (doc.link_s3) {
+                            window.open(doc.link_s3, '_blank');
+                          }
                         }}
                       >
                         Xem <span className="material-symbols-outlined text-sm">open_in_new</span>
@@ -213,14 +217,16 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
           </div>
         </div>
 
-        {/* Question Classification Card */}
-        <QuestionClassificationCard
-          selectedCount={selectedIds.size}
-          onApply={handleApplyClassification}
-          onAIClassify={handleAIClassify}
-          lessons={lessons}
-          isAiClassified={isAiClassified}
-        />
+        {/* Question Classification Card (Only show if owner) */}
+        {isOwner && (
+          <QuestionClassificationCard
+            selectedCount={selectedIds.size}
+            onApply={handleApplyClassification}
+            onAIClassify={handleAIClassify}
+            lessons={lessons}
+            isAiClassified={isAiClassified}
+          />
+        )}
       </div>
 
       {/* Row 2: Data Grid Table */}
