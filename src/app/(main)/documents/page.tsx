@@ -18,7 +18,7 @@ export default function DocumentsPage() {
       const data = await res.json();
 
       if (data.success && data.document && data.questions) {
-        builderRef.current?.loadDocument(data.document.title, data.questions);
+        builderRef.current?.loadDocument(data.document.title, data.questions, data.document.content_blocks);
       } else {
         alert('Không thể tải chi tiết tài liệu');
       }

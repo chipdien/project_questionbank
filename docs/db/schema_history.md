@@ -53,7 +53,9 @@ CREATE TABLE lms_documents_custom (
   title VARCHAR(255) NOT NULL,
   pdf_url TEXT,
   s3_object_key VARCHAR(255),
+  content_blocks LONGTEXT, -- Lưu trữ cấu trúc block của editor
   content_hash VARCHAR(64), -- Bổ sung mới cho việc kiểm tra trùng nội dung
+  created_by_id INT, -- ID người tạo tài liệu custom
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_content_hash (content_hash),
@@ -71,6 +73,7 @@ CREATE TABLE lms_documents_custom_questions (
 
 -- Cập nhật cho DB đã tồn tại: 
 -- ALTER TABLE lms_documents_custom ADD COLUMN content_hash VARCHAR(64) AFTER s3_object_key;
+-- ALTER TABLE lms_documents_custom ADD COLUMN created_by_id INT NULL AFTER content_hash;
 -- CREATE INDEX idx_content_hash ON lms_documents_custom(content_hash);
 -- CREATE INDEX idx_title ON lms_documents_custom(title);
 ```

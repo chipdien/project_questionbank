@@ -101,7 +101,7 @@ export default function SavedDocumentsLibrary({ onLoadDocument }: SavedDocuments
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center p-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg transition-colors border border-outline-variant/30"
-                    title="Táº£i PDF"
+                    title="Tải PDF"
                   >
                     <Download className="w-3.5 h-3.5" />
                   </a>

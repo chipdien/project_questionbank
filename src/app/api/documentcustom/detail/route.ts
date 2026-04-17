@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     // 1. Lấy thông tin tài liệu kèm kiểm tra quyền sở hữu
     const [docs] = await db.query(
-      `SELECT id, title, pdf_url, created_by_id 
+      `SELECT id, title, pdf_url, content_blocks, created_by_id 
        FROM lms_documents_custom 
        WHERE id = ? AND (created_by_id = ? OR created_by_id IS NULL OR ? >= 5)`,
       [id, userId, levelRank]

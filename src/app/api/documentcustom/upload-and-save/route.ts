@@ -12,6 +12,8 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file") as File;
     const questionIdsRaw = formData.get("questionIds") as string;
     const questionIds = JSON.parse(questionIdsRaw || "[]");
+    const contentBlocksRaw = formData.get("contentBlocks") as string;
+    const contentBlocks = contentBlocksRaw || null;
     const userId = await getCurrentUserId();
 
     if (!title || !file) {
@@ -93,9 +95,9 @@ export async function POST(req: NextRequest) {
 
       // Lưu bảng chính
       const [docResult] = await connection.execute<ResultSetHeader>(
-        `INSERT INTO lms_documents_custom (title, created_at, updated_at, pdf_url, s3_object_key, content_hash, created_by_id) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [title, now, now, s3Url, objectKey, contentHash, userId]
+        `INSERT INTO lms_documents_custom (title, created_at, updated_at, pdf_url, s3_object_key, content_blocks, content_hash, created_by_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [title, now, now, s3Url, objectKey, contentBlocks, contentHash, userId]
       );
 
       const documentId = docResult.insertId;

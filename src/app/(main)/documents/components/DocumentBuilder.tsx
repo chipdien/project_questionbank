@@ -18,7 +18,7 @@ export interface Block {
 }
 
 export interface DocumentBuilderRef {
-  loadDocument: (title: string, questions: any[]) => void;
+  loadDocument: (title: string, questions: any[], contentBlocksRaw?: any) => void;
   addQuestion: (questionData: any) => void;
   addQuestions: (questions: any[]) => void;
 }
@@ -155,23 +155,51 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
 
   // Expose các phương thức cho component cha
   React.useImperativeHandle(ref, () => ({
-    loadDocument: (title, questions) => {
+    loadDocument: (title, questions, contentBlocksRaw) => {
       setDocTitle(title);
-      const newBlocks: Block[] = [
-        {
-          id: 'h_' + Date.now(),
-          type: 'headline',
-          content: title,
-          order: 0
-        },
-        ...questions.map((q, idx) => ({
-          id: 'q_' + Date.now() + '_' + idx,
-          type: 'question' as BlockType,
-          content: q,
-          order: idx + 1
-        }))
-      ];
-      setBlocks(newBlocks);
+      
+      if (contentBlocksRaw) {
+        try {
+          const parsedBlocks = typeof contentBlocksRaw === 'string' ? JSON.parse(contentBlocksRaw) : contentBlocksRaw;
+          // Map to ensure questions have the latest content from DB
+          const latestQuestionsMap = new Map();
+          questions.forEach(q => latestQuestionsMap.set(q.id, q));
+          
+          const restoredBlocks = parsedBlocks.map((b: any) => {
+            if (b.type === 'question') {
+              const freshQuestion = latestQuestionsMap.get(b.content?.id || b.content?.question_id || b.content);
+              if (freshQuestion) {
+                return { ...b, content: freshQuestion };
+              }
+            }
+            return b;
+          });
+          setBlocks(restoredBlocks);
+        } catch (e) {
+          console.error("Error parsing content blocks:", e);
+          const fallbackBlocks: Block[] = [
+            { id: 'h_' + Date.now(), type: 'headline', content: title, order: 0 },
+            ...questions.map((q, idx) => ({ id: 'q_' + Date.now() + '_' + idx, type: 'question' as BlockType, content: q, order: idx + 1 }))
+          ];
+          setBlocks(fallbackBlocks);
+        }
+      } else {
+        const newBlocks: Block[] = [
+          {
+            id: 'h_' + Date.now(),
+            type: 'headline',
+            content: title,
+            order: 0
+          },
+          ...questions.map((q, idx) => ({
+            id: 'q_' + Date.now() + '_' + idx,
+            type: 'question' as BlockType,
+            content: q,
+            order: idx + 1
+          }))
+        ];
+        setBlocks(newBlocks);
+      }
 
       // Cuộn lên đầu trang sau khi load
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -442,6 +470,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
       formData.append('file', pdfBlob, `${docTitle}.pdf`);
       formData.append('questionIds', JSON.stringify(questionIds));
       formData.append('contentHash', contentHash);
+      formData.append('contentBlocks', JSON.stringify(sortedBlocks));
 
       // 6. Gọi API gộp
       const response = await fetch('/api/documentcustom/upload-and-save', {
