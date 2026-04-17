@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "data": {
+    "text": "Câu 1: Giải phương trình $x^2 - 5x + 6 = 0$. \nA. $x=2$ \nB. $x=3$ \nC. $x=2$ hoặc $x=3$ \nD. Vô nghiệm",
+    "documentId": 12,
+    "questionsCount": 1
+  }
+}
