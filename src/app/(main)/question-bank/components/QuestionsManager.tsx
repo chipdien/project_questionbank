@@ -119,6 +119,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
               const isPdf = docTitle.toLowerCase().endsWith('.pdf');
               const isDocx = docTitle.toLowerCase().endsWith('.docx');
               const isCsv = docTitle.toLowerCase().endsWith('.csv');
+              const isImage = docTitle.match(/\.(jpeg|jpg|gif|png|webp)$/i);
 
               return (
                 <Link href={`/?docId=${doc.id}&docPage=${docPagination.currentPage}`} key={doc.id} className="block">
@@ -129,10 +130,11 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
                         isPdf ? "bg-error-container/30 text-error" :
                           isDocx ? "bg-primary-fixed/30 text-primary" :
                             isCsv ? "bg-secondary-container/50 text-secondary" :
-                              "bg-surface-container-highest text-on-surface-variant"
+                              isImage ? "bg-teal-500/10 text-teal-600" :
+                                "bg-surface-container-highest text-on-surface-variant"
                       )}>
                         <span className="material-symbols-outlined">
-                          {isPdf ? 'picture_as_pdf' : isDocx ? 'description' : isCsv ? 'table_chart' : 'description'}
+                          {isPdf ? 'picture_as_pdf' : isDocx ? 'description' : isCsv ? 'table_chart' : isImage ? 'image' : 'description'}
                         </span>
                       </div>
                       <div className="min-w-0 flex-1">

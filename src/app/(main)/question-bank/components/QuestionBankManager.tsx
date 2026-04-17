@@ -26,9 +26,14 @@ import SortableQuestionItem from '@/app/(main)/question-bank/components/Sortable
 import { getQuestionsByDocId, getLibraryQuestions } from '@/actions/question';
 import { createCollection } from '@/actions/collection';
 import CollectionSaveModal from '@/app/(main)/collection/components/CollectionSaveModal';
-import { FileText, ChevronRight, Hash, Layers, Loader2, Grab, Save, Filter, Search, GraduationCap, BarChart, BookOpen, ChevronDown, X, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 interface Option {
   id: number;
@@ -52,6 +57,10 @@ interface Document {
   id: number;
   title: string;
   created_at: string;
+  public?: string | null;
+  link_s3?: string | null;
+  teacher_name?: string | null;
+  created_by_id?: number | null;
 }
 
 interface Lesson {
@@ -264,7 +273,7 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
           <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 flex flex-col overflow-hidden shadow-sm">
             <div className="p-4 border-b border-outline-variant/10 bg-surface-container-low/50 flex items-center justify-between">
               <h3 className="font-bold text-sm tracking-tight flex items-center gap-2 text-primary">
-                <Filter className="w-4 h-4" />
+                <span className="material-symbols-outlined text-[18px]">filter_alt</span>
                 BỘ LỌC CÂU HỎI
               </h3>
               {isFiltering && (
@@ -272,16 +281,16 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
                   onClick={() => { setGrade(''); setLessonId(''); setDifficulty(''); }}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-error/10 text-error hover:bg-error hover:text-white transition-all text-[10px] font-black uppercase cursor-pointer"
                 >
-                  <X className="w-3 h-3" />
+                  <span className="material-symbols-outlined text-xs">close</span>
                   Xóa lọc
                 </button>
               )}
             </div>
-            <div className="p-5 space-y-5 bg-gradient-to-b from-transparent to-surface-container-low/20">
+            <div className="p-5 space-y-5 bg-linear-to-b from-transparent to-surface-container-low/20">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[11px] font-bold text-outline uppercase tracking-wider ml-1 flex items-center gap-2">
-                    <GraduationCap className="w-3.5 h-3.5 text-primary/70" />
+                    <span className="material-symbols-outlined text-[16px] text-primary/70">school</span>
                     Khối lớp
                   </label>
                   <div className="relative group/select">
@@ -295,12 +304,12 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
                         <option key={g} value={g.toString()}>Khối {g}</option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline-variant pointer-events-none group-hover/select:text-primary transition-colors" />
+                    <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[18px] text-outline-variant pointer-events-none group-hover/select:text-primary transition-colors">expand_more</span>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[11px] font-bold text-outline uppercase tracking-wider ml-1 flex items-center gap-2">
-                    <BarChart className="w-3.5 h-3.5 text-primary/70" />
+                    <span className="material-symbols-outlined text-[16px] text-primary/70">leaderboard</span>
                     Độ khó
                   </label>
                   <div className="relative group/select">
@@ -314,13 +323,13 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
                       <option value="Trung Bình">Trung Bình</option>
                       <option value="Khó">Khó</option>
                     </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline-variant pointer-events-none group-hover/select:text-primary transition-colors" />
+                    <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[18px] text-outline-variant pointer-events-none group-hover/select:text-primary transition-colors">expand_more</span>
                   </div>
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-outline uppercase tracking-wider ml-1 flex items-center gap-2">
-                  <BookOpen className="w-3.5 h-3.5 text-primary/70" />
+                  <span className="material-symbols-outlined text-[16px] text-primary/70">menu_book</span>
                   Bài học
                 </label>
                 <div className="relative group/select">
@@ -335,7 +344,7 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
                       <option key={lesson.id} value={lesson.id.toString()}>{lesson.name}</option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline-variant pointer-events-none group-hover/select:text-primary transition-colors group-disabled:opacity-0" />
+                  <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[18px] text-outline-variant pointer-events-none group-hover/select:text-primary transition-colors group-disabled:opacity-0">expand_more</span>
                 </div>
               </div>
             </div>
@@ -345,41 +354,75 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
           <div className="flex-1 bg-surface-container-lowest rounded-xl border border-outline-variant/20 flex flex-col overflow-hidden shadow-sm">
             <div className="p-4 border-b border-outline-variant/10 bg-surface-container-low/50 flex items-center justify-between">
               <h3 className="font-bold text-sm tracking-tight flex items-center gap-2">
-                <Layers className="w-4 h-4 text-primary" />
+                <span className="material-symbols-outlined text-[18px] text-primary">layers</span>
                 DANH SÁCH TỆP
               </h3>
               <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-xl uppercase">
                 {initialDocuments.length} tệp
               </span>
             </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {initialDocuments.map((doc) => (
-                <button
-                  key={doc.id}
-                  onClick={() => handleDocClick(doc.id)}
-                  className={`w-full text-left p-3 rounded-xl transition-all group flex items-center gap-3 border ${activeDocId === doc.id
-                    ? 'bg-primary/5 border-primary/20 shadow-sm'
-                    : 'bg-transparent border-transparent hover:bg-surface-container-low hover:border-outline-variant/30'
-                    }`}
-                >
-                  <div className={`p-2 rounded-xl ${activeDocId === doc.id ? 'bg-primary text-on-primary' : 'bg-surface-container-highest text-on-surface-variant group-hover:text-primary'}`}>
-                    <FileText className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-xs font-bold truncate ${activeDocId === doc.id ? 'text-primary' : 'text-on-surface'}`}>
-                      {doc.title}
-                    </p>
-                    <p className="text-[10px] text-outline mt-0.5">
-                      ID: #{doc.id}
-                    </p>
-                  </div>
-                  {activeDocId === doc.id && (
-                    <motion.div layoutId="active-indicator">
-                      <ChevronRight className="w-4 h-4 text-primary" />
-                    </motion.div>
-                  )}
-                </button>
-              ))}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+              {initialDocuments.map((doc) => {
+                const isImage = doc.link_s3?.match(/\.(jpeg|jpg|gif|png|webp)$/i);
+                const isPdf = doc.link_s3?.toLowerCase().endsWith('.pdf');
+                const isExcel = doc.link_s3?.match(/\.(xlsx|xls|csv)$/i);
+
+                let icon = 'description';
+                let iconColor = 'text-outline';
+
+                if (isImage) {
+                  icon = 'image';
+                  iconColor = 'text-teal-500';
+                } else if (isPdf) {
+                  icon = 'picture_as_pdf';
+                  iconColor = 'text-error';
+                } else if (isExcel) {
+                  icon = 'table_chart';
+                  iconColor = 'text-success';
+                }
+
+                const isActive = activeDocId === doc.id;
+
+                return (
+                  <button
+                    key={doc.id}
+                    onClick={() => handleDocClick(doc.id)}
+                    className={cn(
+                      "w-full text-left p-3 rounded-xl transition-all group flex items-center gap-3 border",
+                      isActive
+                        ? 'bg-primary/5 border-primary/20 shadow-sm'
+                        : 'bg-transparent border-transparent hover:bg-surface-container-low hover:border-outline-variant/30'
+                    )}
+                  >
+                    <div className={cn(
+                      "p-2 rounded-xl transition-colors flex items-center",
+                      isActive ? 'bg-primary text-on-primary' : 'bg-surface-container-highest group-hover:bg-primary/10'
+                    )}>
+                      <span className={cn(
+                        "material-symbols-outlined text-[18px]",
+                        isActive ? "text-on-primary" : (iconColor === 'text-outline' ? "group-hover:text-primary" : iconColor)
+                      )}>
+                        {icon}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={cn(
+                        "text-xs font-bold truncate mb-1",
+                        isActive ? 'text-primary' : 'text-on-surface'
+                      )}>
+                        {doc.title}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {doc.public === '1' && (
+                          <span className="px-1.5 py-0.5 rounded-md bg-green-500/10 text-primary text-[8px] font-black uppercase flex items-center gap-1">
+                            Công khai {doc.teacher_name ? `(bởi ${doc.teacher_name})` : ''}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -389,7 +432,7 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
           id="source"
           questions={sourceQuestions}
           title={isFiltering ? "CÂU HỎI TÌM ĐƯỢC" : "CÂU HỎI TRONG TỆP"}
-          icon={isFiltering ? Search : Hash}
+          icon={isFiltering ? "search" : "tag"}
           color="secondary"
           isLoading={isLoading}
         >
@@ -400,19 +443,19 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
                   <SortableQuestionItem key={question.id} question={question} />
                 ))}
               </div>
-              
+
               {/* Pagination Controls */}
               {totalPages > 1 && (
                 <div className="mt-6 pt-4 border-t border-outline-variant/10 flex items-center justify-between bg-surface-container-lowest sticky bottom-0 z-10">
                   <button
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1 || isLoading}
-                    className="p-2 rounded-xl hover:bg-surface-container-low disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-outline-variant/20"
+                    className="p-2 rounded-xl hover:bg-surface-container-low disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-outline-variant/20 flex items-center justify-center"
                     title="Trang trước"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <span className="material-symbols-outlined text-[18px]">chevron_left</span>
                   </button>
-                  
+
                   <div className="flex flex-col items-center">
                     <span className="text-[10px] font-bold text-outline-variant uppercase tracking-tighter">Trang</span>
                     <span className="text-xs font-black text-primary">{page} / {totalPages}</span>
@@ -421,10 +464,10 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
                   <button
                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages || isLoading}
-                    className="p-2 rounded-xl hover:bg-surface-container-low disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-outline-variant/20"
+                    className="p-2 rounded-xl hover:bg-surface-container-low disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-outline-variant/20 flex items-center justify-center"
                     title="Trang sau"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <span className="material-symbols-outlined text-[18px]">chevron_right</span>
                   </button>
                 </div>
               )}
@@ -432,7 +475,7 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-40">
               <div className="w-16 h-16 rounded-xl bg-surface-container-highest flex items-center justify-center mb-4">
-                {isLoading ? <Loader2 className="w-8 h-8 animate-spin" /> : <Grab className="w-8 h-8" />}
+                {isLoading ? <span className="material-symbols-outlined text-[32px] animate-spin">autorenew</span> : <span className="material-symbols-outlined text-[32px]">drag_indicator</span>}
               </div>
               <p className="text-sm font-medium">
                 {activeDocId
@@ -450,7 +493,7 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
           id="selected"
           questions={selectedQuestions}
           title="CÂU HỎI ĐÃ CHỌN"
-          icon={FileText}
+          icon="description"
           color="primary"
           showCount
           headerAction={
@@ -459,7 +502,7 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
                 onClick={() => setIsModalOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-on-primary rounded-xl text-[10px] font-bold hover:bg-primary/90 transition-all shadow-sm shadow-primary/20 active:scale-95"
               >
-                <Save className="w-3 h-3" />
+                <span className="material-symbols-outlined text-[14px]">save</span>
                 TẠO BỘ SƯU TẬP
               </button>
             )
@@ -472,7 +515,7 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
           ) : (
             <div className="h-96 border-2 border-dashed border-outline-variant/30 rounded-xl flex flex-col items-center justify-center text-center p-8 opacity-40">
               <div className="w-20 h-20 rounded-xl border-2 border-dashed border-outline-variant flex items-center justify-center mb-4">
-                <Grab className="w-10 h-10" />
+                <span className="material-symbols-outlined text-[40px]">drag_indicator</span>
               </div>
               <p className="text-sm font-bold uppercase">Kéo thả vào đây</p>
             </div>
@@ -498,7 +541,7 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
         }),
       }}>
         {activeId && activeQuestion ? (
-          <div className="w-[400px] pointer-events-none opacity-90 scale-105">
+          <div className="w-[400px] pointer-events-none opacity-90 scale-105 shadow-2xl">
             <SortableQuestionItem question={activeQuestion} isOverlay />
           </div>
         ) : null}
@@ -508,23 +551,33 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
 }
 
 // Helper components for better droppable detection
-function DroppableColumn({ id, questions, title, icon: Icon, color, children, showCount, isLoading, headerAction }: any) {
+function DroppableColumn({ id, questions, title, icon, color, children, showCount, isLoading, headerAction }: any) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
   return (
     <div
       ref={setNodeRef}
-      className={`col-span-12 lg:col-span-4 bg-surface-container-lowest rounded-xl border flex flex-col overflow-hidden shadow-sm transition-all duration-300 ${id === 'selected' ? 'border-dashed border-2 border-primary/20' : 'border-outline-variant/20'
-        } ${isOver ? 'ring-2 ring-primary/40 bg-primary/5' : ''}`}
+      className={cn(
+        "col-span-12 lg:col-span-4 bg-surface-container-lowest rounded-xl border flex flex-col overflow-hidden shadow-sm transition-all duration-300",
+        id === 'selected' ? 'border-dashed border-2 border-primary/20' : 'border-outline-variant/20',
+        isOver ? 'ring-2 ring-primary/40 bg-primary/5' : ''
+      )}
     >
-      <div className={`p-4 border-b border-outline-variant/10 flex items-center justify-between ${color === 'primary' ? 'bg-primary/5' : 'bg-surface-container-low/50'
-        }`}>
-        <h3 className="font-bold text-sm tracking-tight flex items-center gap-2">
-          <Icon className={`w-4 h-4 ${color === 'primary' ? 'text-primary' : 'text-secondary'}`} />
+      <div className={cn(
+        "p-4 border-b border-outline-variant/10 flex items-center justify-between",
+        color === 'primary' ? 'bg-primary/5' : 'bg-surface-container-low/50'
+      )}>
+        <h3 className="font-bold text-sm tracking-tight flex items-center gap-2 uppercase">
+          <span className={cn(
+            "material-symbols-outlined text-[20px]",
+            color === 'primary' ? 'text-primary' : 'text-secondary'
+          )}>
+            {icon}
+          </span>
           {title}
         </h3>
         <div className="flex items-center gap-2">
-          {isLoading && <Loader2 className="w-3 h-3 animate-spin text-outline" />}
+          {isLoading && <span className="material-symbols-outlined text-[18px] animate-spin text-outline">autorenew</span>}
           {showCount && (
             <span className="text-[10px] font-bold bg-primary text-on-primary px-2 py-0.5 rounded-xl uppercase">
               {questions.length} items
@@ -533,8 +586,10 @@ function DroppableColumn({ id, questions, title, icon: Icon, color, children, sh
           {headerAction}
         </div>
       </div>
-      <div className={`flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin ${color === 'primary' ? 'scrollbar-thumb-primary/20 bg-primary/[0.02]' : 'scrollbar-thumb-outline-variant/30'
-        }`}>
+      <div className={cn(
+        "flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin",
+        color === 'primary' ? 'scrollbar-thumb-primary/20 bg-primary/2' : 'scrollbar-thumb-outline-variant/30'
+      )}>
         <SortableContext items={questions.map((q: any) => q.id)} strategy={verticalListSortingStrategy}>
           {children}
         </SortableContext>
