@@ -136,3 +136,6 @@ desktop.ini
 /prisma/migrations
 /prisma/*.db
 /prisma/*.db-journal
+
+# AI Agents
+.agent/

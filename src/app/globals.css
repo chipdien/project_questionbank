@@ -1,0 +1,244 @@
+@import "tailwindcss";
+
+@source ".";
+@source "../components";
+@source "../lib";
+
+@theme {
+  --font-headline: var(--font-manrope), sans-serif;
+  --font-body: var(--font-inter), sans-serif;
+  --font-label: var(--font-inter), sans-serif;
+
+  --color-primary: #048d3b;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #005322;
+  --color-on-primary-container: #bdffc0;
+
+  --color-secondary: #4f6352;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #cce8d1;
+  --color-on-secondary-container: #00210a;
+
+  --color-tertiary: #4f6354;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #dce5dd;
+  --color-on-tertiary-container: #0e2015;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #410002;
+
+  --color-success: #15803d;
+  --color-on-success: #ffffff;
+  --color-success-container: #dcfce7;
+  --color-on-success-container: #14532d;
+
+  --color-warning: #ca8a04;
+  --color-warning-dark: #854d0e;
+  --color-on-warning: #ffffff;
+  --color-warning-container: #fef9c3;
+  --color-on-warning-container: #713f12;
+
+  --color-background: #fbfdf8;
+  --color-on-background: #191d19;
+
+  --color-surface: #fbfdf8;
+  --color-on-surface: #191d19;
+  --color-surface-variant: #dee5da;
+  --color-on-surface-variant: #424940;
+
+  --color-surface-container: #f0f4f1;
+  --color-surface-container-low: #f1f4ef;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-high: #e8ebe8;
+  --color-surface-container-highest: #e2e3de;
+
+  --color-outline: #717971;
+  --color-outline-variant: #c1c9be;
+
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+    font-family: var(--font-body);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-headline);
+  }
+}
+
+@layer components {
+  .glass-panel {
+    background-color: rgb(255 255 255 / 0.7);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgb(255 255 255 / 0.2);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 20px;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Sidebar Transition Classes */
+#sidebar {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#main-content {
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-collapsed .nav-label,
+.sidebar-collapsed .sidebar-title {
+  display: none;
+}
+
+.sidebar-collapsed .nav-item {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.sidebar-collapsed .nav-section {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+/* --- PRINT MEDIA QUERIES --- */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  /* Hide UI elements */
+  .no-print,
+  #sidebar,
+  header,
+  .sidebar,
+  .filter-section,
+  .nav-bar,
+  .download-button {
+    display: none !important;
+  }
+
+  body {
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* A4 Page container for printing */
+  .a4-page {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    padding: 25mm 15mm 25mm 30mm !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    display: block !important;
+    position: relative !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+  }
+
+  .page-break {
+    page-break-after: always;
+    break-after: always;
+  }
+
+  /* Prevent elements like question groups from breaking across pages */
+  .page-break-inside-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* For textareas to show all text when printing */
+  textarea {
+    overflow: visible !important;
+    height: auto !important;
+    border: none !important;
+    resize: none !important;
+  }
+}
+
+/* --- A4 DOCUMENT INTERFACE (Web view) --- */
+.a4-page {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 12mm 20mm 20mm 30mm;
+  margin: 20px auto;
+  background: white;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+/* Thêm lớp hỗ trợ xuất PDF (html2pdf/html2canvas) */
+#pdf-content.exporting .a4-page {
+  margin: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+  overflow: visible !important;
+}
+
+#pdf-content.exporting {
+  gap: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.a4-page:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+}
+
+
+/* --- KATEX OPTIMIZATION --- */
+.katex-display {
+  display: block;
+  padding: 0.5em 0;
+  margin: 0.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+.katex {
+  font-size: 1.1em;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fix for tailwind typography competing with katex */
+.prose :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+  display: block !important; /* Đảm bảo p luôn là block để chứa được katex-display */
+}
