@@ -1,0 +1,119 @@
+import React, { useState } from 'react';
+import { ChevronRight, ChevronDown, Plus, Trash2, Folder, File } from 'lucide-react';
+import { Topic } from '@/services/topics';
+
+interface TopicTreeNodeProps {
+  topic: Topic;
+  allTopics: Topic[];
+  level: number;
+  activeId: string | null;
+  onSelect: (topic: Topic) => void;
+  onCreateChild: (parent: Topic) => void;
+  onDelete: (topic: Topic) => void;
+}
+
+export default function TopicTreeNode({
+  topic,
+  allTopics,
+  level,
+  activeId,
+  onSelect,
+  onCreateChild,
+  onDelete
+}: TopicTreeNodeProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const children = allTopics.filter(t => t.parent_id === topic.id);
+  const hasChildren = children.length > 0;
+  const isActive = activeId === topic.id;
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
+  };
+
+  return (
+    <div className="select-none">
+      <div
+        onClick={() => onSelect(topic)}
+        className={`flex items-center justify-between py-2 px-3 rounded-lg cursor-pointer transition-all duration-150 group ${
+          isActive
+            ? 'bg-primary/10 text-primary border-l-4 border-primary pl-2'
+            : 'hover:bg-outline-variant/10 text-on-surface-variant'
+        }`}
+        style={{ paddingLeft: `${Math.max(12, level * 16)}px` }}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <button
+            type="button"
+            onClick={handleToggle}
+            className={`p-1 rounded hover:bg-outline-variant/20 text-on-surface-variant/70 shrink-0 ${
+              !hasChildren ? 'opacity-0 cursor-default' : ''
+            }`}
+            disabled={!hasChildren}
+          >
+            {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </button>
+          
+          {hasChildren ? (
+            <Folder className="w-4 h-4 text-amber-500 shrink-0" />
+          ) : (
+            <File className="w-4 h-4 text-slate-400 shrink-0" />
+          )}
+
+          <span className="truncate font-body text-sm font-medium">
+            {topic.code ? `[${topic.code}] ` : ''}{topic.title || 'Không tên'}
+          </span>
+        </div>
+
+        {/* Action buttons (always visible on small/medium screen, or hover on desktop) */}
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0 ml-2">
+          <button
+            title="Thêm chủ đề con"
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCreateChild(topic);
+            }}
+            className="p-1 rounded hover:bg-primary/20 text-primary/80 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+          <button
+            title="Xóa"
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(topic);
+            }}
+            className="p-1 rounded hover:bg-red-500/20 text-red-500 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {hasChildren && isExpanded && (
+        <div className="mt-0.5">
+          {children
+            .sort((a, b) => {
+              const orderA = parseInt(a.order_index || '0');
+              const orderB = parseInt(b.order_index || '0');
+              return orderA - orderB;
+            })
+            .map(child => (
+              <TopicTreeNode
+                key={child.id}
+                topic={child}
+                allTopics={allTopics}
+                level={level + 1}
+                activeId={activeId}
+                onSelect={onSelect}
+                onCreateChild={onCreateChild}
+                onDelete={onDelete}
+              />
+            ))}
+        </div>
+      )}
+    </div>
+  );
+}

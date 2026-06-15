@@ -7,7 +7,9 @@ import {
   Settings,
   FileText,
   LogOut,
-  LibraryBig
+  LibraryBig,
+  BookOpen,
+  Tag
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -35,7 +37,11 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
     { icon: Database, label: 'Question Bank', href: '/question-bank' },
     { icon: LibraryBig, label: 'Collections', href: '/collection' },
     { icon: FileText, label: 'Documents', href: '/documents' },
-    ...(isAdmin ? [{ icon: Settings, label: 'Cấu hình độ khó', href: '/difficulty' }] : []),
+    ...(isAdmin ? [
+      { icon: BookOpen, label: 'Chủ đề học thuật', href: '/topics' },
+      { icon: Tag, label: 'Quản lý Thẻ Tag', href: '/tags' },
+      { icon: Settings, label: 'Cấu hình độ khó', href: '/difficulty' }
+    ] : []),
   ];
 
   return (
