@@ -81,5 +81,28 @@ export const topicsService = {
       topic_ids: topicIds
     });
     return response.data;
+  },
+
+  async fetchTopicQuestions(topicId: string): Promise<any[]> {
+    const response = await axios.get(`/api/topics/${topicId}/questions`);
+    return response.data;
+  },
+
+  async updateQuestion(questionId: string, data: any): Promise<any> {
+    const response = await axios.patch(`/api/questions/${questionId}`, data);
+    return response.data;
+  },
+
+  async bulkMoveQuestions(
+    questionIds: string[],
+    sourceTopicId: string,
+    targetTopicId: string
+  ): Promise<any> {
+    const response = await axios.post('/api/topics/bulk-move-questions', {
+      question_ids: questionIds,
+      source_topic_id: sourceTopicId,
+      target_topic_id: targetTopicId
+    });
+    return response.data;
   }
 };
