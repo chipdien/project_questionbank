@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, RefreshCw, FolderPlus } from 'lucide-react';
+import { Plus, Search, RefreshCw, FolderPlus, ArrowRightLeft, CheckSquare, Square } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { topicsService, Topic, RelatedData } from '@/services/topics';
 import TopicTreeNode from '@/components/ui/topic-tree-node';
 import TopicDetailsPanel from '@/components/ui/topic-details-panel';
 import TopicDeleteTransferModal from '@/components/ui/topic-delete-transfer-modal';
+import TopicBulkMoveModal from '@/components/ui/topic-bulk-move-modal';
 
 export default function TopicsPage() {
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -17,6 +18,11 @@ export default function TopicsPage() {
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [newParentId, setNewParentId] = useState<string | null>(null);
+
+  // States chọn nhiều và di chuyển hàng loạt
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkMoveModalOpen, setBulkMoveModalOpen] = useState(false);
 
   // Modal quản lý xóa và chuyển đổi câu hỏi (US3)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -40,8 +46,29 @@ export default function TopicsPage() {
   }, []);
 
   const handleSelect = (topic: Topic) => {
-    setSelectedTopic(topic);
-    setIsNew(false);
+    if (isMultiSelectMode) {
+      handleToggleSelect(topic);
+    } else {
+      setSelectedTopic(topic);
+      setIsNew(false);
+    }
+  };
+
+  const handleToggleSelect = (topic: Topic) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(topic.id)) {
+        next.delete(topic.id);
+      } else {
+        next.add(topic.id);
+      }
+      return next;
+    });
+  };
+
+  const toggleMultiSelectMode = () => {
+    setIsMultiSelectMode(!isMultiSelectMode);
+    setSelectedIds(new Set());
   };
 
   const handleCreateRoot = () => {
@@ -122,6 +149,8 @@ export default function TopicsPage() {
     );
   });
 
+  const selectedTopicsList = topics.filter(t => selectedIds.has(t.id));
+
   return (
     <div className="flex flex-col gap-6 p-6 h-[calc(100vh-80px)] overflow-hidden">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
@@ -130,6 +159,28 @@ export default function TopicsPage() {
           <p className="text-sm text-on-surface-variant/80">Xây dựng và tinh chỉnh cây giáo trình đệ quy không giới hạn cấp độ</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={toggleMultiSelectMode}
+            className={`px-4 py-2.5 rounded-xl border text-sm font-semibold flex items-center gap-2 transition-all ${
+              isMultiSelectMode
+                ? 'bg-amber-500/15 text-amber-600 border-amber-500/30'
+                : 'border-outline-variant hover:bg-outline-variant/15 text-on-surface-variant'
+            }`}
+          >
+            {isMultiSelectMode ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+            <span>{isMultiSelectMode ? 'Hủy chọn nhiều' : 'Chọn nhiều'}</span>
+          </button>
+          
+          {isMultiSelectMode && selectedIds.size > 0 && (
+            <button
+              onClick={() => setBulkMoveModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700 transition-all text-sm font-semibold flex items-center gap-2"
+            >
+              <ArrowRightLeft className="w-4 h-4" />
+              <span>Di chuyển ({selectedIds.size})</span>
+            </button>
+          )}
+
           <button
             onClick={loadTopics}
             disabled={loading}
@@ -193,9 +244,20 @@ export default function TopicsPage() {
                         : 'border-outline-variant/30 hover:bg-outline-variant/10 text-on-surface-variant'
                     }`}
                   >
-                    <span className="text-sm font-medium truncate">
-                      {topic.code ? `[${topic.code}] ` : ''}{topic.title}
-                    </span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      {isMultiSelectMode && (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(topic.id)}
+                          onChange={() => handleToggleSelect(topic)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-4 h-4 rounded text-primary focus:ring-primary/20 shrink-0"
+                        />
+                      )}
+                      <span className="text-sm font-medium truncate">
+                        {topic.code ? `[${topic.code}] ` : ''}{topic.title}
+                      </span>
+                    </div>
                     <span className="text-[10px] uppercase tracking-wider font-semibold text-outline-variant bg-outline-variant/15 px-2 py-0.5 rounded">
                       {topic.type}
                     </span>
@@ -220,6 +282,9 @@ export default function TopicsPage() {
                     onSelect={handleSelect}
                     onCreateChild={handleCreateChild}
                     onDelete={handleDeleteClick}
+                    isMultiSelectMode={isMultiSelectMode}
+                    selectedIds={selectedIds}
+                    onToggleSelect={handleToggleSelect}
                   />
                 ))
             )}
@@ -255,6 +320,22 @@ export default function TopicsPage() {
             setTopicToDelete(null);
             setRelatedData(null);
             setSelectedTopic(null);
+            loadTopics();
+          }}
+        />
+      )}
+
+      {/* Bulk Move Modal */}
+      {bulkMoveModalOpen && selectedTopicsList.length > 0 && (
+        <TopicBulkMoveModal
+          isOpen={bulkMoveModalOpen}
+          onClose={() => setBulkMoveModalOpen(false)}
+          selectedTopics={selectedTopicsList}
+          allTopics={topics}
+          onSuccess={() => {
+            setBulkMoveModalOpen(false);
+            setIsMultiSelectMode(false);
+            setSelectedIds(new Set());
             loadTopics();
           }}
         />

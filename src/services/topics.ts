@@ -60,5 +60,16 @@ export const topicsService = {
   ): Promise<any> {
     const response = await axios.post(`/api/topics/${id}/transfer`, data);
     return response.data;
+  },
+
+  async bulkMoveTopics(
+    topicIds: string[],
+    targetParentId: string | null
+  ): Promise<any> {
+    const response = await axios.post('/api/topics/bulk-move', {
+      topic_ids: topicIds,
+      target_parent_id: targetParentId
+    });
+    return response.data;
   }
 };

@@ -10,6 +10,9 @@ interface TopicTreeNodeProps {
   onSelect: (topic: Topic) => void;
   onCreateChild: (parent: Topic) => void;
   onDelete: (topic: Topic) => void;
+  isMultiSelectMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (topic: Topic) => void;
 }
 
 export default function TopicTreeNode({
@@ -19,7 +22,10 @@ export default function TopicTreeNode({
   activeId,
   onSelect,
   onCreateChild,
-  onDelete
+  onDelete,
+  isMultiSelectMode = false,
+  selectedIds = new Set(),
+  onToggleSelect
 }: TopicTreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const children = allTopics.filter(t => t.parent_id === topic.id);
@@ -53,6 +59,16 @@ export default function TopicTreeNode({
           >
             {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
+
+          {isMultiSelectMode && onToggleSelect && (
+            <input
+              type="checkbox"
+              checked={selectedIds.has(topic.id)}
+              onChange={() => onToggleSelect(topic)}
+              onClick={(e) => e.stopPropagation()}
+              className="w-4 h-4 rounded text-primary focus:ring-primary/20 shrink-0 mr-1"
+            />
+          )}
           
           {hasChildren ? (
             <Folder className="w-4 h-4 text-amber-500 shrink-0" />
@@ -110,6 +126,9 @@ export default function TopicTreeNode({
                 onSelect={onSelect}
                 onCreateChild={onCreateChild}
                 onDelete={onDelete}
+                isMultiSelectMode={isMultiSelectMode}
+                selectedIds={selectedIds}
+                onToggleSelect={onToggleSelect}
               />
             ))}
         </div>
