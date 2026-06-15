@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type, Schema } from '@google/genai';
+import { prisma } from '@/lib/db';
 
 // Initialize SDK
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -185,13 +186,14 @@ export class QuestionClassifierService {
       throw new Error("GEMINI_API_KEY is not configured.");
     }
 
-    // Import query utility dynamically or use it directly
-    const { query } = require('@/lib/db');
     let difficultyEnum = ["Dễ", "Trung Bình", "Khó"]; // Fallback mặc định
     try {
-      const dbDiffs = await query('SELECT name FROM lms_difficulties ORDER BY display_order ASC');
+      const dbDiffs = await prisma.lms_difficulties.findMany({
+        orderBy: { display_order: 'asc' },
+        select: { name: true },
+      });
       if (dbDiffs && dbDiffs.length > 0) {
-        difficultyEnum = dbDiffs.map((d: any) => d.name);
+        difficultyEnum = dbDiffs.map((d) => d.name);
       }
     } catch (dbError) {
       console.error('Failed to load dynamic difficulties for AI, using fallback:', dbError);

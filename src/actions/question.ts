@@ -1,8 +1,9 @@
 'use server';
 
-import { query } from '@/lib/db';
+import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getCurrentUser } from '@/lib/utils/auth-utils';
+import { serializeBigInt } from '@/lib/utils/serialization';
 
 export async function classifyQuestions(
   questionIds: number[],
@@ -23,17 +24,29 @@ export async function classifyQuestions(
 
     // Check ownership before classifying
     if (levelRank < 5) { // Admin (level >= 5) bypasses this check
-      const placeholders = questionIds.map(() => '?').join(',');
-      const accessCheck = await query<{ id: number }[]>(`
-        SELECT q.id
-        FROM lms_questions q
-        JOIN lms_questions_documents qd ON q.id = qd.question_id
-        JOIN lms_documents d ON qd.document_id = d.id
-        WHERE q.id IN (${placeholders})
-        AND (d.created_by_id = ? OR d.teacher_owned = ?)
-      `, [...questionIds, userId, userId]);
+      const linkedDocs = await prisma.lms_questions_documents.findMany({
+        where: { question_id: { in: questionIds.map(BigInt) } },
+        select: { document_id: true, question_id: true },
+      });
+      const docIds = linkedDocs.map(ld => ld.document_id);
 
-      const accessIds = new Set(accessCheck.map(r => r.id));
+      const docAccess = await prisma.lms_documents.findMany({
+        where: {
+          id: { in: docIds },
+          OR: [
+            { created_by_id: userId !== null ? BigInt(userId) : null },
+            { teacher_owned: userId !== null ? BigInt(userId) : null },
+          ],
+        },
+        select: { id: true },
+      });
+
+      const allowedDocIds = new Set(docAccess.map(d => d.id));
+      const accessCheckQuestionIds = linkedDocs
+        .filter(ld => allowedDocIds.has(ld.document_id))
+        .map(ld => Number(ld.question_id));
+
+      const accessIds = new Set(accessCheckQuestionIds);
       for (const id of questionIds) {
         if (!accessIds.has(id)) {
           return { success: false, error: 'Bạn không có quyền phân loại một số câu hỏi (Vì không phải người tải lên).' };
@@ -44,40 +57,39 @@ export async function classifyQuestions(
     const { grade, lessonId, difficulty } = classification;
 
     // 1. Cập nhật bảng lms_questions (Khối lớp và Độ khó)
-    const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateData: any = {};
 
     if (grade !== undefined) {
-      updateFields.push('grade = ?');
-      updateValues.push(grade === '' ? null : grade);
+      updateData.grade = grade === '' || grade === null ? null : Number(grade);
     }
     if (difficulty !== undefined) {
-      updateFields.push('question_difficulty = ?');
-      updateValues.push(difficulty === '' ? null : difficulty);
+      updateData.question_difficulty = difficulty === '' ? null : difficulty;
     }
 
-    if (updateFields.length > 0) {
-      const placeholders = questionIds.map(() => '?').join(',');
-      const sql = `UPDATE lms_questions SET ${updateFields.join(', ')} WHERE id IN (${placeholders})`;
-      await query(sql, [...updateValues, ...questionIds]);
+    if (Object.keys(updateData).length > 0) {
+      await prisma.lms_questions.updateMany({
+        where: { id: { in: questionIds.map(BigInt) } },
+        data: updateData,
+      });
     }
 
     // 2. Cập nhật bảng lms_questions_lessons (Chủ đề)
     if (lessonId !== undefined) {
       // Xóa các liên kết cũ của các câu hỏi này
-      const placeholders = questionIds.map(() => '?').join(',');
-      await query(`DELETE FROM lms_questions_lessons WHERE question_id IN (${placeholders})`, [...questionIds]);
+      await prisma.lms_questions_lessons.deleteMany({
+        where: { question_id: { in: questionIds.map(BigInt) } },
+      });
 
-      // Nếu có chọn bài học mới, thực hiện thêm bản ghi theo kiểu Bulk Insert
+      // Nếu có chọn bài học mới, thực hiện thêm bản ghi
       if (lessonId !== null && lessonId !== '') {
-        const insertValues: any[] = [];
-        const rows = questionIds.map((qId) => {
-          insertValues.push(qId, lessonId);
-          return '(NOW(), NOW(), ?, ?)';
-        }).join(', ');
-
-        const sqlInsert = `INSERT INTO lms_questions_lessons (created_at, updated_at, question_id, lesson_id) VALUES ${rows}`;
-        await query(sqlInsert, insertValues);
+        await prisma.lms_questions_lessons.createMany({
+          data: questionIds.map((qId) => ({
+            question_id: BigInt(qId),
+            lesson_id: BigInt(lessonId),
+            created_at: new Date(),
+            updated_at: new Date(),
+          })),
+        });
       }
     }
 
@@ -101,13 +113,21 @@ export async function getQuestionsByDocId(
     const levelRank = user?.level_rank || 0;
 
     // Check ownership/public access for this specific docId
-    const docAccess = await query<any[]>(
-      `SELECT id FROM lms_documents 
-       WHERE id = ? AND (created_by_id = ? OR \`public\` = '1' OR created_by_id IS NULL OR ? >= 5)`,
-      [docId, userId, levelRank]
-    );
+    const docQueryOr: any[] = [
+      { created_by_id: userId !== null ? BigInt(userId) : null },
+      { public: '1' },
+      { created_by_id: null },
+    ];
 
-    if (docAccess.length === 0) {
+    const doc = await prisma.lms_documents.findFirst({
+      where: levelRank >= 5 ? { id: BigInt(docId) } : {
+        id: BigInt(docId),
+        OR: docQueryOr,
+      },
+      select: { id: true },
+    });
+
+    if (!doc) {
       return { data: [], total: 0, page: 1, pageSize: 30, totalPages: 0 };
     }
 
@@ -116,56 +136,66 @@ export async function getQuestionsByDocId(
     const offset = (safePage - 1) * safePageSize;
 
     // Count total
-    let countSql = `
-      SELECT COUNT(DISTINCT q.id) as total
-      FROM lms_questions q
-      JOIN lms_questions_documents qd ON q.id = qd.question_id
-      WHERE qd.document_id = ?
-    `;
-    const countParams: any[] = [docId];
-    if (excludeIds.length > 0) {
-      const placeholders = excludeIds.map(() => '?').join(',');
-      countSql += ` AND q.id NOT IN (${placeholders})`;
-      countParams.push(...excludeIds);
-    }
-    const countResult = await query<any[]>(countSql, countParams);
-    const total = Number(countResult[0]?.total || 0);
+    const questionsDocs = await prisma.lms_questions_documents.findMany({
+      where: {
+        document_id: BigInt(docId),
+        question_id: excludeIds.length > 0 ? { notIn: excludeIds.map(BigInt) } : undefined,
+      },
+      select: { question_id: true },
+    });
+
+    const questionIds = questionsDocs.map(qd => qd.question_id);
+    const total = questionIds.length;
 
     // Fetch paginated
-    let paginatedSql = `
-      SELECT q.*, GROUP_CONCAT(l.name SEPARATOR ', ') as lesson_name
-      FROM lms_questions q
-      LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
-      LEFT JOIN lms_lessons l ON ql.lesson_id = l.id
-      JOIN lms_questions_documents qd ON q.id = qd.question_id
-      WHERE qd.document_id = ?
-    `;
-    const queryParams: any[] = [docId];
-    if (excludeIds.length > 0) {
-      const placeholders = excludeIds.map(() => '?').join(',');
-      paginatedSql += ` AND q.id NOT IN (${placeholders})`;
-      queryParams.push(...excludeIds);
-    }
-    paginatedSql += ` GROUP BY q.id ORDER BY q.id ASC LIMIT ? OFFSET ?`;
-    queryParams.push(safePageSize, offset);
+    const paginatedQuestionIds = questionIds.slice(offset, offset + safePageSize);
 
-    const questions = await query<any[]>(paginatedSql, queryParams);
+    const questionsRaw = await prisma.lms_questions.findMany({
+      where: { id: { in: paginatedQuestionIds } },
+      orderBy: { id: 'asc' },
+    });
+
+    // Fetch lessons linked to these questions
+    const questionLessons = await prisma.lms_questions_lessons.findMany({
+      where: { question_id: { in: paginatedQuestionIds } },
+      select: { question_id: true, lesson_id: true },
+    });
+
+    const lessonIds = questionLessons.map(ql => ql.lesson_id);
+    const lessonsMap = await prisma.lms_lessons.findMany({
+      where: { id: { in: lessonIds } },
+      select: { id: true, name: true },
+    });
+
+    const lessonNameMap = new Map(lessonsMap.map(l => [l.id, l.name]));
+
+    const questions: any[] = questionsRaw.map((q) => {
+      const linkedLessonIds = questionLessons
+        .filter(ql => ql.question_id === q.id)
+        .map(ql => ql.lesson_id);
+      const names = linkedLessonIds.map(id => lessonNameMap.get(id)).filter(n => n) as string[];
+
+      return {
+        ...q,
+        lesson_name: names.join(', ') || null,
+      };
+    });
 
     for (const q of questions) {
-      const options = await query<any[]>(
-        'SELECT * FROM lms_options WHERE question_id = ? ORDER BY `order` ASC',
-        [q.id]
-      );
+      const options = await prisma.lms_options.findMany({
+        where: { question_id: q.id },
+        orderBy: { order: 'asc' },
+      });
       q.options = options;
     }
 
-    return {
+    return serializeBigInt({
       data: questions,
       total,
       page: safePage,
       pageSize: safePageSize,
-      totalPages: Math.ceil(total / safePageSize)
-    };
+      totalPages: Math.ceil(total / safePageSize),
+    });
   } catch (error) {
     console.error('Error fetching questions for doc:', error);
     return { data: [], total: 0, page: 1, pageSize: 30, totalPages: 0 };
@@ -190,91 +220,108 @@ export async function getLibraryQuestions(
     const offset = (safePage - 1) * safePageSize;
 
     // Base conditions for ownership/visibility
-    const authWhere = `(d.created_by_id = ? OR d.public = '1' OR d.created_by_id IS NULL OR ? >= 5)`;
-    const authParams = [userId, levelRank];
+    const docQueryOr: any[] = [
+      { created_by_id: userId !== null ? BigInt(userId) : null },
+      { public: '1' },
+      { created_by_id: null },
+    ];
 
-    // Count total
-    let countSql = `
-      SELECT COUNT(DISTINCT q.id) as total 
-      FROM lms_questions q
-      LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
-      JOIN lms_questions_documents qd ON q.id = qd.question_id
-      JOIN lms_documents d ON qd.document_id = d.id
-      WHERE ${authWhere}
-    `;
-    const countParams: any[] = [...authParams];
+    const docs = await prisma.lms_documents.findMany({
+      where: levelRank >= 5 ? {} : { OR: docQueryOr },
+      select: { id: true },
+    });
+
+    const allowedDocIds = docs.map(d => d.id);
+
+    // Join questions through documents
+    const qdRelations = await prisma.lms_questions_documents.findMany({
+      where: { document_id: { in: allowedDocIds } },
+      select: { question_id: true },
+    });
+
+    let targetQuestionIds = Array.from(new Set(qdRelations.map(r => r.question_id)));
+
+    if (lessonId) {
+      const questionLessons = await prisma.lms_questions_lessons.findMany({
+        where: {
+          question_id: { in: targetQuestionIds },
+          lesson_id: BigInt(lessonId),
+        },
+        select: { question_id: true },
+      });
+      targetQuestionIds = questionLessons.map(ql => ql.question_id);
+    }
+
+    const whereClause: any = {
+      id: { in: targetQuestionIds },
+    };
 
     if (grade) {
-      countSql += ' AND q.grade = ?';
-      countParams.push(grade);
+      whereClause.grade = Number(grade);
     }
     if (difficulty) {
-      countSql += ' AND q.question_difficulty = ?';
-      countParams.push(difficulty);
-    }
-    if (lessonId) {
-      countSql += ' AND ql.lesson_id = ?';
-      countParams.push(lessonId);
+      whereClause.question_difficulty = difficulty;
     }
     if (excludeIds.length > 0) {
-      const placeholders = excludeIds.map(() => '?').join(',');
-      countSql += ` AND q.id NOT IN (${placeholders})`;
-      countParams.push(...excludeIds);
+      whereClause.id = {
+        in: targetQuestionIds,
+        notIn: excludeIds.map(BigInt),
+      };
     }
 
-    const countResult = await query<any[]>(countSql, countParams);
-    const total = Number(countResult[0]?.total || 0);
-    
-    // Fetch pagination
-    let paginatedSql = `
-      SELECT q.*, GROUP_CONCAT(DISTINCT l.name SEPARATOR ', ') as lesson_name
-      FROM lms_questions q
-      LEFT JOIN lms_questions_lessons ql ON q.id = ql.question_id
-      LEFT JOIN lms_lessons l ON ql.lesson_id = l.id
-      JOIN lms_questions_documents qd ON q.id = qd.question_id
-      JOIN lms_documents d ON qd.document_id = d.id
-      WHERE ${authWhere}
-    `;
-    const queryParams: any[] = [...authParams];
+    const total = await prisma.lms_questions.count({
+      where: whereClause,
+    });
 
-    if (grade) {
-      paginatedSql += ` AND q.grade = ?`;
-      queryParams.push(grade);
-    }
-    if (difficulty) {
-      paginatedSql += ` AND q.question_difficulty = ?`;
-      queryParams.push(difficulty);
-    }
-    if (lessonId) {
-      paginatedSql += ` AND ql.lesson_id = ?`;
-      queryParams.push(lessonId);
-    }
-    if (excludeIds.length > 0) {
-      const placeholders = excludeIds.map(() => '?').join(',');
-      paginatedSql += ` AND q.id NOT IN (${placeholders})`;
-      queryParams.push(...excludeIds);
-    }
+    const questionsRaw = await prisma.lms_questions.findMany({
+      where: whereClause,
+      orderBy: { id: 'desc' },
+      skip: offset,
+      take: safePageSize,
+    });
 
-    paginatedSql += ` GROUP BY q.id ORDER BY q.id DESC LIMIT ? OFFSET ?`;
-    queryParams.push(Number(safePageSize), Number(offset));
+    // Fetch lessons linked to these questions
+    const paginatedQuestionIds = questionsRaw.map(q => q.id);
+    const questionLessons = await prisma.lms_questions_lessons.findMany({
+      where: { question_id: { in: paginatedQuestionIds } },
+      select: { question_id: true, lesson_id: true },
+    });
 
-    const questions = await query<any[]>(paginatedSql, queryParams);
+    const lessonIds = questionLessons.map(ql => ql.lesson_id);
+    const lessonsMap = await prisma.lms_lessons.findMany({
+      where: { id: { in: lessonIds } },
+      select: { id: true, name: true },
+    });
+
+    const lessonNameMap = new Map(lessonsMap.map(l => [l.id, l.name]));
+
+    const questions: any[] = questionsRaw.map((q) => {
+      const linkedLessonIds = questionLessons
+        .filter(ql => ql.question_id === q.id)
+        .map(ql => ql.lesson_id);
+      const names = linkedLessonIds.map(id => lessonNameMap.get(id)).filter(n => n) as string[];
+
+      return {
+        ...q,
+        lesson_name: names.join(', ') || null,
+      };
+    });
 
     for (const q of questions) {
-      const options = await query<any[]>(
-        'SELECT * FROM lms_options WHERE question_id = ? ORDER BY `order` ASC',
-        [q.id]
-      );
+      const options = await prisma.lms_options.findMany({
+        where: { question_id: q.id },
+        orderBy: { order: 'asc' },
+      });
       q.options = options;
     }
 
-    return {
+    return serializeBigInt({
       data: questions,
       total,
       page: safePage,
       pageSize: safePageSize,
-      totalPages: Math.ceil(total / safePageSize)
-    };
+      totalPages: Math.ceil(total / safePageSize),
+    });
   } catch (error: any) {
     console.error('Error fetching library questions:', error.message);
     return { data: [], total: 0, page: 1, pageSize: 30, totalPages: 0 };
@@ -283,11 +330,17 @@ export async function getLibraryQuestions(
 
 export async function getLessons() {
   try {
-    const lessons = await query<any[]>('SELECT id, name, grade FROM lms_lessons ORDER BY name ASC');
-    return lessons || [];
+    const lessons = await prisma.lms_lessons.findMany({
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, grade: true },
+    });
+    return lessons.map(l => ({
+      id: Number(l.id),
+      name: l.name,
+      grade: l.grade,
+    })) || [];
   } catch (error) {
     console.error('Error fetching lessons:', error);
     return [];
   }
 }
-

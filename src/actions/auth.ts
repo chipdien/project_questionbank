@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { signInAPI, signOutAPI } from '@/services/auth';
-import { query } from '@/lib/db';
+import { prisma } from '@/lib/db';
 
 export async function loginAction(prevState: any, formData: FormData) {
   const email = formData.get('email') as string;
@@ -21,16 +21,22 @@ export async function loginAction(prevState: any, formData: FormData) {
 
     // 1. Đồng bộ DB trước
     try {
-      await query(
-        `INSERT INTO lms_users (id, email, username, nickname, level_rank) 
-         VALUES (?, ?, ?, ?, ?) 
-         ON DUPLICATE KEY UPDATE 
-           email = VALUES(email), 
-           username = VALUES(username), 
-           nickname = VALUES(nickname), 
-           level_rank = VALUES(level_rank)`,
-        [user.id, user.email, user.username, user.nickname, user.level_rank || 0]
-      );
+      await prisma.lms_users.upsert({
+        where: { id: user.id },
+        update: {
+          email: user.email,
+          username: user.username,
+          nickname: user.nickname,
+          level_rank: user.level_rank || 0,
+        },
+        create: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          nickname: user.nickname,
+          level_rank: user.level_rank || 0,
+        },
+      });
     } catch (e) {
       console.error('Database Sync Error:', e);
     }
