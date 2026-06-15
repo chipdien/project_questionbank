@@ -14,32 +14,13 @@ import { usePathname } from 'next/navigation';
 
 import { logoutAction } from '@/actions/auth';
 import { User } from '@/lib/utils/auth-utils';
-import { getDifficulties, Difficulty } from '@/actions/difficulty';
-import DifficultyConfigModal from '@/app/(main)/question-bank/components/DifficultyConfigModal';
 
 export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; user: User | null }) {
   const pathname = usePathname();
 
   const [isPending, startTransition] = useTransition();
-  const [isDiffModalOpen, setIsDiffModalOpen] = useState(false);
-  const [difficultiesList, setDifficultiesList] = useState<Difficulty[]>([]);
 
   const isAdmin = typeof user?.level_rank === 'number' && (user.level_rank === 0 || user.level_rank >= 5);
-
-  const handleRefreshDifficulties = async () => {
-    try {
-      const data = await getDifficulties();
-      setDifficultiesList(data);
-    } catch (error) {
-      console.error('Failed to fetch difficulties in Sidebar:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (isAdmin) {
-      handleRefreshDifficulties();
-    }
-  }, [isAdmin]);
 
   const handleLogout = () => {
     if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
@@ -54,6 +35,7 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
     { icon: Database, label: 'Question Bank', href: '/question-bank' },
     { icon: LibraryBig, label: 'Collections', href: '/collection' },
     { icon: FileText, label: 'Documents', href: '/documents' },
+    ...(isAdmin ? [{ icon: Settings, label: 'Cấu hình độ khó', href: '/difficulty' }] : []),
   ];
 
   return (
@@ -86,21 +68,6 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
       </div>
 
       <div className={`mt-auto border-t border-outline-variant/20 pt-4 px-2 space-y-2 nav-section w-full`}>
-        {isAdmin && (
-          <button
-            type="button"
-            onClick={() => {
-              handleRefreshDifficulties();
-              setIsDiffModalOpen(true);
-            }}
-            className="nav-item w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-200 ease-in-out rounded-xl cursor-pointer"
-          >
-            <Settings className="w-5 h-5 shrink-0" />
-            {!isCollapsed && (
-              <span className="nav-label text-[0.875rem] font-body">Cấu hình độ khó</span>
-            )}
-          </button>
-        )}
         <button
           type="button"
           onClick={handleLogout}
@@ -115,15 +82,6 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
           )}
         </button>
       </div>
-
-      {isDiffModalOpen && (
-        <DifficultyConfigModal
-          isOpen={isDiffModalOpen}
-          onClose={() => setIsDiffModalOpen(false)}
-          difficulties={difficultiesList}
-          onRefresh={handleRefreshDifficulties}
-        />
-      )}
     </aside>
   );
 }
