@@ -6,11 +6,11 @@
 
 ## Summary
 
-Dự án cần nâng cấp hệ thống phân loại câu hỏi (Questions Classification) và bộ lọc tìm kiếm trong Ngân hàng câu hỏi (Question Bank) theo các tiêu chí: Khối lớp (Grade), Độ khó (Difficulty), Chủ đề đệ quy (Topics) và Thẻ phân loại (Tags theo danh mục SOURCE, METHOD, SKILL). 
+Dự án cần nâng cấp hệ thống phân loại câu hỏi (Questions Classification) và bộ lọc tìm kiếm trong Ngân hàng câu hỏi (Question Bank) theo các tiêu chí: Khối lớp (Grade), Độ khó (Difficulty - 5 mức), Loại hình câu hỏi (Question Type), Cấu trúc câu hỏi (Độc lập hoặc Câu hỏi chùm - group câu hỏi con `sub` vào `main`), Chủ đề đệ quy (Topics) và Thẻ phân loại (Tags theo danh mục SOURCE, METHOD, SKILL, TYPE, EXAM, YEAR).
 
 ### Giải pháp kỹ thuật:
-1. **API/Server Action**: Nâng cấp hàm `getLibraryQuestions` trong `src/actions/question.ts` để nhận thêm các tham số lọc: `grades[]`, `difficulties[]`, `topicIds[]`, `tagIds[]`, `keyword`. Truy vấn đệ quy theo chủ đề sẽ sử dụng cột `path` của `lms_topics` để tìm tất cả chủ đề con cháu thuộc chủ đề được chọn.
-2. **Giao diện bộ lọc (Filter Panel)**: Thay thế giao diện bộ lọc hiện tại bằng một bảng điều khiển bộ lọc mới, hỗ trợ chọn nhiều (multi-select) cho Khối lớp và Độ khó; hiển thị Dropdown hoặc cây chủ đề học thuật thu gọn được; và các thẻ tag được gom nhóm theo category (Nguồn gốc - SOURCE, Phương pháp - METHOD, Kỹ năng - SKILL).
+1. **API/Server Action**: Nâng cấp hàm `getLibraryQuestions` trong `src/actions/question.ts` để nhận thêm các tham số lọc: `grades[]`, `difficulties[]`, `questionTypes[]`, `topicIds[]`, `tagIds[]`, `complex`, `keyword`. Truy vấn đệ quy theo chủ đề sẽ sử dụng cột `path` của `lms_topics` để tìm tất cả chủ đề con cháu thuộc chủ đề được chọn. Gộp các câu hỏi con (`complex = sub`) vào câu hỏi chùm cha (`complex = main`) khi trả về.
+2. **Giao diện bộ lọc (Filter Panel)**: Thay thế giao diện bộ lọc hiện tại bằng một bảng điều khiển bộ lọc mới, hỗ trợ chọn nhiều (multi-select) cho Khối lớp và Độ khó; hiển thị Dropdown hoặc cây chủ đề học thuật thu gọn được; lọc theo loại hình câu hỏi và cấu trúc; và các thẻ tag được gom nhóm theo category (SOURCE, METHOD, SKILL, TYPE, EXAM, YEAR).
 3. **Đồng bộ hóa URL**: Đồng bộ hóa trạng thái bộ lọc lên URL query parameters bằng hook của Next.js để giữ trạng thái bộ lọc khi reload hoặc chia sẻ link.
 
 ## Technical Context
