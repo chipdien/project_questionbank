@@ -75,13 +75,30 @@ export default function TagsPage() {
   const getCategoryBadgeClass = (category: string) => {
     switch (category.toUpperCase()) {
       case 'SKILL':
-        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+        return 'bg-blue-500/10 text-blue-600 border-blue-500/30';
       case 'SOURCE':
-        return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+        return 'bg-purple-500/10 text-purple-600 border-purple-500/30';
       case 'METHOD':
-        return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+        return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30';
+      case 'TOPIC':
+        return 'bg-amber-500/10 text-amber-600 border-amber-500/30';
       default:
-        return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
+        return 'bg-slate-500/10 text-slate-500 border-slate-500/30';
+    }
+  };
+
+  const getCategoryBorderClass = (category: string) => {
+    switch (category.toUpperCase()) {
+      case 'SKILL':
+        return 'border-l-blue-500/90';
+      case 'SOURCE':
+        return 'border-l-purple-500/90';
+      case 'METHOD':
+        return 'border-l-emerald-500/90';
+      case 'TOPIC':
+        return 'border-l-amber-500/90';
+      default:
+        return 'border-l-slate-400/90';
     }
   };
 
@@ -163,7 +180,9 @@ export default function TagsPage() {
             {filteredTags.map(tag => (
               <div
                 key={tag.id}
-                className="flex items-center justify-between p-4 bg-surface border border-outline-variant/20 rounded-2xl hover:shadow-md hover:border-outline-variant/55 transition-all group"
+                className={`flex items-center justify-between p-4 bg-surface border-y border-r border-l-4 border-outline-variant/20 rounded-2xl hover:shadow-md hover:border-y-outline-variant/55 hover:border-r-outline-variant/55 transition-all group ${getCategoryBorderClass(
+                  tag.category
+                )}`}
               >
                 <div className="flex flex-col gap-2 min-w-0">
                   <span className="font-semibold text-on-surface text-sm truncate font-body">
