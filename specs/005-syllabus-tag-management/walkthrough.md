@@ -15,11 +15,15 @@ Tài liệu này tổng kết các thay đổi kỹ thuật và kết quả ki�
    - **Modal Di chuyển & Xóa Chủ đề ([TopicDeleteTransferModal.tsx](file:///Volumes/DATA/workspace/vietelite_questionbank/src/components/ui/topic-delete-transfer-modal.tsx))**:
      - Hiển thị khi xóa một chủ đề có chứa chủ đề con hoặc câu hỏi liên quan.
      - Liệt kê thống kê chi tiết ràng buộc và cho phép người dùng chọn một chủ đề đích để di chuyển hàng loạt trước khi xóa.
+   - **Di chuyển hàng loạt Chủ đề (Bulk Move Topics)**:
+     - Nút "Chọn nhiều" trên thanh công cụ để kích hoạt chế độ tích chọn checkbox bên cạnh các node chủ đề trên cây.
+     - Modal [TopicBulkMoveModal.tsx](file:///Volumes/DATA/workspace/vietelite_questionbank/src/components/ui/topic-bulk-move-modal.tsx) cho phép chọn một chủ đề cha mới và di chuyển đồng thời tất cả các chủ đề đã chọn về đó (tự động loại trừ chính nó và các con cháu của nó để tránh vòng lặp).
 
 2. **Hệ thống API backend**:
    - **Chặn xóa (`DELETE /api/topics/[id]`)**: Trả về lỗi `400 Bad Request` và chặn xóa nếu có chủ đề con hoặc câu hỏi liên quan.
    - **Truy vấn quan hệ (`GET /api/topics/[id]/related`)**: Trích xuất đệ quy số lượng subtopics và danh sách câu hỏi liên quan.
    - **Di chuyển câu hỏi (`POST /api/topics/[id]/transfer`)**: Transaction chuyển toàn bộ câu hỏi liên kết sang chủ đề mới an toàn, loại bỏ trùng lặp khóa.
+   - **Di chuyển hàng loạt Chủ đề (`POST /api/topics/bulk-move`)**: Cho phép thay đổi nút cha (`parent_id`) và tính toán lại `path` đệ quy cho danh sách nhiều chủ đề cùng lúc.
    - **Chỉnh sửa & Xóa thẻ tag (`PATCH/DELETE /api/tags/[id]`)**: Hỗ trợ CRUD hoàn chỉnh cho thực thể thẻ tag.
 
 ---
