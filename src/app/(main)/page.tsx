@@ -4,44 +4,7 @@ import { prisma } from '@/lib/db';
 import QuestionsManager from '@/app/(main)/question-bank/components/QuestionsManager';
 import { getDifficulties } from '@/actions/difficulty';
 import { getCurrentUser } from '@/lib/utils/auth-utils';
-
-interface Option {
-  id: number;
-  question_id: number;
-  content: string;
-  order: number;
-  weight: number;
-}
-
-interface Question {
-  id: number;
-  statement: string;
-  content?: string | null;
-  grade: string;
-  question_difficulty: string;
-  question_type: string;
-  created_at: string;
-  options?: Option[];
-  lesson_name?: string;
-}
-
-interface Document {
-  id: number;
-  title: string;
-  created_at: string;
-  is_ai_classified: number;
-  public?: string | null;
-  link_s3?: string | null;
-  teacher_name?: string | null;
-  teacher_owned?: number | null;
-  created_by_id?: number | null;
-}
-
-interface Lesson {
-  id: number;
-  name: string;
-  grade?: string;
-}
+import { Question, Option, Document, Lesson } from '@/types';
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -189,6 +152,8 @@ export default async function DashboardPage(props: PageProps) {
           question_type: q.question_type ?? '',
           created_at: q.created_at?.toISOString() ?? '',
           lesson_name: lessonName ?? undefined,
+          teacher_owned_by_id: q.teacher_owned_by_id ? Number(q.teacher_owned_by_id) : null,
+          hint: q.hint ?? null,
         };
       });
     } else {
@@ -228,6 +193,8 @@ export default async function DashboardPage(props: PageProps) {
           question_type: q.question_type ?? '',
           created_at: q.created_at?.toISOString() ?? '',
           lesson_name: lessonName ?? undefined,
+          teacher_owned_by_id: q.teacher_owned_by_id ? Number(q.teacher_owned_by_id) : null,
+          hint: q.hint ?? null,
         };
       });
     }

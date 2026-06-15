@@ -20,6 +20,7 @@ export interface Question {
   lesson_name?: string;
   containerId?: string;
   document_id?: number;
+  hint?: string | null;
 }
 
 export interface Document {

@@ -278,6 +278,29 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
     dateRange: new Date().toISOString().split('T')[0] // Mặc định là ngày hôm nay dạng YYYY-MM-DD
   });
 
+  // Auth state for ownership checks
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.user) {
+            setCurrentUserId(Number(data.user.id));
+            setIsAdmin(data.user.level_rank !== null && data.user.level_rank >= 5);
+          }
+        }
+      } catch (err) {
+        console.error('Lỗi khi lấy thông tin user:', err);
+      }
+    };
+    fetchUser();
+  }, []);
+
+
   useEffect(() => {
     // 3. CẤU TRÚC NỘI DUNG MẶC ĐỊNH
     const initialBlocks: Block[] = [
@@ -661,6 +684,9 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
                   activeFieldId={activeFieldId}
                   setActiveFieldId={setActiveFieldId}
                   onEditQuestion={(b) => setEditingQuestionBlock(b)}
+                  currentUserId={currentUserId}
+                  isAdmin={isAdmin}
+                  isReadOnly={true}
                 />
               ))}
             </ReactSortable>
@@ -890,6 +916,9 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
               updateBlock(editingQuestionBlock.id, newContent);
               setEditingQuestionBlock(null);
             }}
+            currentUserId={currentUserId}
+            isAdmin={isAdmin}
+            isReadOnly={true}
           />
         )}
       </AnimatePresence>
