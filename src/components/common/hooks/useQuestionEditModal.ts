@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { getQuestionDisplayContent } from '@/lib/utils/math-utils';
+import toast from 'react-hot-toast';
 
 // Hàm chuẩn hóa riêng dành cho modal để editor Vditor hiển thị đúng
 export const cleanMathDelimiters = (text: string) => {
@@ -198,7 +200,7 @@ export function useQuestionEditModal({
   useEffect(() => {
     if (isOpen && question) {
       const cloned = JSON.parse(JSON.stringify(question));
-      cloned.statement = cleanMathDelimiters(cloned.statement || cloned.content || '');
+      cloned.statement = cleanMathDelimiters(getQuestionDisplayContent(cloned.statement, cloned.content));
       if (cloned.options) {
         cloned.options = cloned.options.map((o: any) => ({
           ...o,
@@ -250,7 +252,7 @@ export function useQuestionEditModal({
       setIsSaving(true);
       try {
         const response = await fetch(`/api/questions/${localQuestion.id}`, {
-          method: 'PUT',
+          method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -268,15 +270,13 @@ export function useQuestionEditModal({
         }
 
         const data = await response.json();
-        if (data.success && data.question) {
-          onSave(data.question);
-          onClose();
-        } else {
-          throw new Error('Không nhận được thông tin phản hồi hợp lệ từ server.');
-        }
+        // PATCH returns the updated question directly (not wrapped in {success, question})
+        onSave({ ...localQuestion, ...data });
+        toast.success('Đã lưu câu hỏi thành công!');
+        onClose();
       } catch (error: any) {
         console.error('Lỗi khi lưu câu hỏi:', error);
-        alert(error.message || 'Không thể lưu câu hỏi. Vui lòng thử lại.');
+        toast.error(error.message || 'Không thể lưu câu hỏi. Vui lòng thử lại.');
       } finally {
         setIsSaving(false);
       }

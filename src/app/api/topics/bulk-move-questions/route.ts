@@ -47,7 +47,9 @@ export async function POST(request: NextRequest) {
           await tx.lms_topics_questions.create({
             data: {
               topic_id: targetTopicBigId,
-              question_id: qId
+              question_id: qId,
+              created_at: new Date(),
+              updated_at: new Date()
             }
           });
           count++;

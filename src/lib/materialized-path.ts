@@ -66,7 +66,7 @@ export async function updateDescendantsPaths(
   } else {
     // Thực hiện update hàng loạt trong transaction mới
     await prisma.$transaction(
-      descendants.map((child) => {
+      descendants.map((child: { id: bigint; path: string | null }) => {
         const childOldPath = child.path || '';
         const childNewPath = childOldPath.startsWith(oldPath)
           ? newPath + childOldPath.slice(oldPath.length)

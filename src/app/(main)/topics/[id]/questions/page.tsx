@@ -12,11 +12,13 @@ import Link from 'next/link';
 
 import { topicsService, Topic } from '@/services/topics';
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
+import QuestionEditModal from '@/components/common/QuestionEditModal';
 
 interface Option {
   id: string;
   question_id: string;
   content: string;
+  statement?: string | null;
   order: number;
   weight: number; // 1 = Đúng, 0 = Sai
 }
@@ -29,6 +31,7 @@ interface Question {
   question_difficulty: string;
   question_type: string;
   options?: Option[];
+  hint?: string | null;
 }
 
 export default function TopicQuestionsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -48,9 +51,6 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
 
   // States chỉnh sửa câu hỏi
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-  const [editStatement, setEditStatement] = useState('');
-  const [editOptions, setEditOptions] = useState<Option[]>([]);
-  const [isSavingQuestion, setIsSavingQuestion] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -92,46 +92,6 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
 
   const handleOpenEdit = (q: Question) => {
     setEditingQuestion(q);
-    setEditStatement(q.statement || '');
-    setEditOptions(q.options ? [...q.options].sort((a, b) => a.order - b.order) : []);
-  };
-
-  const handleSaveQuestionSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingQuestion) return;
-
-    setIsSavingQuestion(true);
-    const toastId = toast.loading('Đang cập nhật câu hỏi...');
-    try {
-      await topicsService.updateQuestion(editingQuestion.id, {
-        statement: editStatement,
-        options: editOptions
-      });
-      toast.success('Đã cập nhật câu hỏi thành công', { id: toastId });
-      setEditingQuestion(null);
-      await loadData();
-    } catch (err: any) {
-      toast.error('Cập nhật thất bại: ' + err.message, { id: toastId });
-    } finally {
-      setIsSavingQuestion(false);
-    }
-  };
-
-  const handleOptionContentChange = (index: number, content: string) => {
-    setEditOptions(prev => {
-      const next = [...prev];
-      next[index] = { ...next[index], content };
-      return next;
-    });
-  };
-
-  const handleOptionWeightChange = (index: number, isCorrect: boolean) => {
-    setEditOptions(prev => {
-      return prev.map((opt, i) => ({
-        ...opt,
-        weight: i === index ? (isCorrect ? 1 : 0) : (editingQuestion?.question_type === 'SINGLE_CHOICE' && isCorrect ? 0 : opt.weight)
-      }));
-    });
   };
 
   const handleBulkMoveSubmit = async (e: React.FormEvent) => {
@@ -214,7 +174,7 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
               <ArrowLeft className="w-4 h-4" />
               Quay lại cây chủ đề
             </Link>
-            
+
             {selectedIds.size > 0 && (
               <button
                 onClick={() => setBulkMoveOpen(true)}
@@ -290,11 +250,10 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
                 return (
                   <div
                     key={q.id}
-                    className={`flex gap-4 p-5 bg-surface border rounded-2xl transition-all group ${
-                      isSelected
+                    className={`flex gap-4 p-5 bg-surface border rounded-2xl transition-all group ${isSelected
                         ? 'border-primary bg-primary/5 shadow-md'
                         : 'border-outline-variant/30 hover:border-outline-variant/70 hover:shadow-sm'
-                    }`}
+                      }`}
                   >
                     {/* Checkbox */}
                     <div className="pt-1 shrink-0">
@@ -343,11 +302,10 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
                               return (
                                 <div
                                   key={opt.id}
-                                  className={`flex gap-2 p-3 rounded-xl border text-xs transition-all ${
-                                    isCorrect
+                                  className={`flex gap-2 p-3 rounded-xl border text-xs transition-all ${isCorrect
                                       ? 'bg-success/5 border-success/40 text-success'
                                       : 'bg-surface-container-lowest border-outline-variant/20'
-                                  }`}
+                                    }`}
                                 >
                                   <span className="font-bold mr-1">{charLabel}.</span>
                                   <div className="prose prose-slate max-w-none text-xs">
@@ -355,7 +313,7 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
                                       remarkPlugins={[remarkMath, remarkGfm]}
                                       rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
                                     >
-                                      {cleanMathpixData(opt.content)}
+                                      {cleanMathpixData(opt.content || opt.statement || '')}
                                     </ReactMarkdown>
                                   </div>
                                 </div>
@@ -385,122 +343,16 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
 
       {/* MODAL: CHỈNH SỬA CÂU HỎI */}
       {editingQuestion && (
-        <div className="fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-surface-container-low border border-outline-variant/30 rounded-2xl w-full max-w-4xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/20">
-              <h3 className="text-lg font-bold text-on-surface font-title">
-                Chỉnh sửa câu hỏi (Q-{editingQuestion.id})
-              </h3>
-              <button
-                onClick={() => setEditingQuestion(null)}
-                className="p-1.5 rounded-lg hover:bg-outline-variant/25 text-on-surface-variant transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveQuestionSubmit} className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
-              {/* Question Statement */}
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold text-outline uppercase tracking-wider">Nội dung câu hỏi (Statement)</label>
-                <textarea
-                  required
-                  rows={4}
-                  value={editStatement}
-                  onChange={(e) => setEditStatement(e.target.value)}
-                  placeholder="Nhập đề bài dạng Markdown hoặc LaTeX..."
-                  className="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm font-mono transition-all resize-y"
-                />
-              </div>
-
-              {/* Preview Statement */}
-              <div className="p-4 bg-surface rounded-xl border border-outline-variant/20">
-                <span className="text-[10px] font-bold text-outline uppercase tracking-wider block mb-2">Xem trước đề bài</span>
-                <div className="prose prose-slate max-w-none text-sm [&_img]:max-w-xs [&_img]:rounded-md font-body text-on-surface">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkMath, remarkGfm]}
-                    rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                  >
-                    {cleanMathpixData(editStatement)}
-                  </ReactMarkdown>
-                </div>
-              </div>
-
-              {/* Options Section */}
-              {editOptions.length > 0 && (
-                <div className="flex flex-col gap-4">
-                  <span className="text-xs font-bold text-outline uppercase tracking-wider block">Các đáp án lựa chọn</span>
-                  <div className="grid grid-cols-1 gap-4">
-                    {editOptions.map((opt, index) => {
-                      const charLabel = String.fromCharCode(65 + index);
-                      const isCorrect = opt.weight === 1;
-                      return (
-                        <div key={opt.id} className="flex gap-4 p-4 rounded-xl border border-outline-variant/20 bg-surface items-start">
-                          <span className="w-8 h-8 rounded-full bg-outline-variant/20 flex items-center justify-center font-bold text-sm text-outline-variant shrink-0 mt-1">
-                            {charLabel}
-                          </span>
-                          <div className="flex-1 flex flex-col gap-3 min-w-0">
-                            <textarea
-                              rows={2}
-                              value={opt.content}
-                              onChange={(e) => handleOptionContentChange(index, e.target.value)}
-                              placeholder={`Đáp án ${charLabel}...`}
-                              className="w-full px-3 py-2 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-xs transition-all resize-y"
-                            />
-                            {/* Option Preview */}
-                            {opt.content && (
-                              <div className="prose prose-slate max-w-none text-xs opacity-80 border-t border-dashed border-outline-variant/10 pt-2 font-body">
-                                <ReactMarkdown
-                                  remarkPlugins={[remarkMath, remarkGfm]}
-                                  rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                                >
-                                  {cleanMathpixData(opt.content)}
-                                </ReactMarkdown>
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Correct/Incorrect Button Toggle */}
-                          <button
-                            type="button"
-                            onClick={() => handleOptionWeightChange(index, !isCorrect)}
-                            className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all shrink-0 mt-1 flex items-center gap-1 ${
-                              isCorrect
-                                ? 'bg-success/10 text-success border-success/30'
-                                : 'bg-outline-variant/5 text-on-surface-variant border-outline-variant/20 hover:bg-outline-variant/15'
-                            }`}
-                          >
-                            {isCorrect ? 'Đúng' : 'Sai'}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant/20 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setEditingQuestion(null)}
-                  disabled={isSavingQuestion}
-                  className="px-4 py-2 text-sm font-semibold rounded-xl text-on-surface-variant hover:bg-outline-variant/15 transition-all"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSavingQuestion}
-                  className="px-5 py-2 text-sm font-semibold rounded-xl bg-primary text-on-primary hover:bg-primary-hover active:bg-primary-active transition-all flex items-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>{isSavingQuestion ? 'Đang lưu...' : 'Lưu lại'}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <QuestionEditModal
+          question={editingQuestion}
+          isOpen={true}
+          onClose={() => setEditingQuestion(null)}
+          onSave={async () => {
+            setEditingQuestion(null);
+            await loadData();
+          }}
+          isAdmin={true}
+        />
       )}
 
       {/* MODAL: DI CHUYỂN HÀNG LOẠT CÂU HỎI */}
@@ -526,7 +378,7 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
 
               <div className="flex flex-col gap-1.5 mt-2 relative">
                 <label className="text-xs font-bold text-outline uppercase tracking-wider">Chọn chủ đề đích</label>
-                
+
                 {/* Search Target Input */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-outline" />

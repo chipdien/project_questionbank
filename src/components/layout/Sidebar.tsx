@@ -33,7 +33,7 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
   };
 
   const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
+    { icon: LayoutDashboard, label: 'Xử lý tài liệu', href: '/' },
     { icon: Database, label: 'Question Bank', href: '/question-bank' },
     { icon: LibraryBig, label: 'Collections', href: '/collection' },
     { icon: FileText, label: 'Documents', href: '/documents' },
