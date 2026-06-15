@@ -24,6 +24,7 @@ export default function TopicDetailsPanel({
   const [parentId, setParentId] = useState('');
   const [orderIndex, setOrderIndex] = useState('0');
   const [isSaving, setIsSaving] = useState(false);
+  const [createAnother, setCreateAnother] = useState(false);
 
   // States for custom searchable dropdowns
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -80,8 +81,9 @@ export default function TopicDetailsPanel({
         content: content.trim() || null,
         type,
         parent_id: parentId || null,
-        order_index: orderIndex
-      });
+        order_index: orderIndex,
+        createAnother // Truyền cờ tạo liên tục lên component cha
+      } as any);
     } catch (err) {
       console.error(err);
     } finally {
@@ -289,6 +291,17 @@ export default function TopicDetailsPanel({
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t border-outline-variant/20 pt-4 mt-auto">
+          {isNew && (
+            <label className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant cursor-pointer mr-auto">
+              <input
+                type="checkbox"
+                checked={createAnother}
+                onChange={(e) => setCreateAnother(e.target.checked)}
+                className="w-4 h-4 rounded text-primary focus:ring-primary/20 accent-primary"
+              />
+              <span>Tạo liên tiếp chủ đề cùng cấp</span>
+            </label>
+          )}
           <button
             type="button"
             onClick={onCancel}

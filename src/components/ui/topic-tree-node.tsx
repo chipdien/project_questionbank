@@ -13,6 +13,8 @@ interface TopicTreeNodeProps {
   isMultiSelectMode?: boolean;
   selectedIds?: Set<string>;
   onToggleSelect?: (topic: Topic) => void;
+  expandedIds: Set<string>;
+  onToggleExpand: (topicId: string, isExpanded: boolean) => void;
 }
 
 export default function TopicTreeNode({
@@ -25,16 +27,18 @@ export default function TopicTreeNode({
   onDelete,
   isMultiSelectMode = false,
   selectedIds = new Set(),
-  onToggleSelect
+  onToggleSelect,
+  expandedIds = new Set(),
+  onToggleExpand = () => {}
 }: TopicTreeNodeProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const children = allTopics.filter(t => t.parent_id === topic.id);
   const hasChildren = children.length > 0;
   const isActive = activeId === topic.id;
+  const isExpanded = expandedIds.has(topic.id);
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsExpanded(!isExpanded);
+    onToggleExpand(topic.id, !isExpanded);
   };
 
   return (
@@ -134,6 +138,8 @@ export default function TopicTreeNode({
                 isMultiSelectMode={isMultiSelectMode}
                 selectedIds={selectedIds}
                 onToggleSelect={onToggleSelect}
+                expandedIds={expandedIds}
+                onToggleExpand={onToggleExpand}
               />
             ))}
         </div>
