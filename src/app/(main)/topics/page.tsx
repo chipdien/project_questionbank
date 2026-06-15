@@ -17,7 +17,6 @@ export default function TopicsPage() {
   
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [isNew, setIsNew] = useState(false);
-  const [newParentId, setNewParentId] = useState<string | null>(null);
 
   // States chọn nhiều và di chuyển hàng loạt
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
@@ -78,14 +77,32 @@ export default function TopicsPage() {
   };
 
   const handleCreateRoot = () => {
-    setSelectedTopic(null);
-    setNewParentId(null);
+    setSelectedTopic({
+      id: '',
+      title: '',
+      code: '',
+      content: '',
+      parent_id: null,
+      type: 'SYLLABUS',
+      order_index: '0',
+      subject_id: null,
+      syllabus_id: null
+    });
     setIsNew(true);
   };
 
   const handleCreateChild = (parent: Topic) => {
-    setSelectedTopic(null);
-    setNewParentId(parent.id);
+    setSelectedTopic({
+      id: '',
+      title: '',
+      code: '',
+      content: '',
+      parent_id: parent.id,
+      type: 'TOPIC',
+      order_index: '0',
+      subject_id: null,
+      syllabus_id: null
+    });
     setIsNew(true);
   };
 
@@ -139,11 +156,7 @@ export default function TopicsPage() {
   const handleSave = async (formData: Partial<Topic>) => {
     try {
       if (isNew) {
-        const payload = {
-          ...formData,
-          parent_id: newParentId
-        };
-        const created = await topicsService.createTopic(payload);
+        const created = await topicsService.createTopic(formData);
         toast.success('Tạo chủ đề thành công');
         setIsNew(false);
         setSelectedTopic(created);
