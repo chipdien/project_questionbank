@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     await prisma.$transaction(async (tx) => {
       for (const topic of topicsToMove) {
         const oldPath = topic.path || '';
-        const newPath = await generatePath(targetParentId, topic.id);
+        const newPath = await generatePath(targetParentId, topic.id, tx);
 
         const updated = await tx.lms_topics.update({
           where: { id: topic.id },
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Cập nhật các con cháu của node này
-        await updateDescendantsPaths(topic.id, oldPath, newPath);
+        await updateDescendantsPaths(topic.id, oldPath, newPath, tx);
         results.push(updated);
       }
     });

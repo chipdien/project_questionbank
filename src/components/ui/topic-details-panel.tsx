@@ -107,7 +107,7 @@ export default function TopicDetailsPanel({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Nhập tên chủ đề"
-            className="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
+            className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
           />
         </div>
 
@@ -119,7 +119,7 @@ export default function TopicDetailsPanel({
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="VD: TOAN5-SH"
-              className="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
+              className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
             />
           </div>
 
@@ -130,7 +130,7 @@ export default function TopicDetailsPanel({
               value={orderIndex}
               onChange={(e) => setOrderIndex(e.target.value)}
               placeholder="0"
-              className="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
+              className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
             />
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function TopicDetailsPanel({
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
+              className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
             >
               <option value="SYLLABUS">Giáo trình (Syllabus)</option>
               <option value="TOPIC">Chuyên đề (Topic)</option>
@@ -154,7 +154,7 @@ export default function TopicDetailsPanel({
             <select
               value={parentId}
               onChange={(e) => setParentId(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
+              className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
             >
               <option value="">-- Chọn chủ đề gốc --</option>
               {getEligibleParents().map(t => (
