@@ -18,6 +18,9 @@ export default function TopicsPage() {
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [isNew, setIsNew] = useState(false);
 
+  // Trạng thái mở rộng (Expansion state) của cây chủ đề
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
   // States chọn nhiều và di chuyển hàng loạt
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -76,6 +79,35 @@ export default function TopicsPage() {
     setSelectedIds(new Set());
   };
 
+  const handleToggleExpand = (topicId: string, isExpanded: boolean) => {
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (isExpanded) {
+        next.add(topicId);
+      } else {
+        next.delete(topicId);
+      }
+      return next;
+    });
+  };
+
+  const getNextTopicType = (parentType: string | null): string => {
+    switch (parentType?.toUpperCase()) {
+      case 'SYLLABUS':
+        return 'DOMAIN';
+      case 'DOMAIN':
+        return 'TOPIC';
+      case 'TOPIC':
+        return 'LESSON';
+      case 'LESSON':
+        return 'SUB_LESSON';
+      case 'SUB_LESSON':
+        return 'SUB_LESSON';
+      default:
+        return 'TOPIC';
+    }
+  };
+
   const handleCreateRoot = () => {
     setSelectedTopic({
       id: '',
@@ -98,10 +130,16 @@ export default function TopicsPage() {
       code: '',
       content: '',
       parent_id: parent.id,
-      type: 'TOPIC',
+      type: getNextTopicType(parent.type),
       order_index: '0',
       subject_id: null,
       syllabus_id: null
+    });
+    // Tự động mở rộng node cha khi bấm nút thêm con
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      next.add(parent.id);
+      return next;
     });
     setIsNew(true);
   };
@@ -153,15 +191,43 @@ export default function TopicsPage() {
     }
   };
 
-  const handleSave = async (formData: Partial<Topic>) => {
+  const handleSave = async (formData: Partial<Topic> & { createAnother?: boolean }) => {
+    const { createAnother, ...saveData } = formData;
     try {
       if (isNew) {
-        const created = await topicsService.createTopic(formData);
+        const created = await topicsService.createTopic(saveData);
         toast.success('Tạo chủ đề thành công');
-        setIsNew(false);
-        setSelectedTopic(created);
+        
+        // Tự động mở rộng các node cha của node mới tạo
+        if (created.parent_id) {
+          setExpandedIds(prev => {
+            const next = new Set(prev);
+            if (created.path) {
+              created.path.split('/').filter(Boolean).forEach(id => next.add(id));
+            }
+            return next;
+          });
+        }
+
+        if (createAnother) {
+          const nextOrder = (parseInt(formData.order_index || '0', 10) + 1).toString();
+          setSelectedTopic({
+            id: '',
+            title: '',
+            code: '',
+            content: '',
+            parent_id: formData.parent_id || null,
+            type: formData.type || 'TOPIC',
+            order_index: nextOrder,
+            subject_id: null,
+            syllabus_id: null
+          });
+        } else {
+          setIsNew(false);
+          setSelectedTopic(created);
+        }
       } else if (selectedTopic) {
-        const updated = await topicsService.updateTopic(selectedTopic.id, formData);
+        const updated = await topicsService.updateTopic(selectedTopic.id, saveData);
         toast.success('Cập nhật chủ đề thành công');
         setSelectedTopic(updated);
       }
@@ -342,6 +408,8 @@ export default function TopicsPage() {
                     isMultiSelectMode={isMultiSelectMode}
                     selectedIds={selectedIds}
                     onToggleSelect={handleToggleSelect}
+                    expandedIds={expandedIds}
+                    onToggleExpand={handleToggleExpand}
                   />
                 ))
             )}
