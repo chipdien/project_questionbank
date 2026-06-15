@@ -71,9 +71,9 @@ export default function TopicTreeNode({
           )}
           
           {hasChildren ? (
-            <Folder className="w-4 h-4 text-amber-500 shrink-0" />
+            <Folder className="w-4 h-4 text-warning shrink-0" />
           ) : (
-            <File className="w-4 h-4 text-slate-400 shrink-0" />
+            <File className="w-4 h-4 text-on-surface-variant/50 shrink-0" />
           )}
 
           <span className="truncate font-body text-sm font-medium">

@@ -57,7 +57,12 @@ export async function POST(request: NextRequest) {
     // Chạy transaction tuần tự cập nhật từng topic
     await prisma.$transaction(async (tx) => {
       for (const topic of topicsToMove) {
-        const oldPath = topic.path || '';
+        // Lấy lại thông tin mới nhất từ DB để tránh dữ liệu bị stale do các vòng lặp trước đã cập nhật
+        const currentTopic = await tx.lms_topics.findUnique({
+          where: { id: topic.id },
+          select: { path: true }
+        });
+        const oldPath = currentTopic?.path || '';
         const newPath = await generatePath(targetParentId, topic.id, tx);
 
         const updated = await tx.lms_topics.update({
@@ -72,6 +77,8 @@ export async function POST(request: NextRequest) {
         await updateDescendantsPaths(topic.id, oldPath, newPath, tx);
         results.push(updated);
       }
+    }, {
+      timeout: 10000 // Tăng timeout của transaction lên 10s đề phòng xử lý nhiều bản ghi
     });
 
     return Response.json(serialize({
