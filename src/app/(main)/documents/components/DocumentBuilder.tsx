@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import BlockEditor from './BlockEditor';
-import QuestionEditModal from './QuestionEditModal';
+import QuestionEditModal from '@/components/common/QuestionEditModal';
 import { FileDown, Plus, X, RotateCcw, Settings, GraduationCap, Calendar, User, BookOpen, Quote, Loader2, CheckCircle2, Phone, Mail, Globe } from 'lucide-react';
 import { blocksToMarkdown } from '@/lib/utils/export-utils';
 import { motion, AnimatePresence } from 'framer-motion';
