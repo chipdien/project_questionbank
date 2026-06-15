@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model lms_collections {
@@ -204,6 +205,9 @@ model lms_questions {
   teacher_owned_by_id BigInt?
   code                String?   @db.VarChar(6)
 
+  topics              lms_topics_questions[]
+  tags                lms_questions_tags[]
+
   @@index([created_by_id], map: "lms_questions_created_by_id")
   @@index([domain_id], map: "lms_questions_domain_id")
   @@index([owned_by_id], map: "lms_questions_owned_by_id")
@@ -302,9 +306,20 @@ model lms_topics {
   code          String?   @db.VarChar(255)
   order_index   BigInt?
 
+  parent_id     BigInt?
+  path          String?   @db.VarChar(512)
+  type          String?   @db.VarChar(50)
+
+  parent        lms_topics?   @relation("TopicToTopic", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children      lms_topics[]  @relation("TopicToTopic")
+
+  questions     lms_topics_questions[]
+
   @@index([created_by_id], map: "lms_topics_created_by_id")
   @@index([syllabus_id], map: "lms_topics_syllabus_id")
   @@index([updated_by_id], map: "lms_topics_updated_by_id")
+  @@index([parent_id])
+  @@index([path])
 }
 
 model lms_topics_questions {
@@ -312,6 +327,9 @@ model lms_topics_questions {
   updated_at  DateTime @db.DateTime(0)
   topic_id    BigInt
   question_id BigInt
+
+  topic       lms_topics    @relation(fields: [topic_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  question    lms_questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([topic_id, question_id])
   @@index([question_id], map: "lms_topics_questions_question_id")
@@ -326,4 +344,31 @@ model lms_users {
   level_rank Int?      @default(0)
   created_at DateTime? @default(now()) @db.Timestamp(0)
   updated_at DateTime? @default(now()) @db.Timestamp(0)
+
+  // Bổ sung quan hệ nếu có
+}
+
+model lms_tags {
+  id          BigInt    @id @default(autoincrement())
+  name        String    @unique @db.VarChar(100)
+  category    String    @db.VarChar(50)
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @default(now()) @db.Timestamp(0) @updatedAt
+
+  questions   lms_questions_tags[]
+
+  @@index([name])
+}
+
+model lms_questions_tags {
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+  question_id BigInt
+  tag_id      BigInt
+
+  question    lms_questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tag         lms_tags      @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([question_id, tag_id])
+  @@index([question_id], map: "idx_question_tags_question_id")
+  @@index([tag_id], map: "idx_question_tags_tag_id")
 }
