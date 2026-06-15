@@ -10,6 +10,9 @@ erDiagram
         bigint id PK
         varchar grade "Khối lớp"
         varchar question_difficulty "Độ khó"
+        varchar question_type "Loại hình câu hỏi"
+        varchar complex "Cấu trúc câu hỏi ('main' hoặc 'sub' hoặc null)"
+        bigint ref_question_id FK "Liên kết tới câu hỏi cha 'main' nếu complex='sub'"
         longtext statement "Đề bài câu hỏi"
         longtext content "Nội dung/Đáp án câu hỏi"
     }
@@ -24,7 +27,7 @@ erDiagram
     lms_tags {
         bigint id PK
         varchar name "Tên thẻ"
-        varchar category "Danh mục thẻ (SOURCE, METHOD, SKILL)"
+        varchar category "Danh mục thẻ (SOURCE, METHOD, SKILL, TYPE, EXAM, YEAR)"
     }
 
     lms_topics_questions {
@@ -43,16 +46,18 @@ erDiagram
     lms_tags ||--o{ lms_questions_tags : "gán cho"
 ```
 
+*Lưu ý: Bộ sách giáo khoa (textbook) không cần tạo trường hay bảng phân loại vì từ năm học 2026-2027 toàn quốc dùng chung một bộ sách giáo khoa.*
+
 ## 2. Đặc tả Logic Truy vấn (Query Specifications)
 
 ### A. Lọc theo Khối lớp (Grade) và Độ khó (Difficulty)
 Truy vấn trực tiếp trên bảng `lms_questions`:
 ```typescript
-if (grade) {
-  whereClause.grade = Number(grade);
+if (grades && grades.length > 0) {
+  whereClause.grade = { in: grades.map(Number) };
 }
-if (difficulty) {
-  whereClause.question_difficulty = difficulty;
+if (difficulties && difficulties.length > 0) {
+  whereClause.question_difficulty = { in: difficulties };
 }
 ```
 
@@ -63,13 +68,34 @@ if (difficulty) {
 
 ### C. Lọc theo nhiều Thẻ Tag (lms_tags)
 Lọc theo kiểu **OR** hoặc **AND**:
-- Lọc câu hỏi có chứa ít nhất một trong các tag được chọn:
+- Gom nhóm theo Category (ví dụ: SOURCE, METHOD, SKILL, TYPE, EXAM, YEAR).
+- Các tag trong cùng một Category sẽ được lọc theo điều kiện **OR** (hợp).
+- Giữa các Category khác nhau sẽ được lọc theo điều kiện **AND** (giao).
 ```typescript
-if (tagIds && tagIds.length > 0) {
-  whereClause.tags = {
-    some: {
-      tag_id: { in: tagIds.map(BigInt) }
+// Lọc các tag theo category
+const categoryFilters = Object.entries(tagsByCategory).map(([category, tagIds]) => {
+  return {
+    tags: {
+      some: {
+        tag_id: { in: tagIds.map(BigInt) }
+      }
     }
   };
+});
+
+if (categoryFilters.length > 0) {
+  whereClause.AND = categoryFilters;
 }
+```
+
+### D. Cấu trúc câu hỏi chùm (complex/sub)
+- Giao diện danh sách Ngân hàng Câu hỏi chỉ hiển thị câu hỏi độc lập (`complex` khác `main` và `sub`, hoặc null/empty) và câu hỏi cha (`complex = 'main'`).
+- Khi trả về kết quả câu hỏi `main`, hệ thống sẽ tự động truy vấn thêm các câu hỏi con có `ref_question_id` trỏ tới ID của câu hỏi `main` đó và sắp xếp chúng.
+- Truy vấn lấy câu hỏi chính:
+```typescript
+whereClause.OR = [
+  { complex: { notIn: ['main', 'sub'] } },
+  { complex: null },
+  { complex: 'main' }
+];
 ```

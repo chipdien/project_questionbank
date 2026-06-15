@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getQuestionsByDocId, getLibraryQuestions } from '@/actions/question';
 import { createCollection } from '@/actions/collection';
 import toast from 'react-hot-toast';
@@ -21,6 +22,10 @@ export interface Question {
   containerId?: string;
   document_id?: number;
   hint?: string | null;
+  complex?: string | null;
+  ref_question_id?: number | null;
+  sub_questions?: Question[];
+  tags?: { id: number; name: string; category: string }[];
 }
 
 export interface Document {
@@ -40,12 +45,47 @@ export interface Lesson {
 }
 
 export function useQuestionBank() {
-  const [activeDocId, setActiveDocId] = useState<number | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const [grade, setGrade] = useState<string>('');
-  const [lessonId, setLessonId] = useState<string>('');
-  const [difficulty, setDifficulty] = useState<string>('');
+  // Active Document ID
+  const [activeDocId, setActiveDocId] = useState<number | null>(() => {
+    const docId = searchParams.get('docId');
+    return docId ? Number(docId) : null;
+  });
 
+  // Advanced filters state
+  const [grades, setGrades] = useState<number[]>(() => {
+    const gradeParam = searchParams.get('grades');
+    return gradeParam ? gradeParam.split(',').map(Number).filter(Boolean) : [];
+  });
+
+  const [difficulties, setDifficulties] = useState<string[]>(() => {
+    const diffParam = searchParams.get('difficulties');
+    return diffParam ? diffParam.split(',').filter(Boolean) : [];
+  });
+
+  const [questionTypes, setQuestionTypes] = useState<string[]>(() => {
+    const typeParam = searchParams.get('questionTypes');
+    return typeParam ? typeParam.split(',').filter(Boolean) : [];
+  });
+
+  const [topicIds, setTopicIds] = useState<number[]>(() => {
+    const topicParam = searchParams.get('topicIds');
+    return topicParam ? topicParam.split(',').map(Number).filter(Boolean) : [];
+  });
+
+  const [tagIds, setTagIds] = useState<number[]>(() => {
+    const tagParam = searchParams.get('tagIds');
+    return tagParam ? tagParam.split(',').map(Number).filter(Boolean) : [];
+  });
+
+  const [keyword, setKeyword] = useState<string>(() => {
+    return searchParams.get('keyword') || '';
+  });
+
+  // Source list of questions and selections
   const [sourceQuestions, setSourceQuestions] = useState<Question[]>([]);
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,30 +93,86 @@ export function useQuestionBank() {
 
   const [selectedSourceIds, setSelectedSourceIds] = useState<Set<number>>(new Set());
 
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => {
+    const pageParam = searchParams.get('page');
+    return pageParam ? Math.max(1, Number(pageParam)) : 1;
+  });
+
   const [totalPages, setTotalPages] = useState(0);
   const PAGE_SIZE = 30;
 
+  // Sync state changes to URL SearchParams
+  const syncParamsToUrl = useCallback((updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, val]) => {
+      if (val === null || val === '') {
+        params.delete(key);
+      } else {
+        params.set(key, val);
+      }
+    });
+    router.push(`${pathname}?${params.toString()}`);
+  }, [searchParams, pathname, router]);
+
   const handleDocClick = useCallback((docId: number) => {
     setActiveDocId(docId);
-    setGrade('');
-    setLessonId('');
-    setDifficulty('');
+    setGrades([]);
+    setDifficulties([]);
+    setQuestionTypes([]);
+    setTopicIds([]);
+    setTagIds([]);
+    setKeyword('');
     setPage(1);
     setSelectedSourceIds(new Set());
-  }, []);
 
-  const handleFilterChange = useCallback((field: 'grade' | 'lessonId' | 'difficulty', value: string) => {
-    if (field === 'grade') setGrade(value);
-    if (field === 'lessonId') setLessonId(value);
-    if (field === 'difficulty') setDifficulty(value);
+    syncParamsToUrl({
+      docId: docId.toString(),
+      grades: null,
+      difficulties: null,
+      questionTypes: null,
+      topicIds: null,
+      tagIds: null,
+      keyword: null,
+      page: '1'
+    });
+  }, [syncParamsToUrl]);
 
-    if (value !== '') {
-      setActiveDocId(null);
+  // Unified filter change helper
+  const handleAdvancedFilterChange = useCallback((
+    type: 'grades' | 'difficulties' | 'questionTypes' | 'topicIds' | 'tagIds' | 'keyword',
+    value: any
+  ) => {
+    setActiveDocId(null);
+    setPage(1);
+    setSelectedSourceIds(new Set());
+
+    const urlUpdates: Record<string, string | null> = {
+      docId: null,
+      page: '1'
+    };
+
+    if (type === 'grades') {
+      setGrades(value);
+      urlUpdates.grades = value.length > 0 ? value.join(',') : null;
+    } else if (type === 'difficulties') {
+      setDifficulties(value);
+      urlUpdates.difficulties = value.length > 0 ? value.join(',') : null;
+    } else if (type === 'questionTypes') {
+      setQuestionTypes(value);
+      urlUpdates.questionTypes = value.length > 0 ? value.join(',') : null;
+    } else if (type === 'topicIds') {
+      setTopicIds(value);
+      urlUpdates.topicIds = value.length > 0 ? value.join(',') : null;
+    } else if (type === 'tagIds') {
+      setTagIds(value);
+      urlUpdates.tagIds = value.length > 0 ? value.join(',') : null;
+    } else if (type === 'keyword') {
+      setKeyword(value);
+      urlUpdates.keyword = value !== '' ? value : null;
     }
-    setPage(1);
-    setSelectedSourceIds(new Set());
-  }, []);
+
+    syncParamsToUrl(urlUpdates);
+  }, [syncParamsToUrl]);
 
   const selectedQuestionsRef = useRef(selectedQuestions);
   useEffect(() => {
@@ -87,7 +183,15 @@ export function useQuestionBank() {
     let isActive = true;
 
     async function loadQuestions() {
-      if (!activeDocId && !grade && !lessonId && !difficulty) {
+      const isAnyFilterActive =
+        grades.length > 0 ||
+        difficulties.length > 0 ||
+        questionTypes.length > 0 ||
+        topicIds.length > 0 ||
+        tagIds.length > 0 ||
+        keyword !== '';
+
+      if (!activeDocId && !isAnyFilterActive) {
         if (isActive) {
           setSourceQuestions([]);
           setTotalPages(0);
@@ -102,7 +206,14 @@ export function useQuestionBank() {
       if (activeDocId) {
         result = await getQuestionsByDocId(activeDocId, page, PAGE_SIZE, excludeIds);
       } else {
-        result = await getLibraryQuestions(page, PAGE_SIZE, { grade, difficulty, lessonId }, excludeIds);
+        result = await getLibraryQuestions(page, PAGE_SIZE, {
+          grades,
+          difficulties,
+          questionTypes,
+          topicIds,
+          tagIds,
+          keyword
+        }, excludeIds);
       }
 
       if (!isActive) return;
@@ -110,7 +221,6 @@ export function useQuestionBank() {
       const data = result.data || [];
       setTotalPages(result.totalPages || 0);
 
-      // Lọc bỏ những câu hỏi có thể đã nằm trong mảng selected (bảo vệ bằng ref đảm bảo luôn lấy state mới nhất)
       const currentSelectedIds = new Set(selectedQuestionsRef.current.map(q => q.id));
       const filteredData = data.filter((q: any) => !currentSelectedIds.has(q.id));
 
@@ -121,14 +231,14 @@ export function useQuestionBank() {
       })));
       setIsLoading(false);
     }
-    
+
     loadQuestions();
-    
+
     return () => {
       isActive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeDocId, grade, lessonId, difficulty, page]);
+  }, [activeDocId, grades, difficulties, questionTypes, topicIds, tagIds, keyword, page]);
 
   const handleSaveCollection = async (title: string) => {
     const questionIds = selectedQuestions.map(q => q.id);
@@ -168,7 +278,7 @@ export function useQuestionBank() {
       if (prev.some(q => q.id === question.id)) return prev;
       return [...prev, { ...question, containerId: 'selected' }];
     });
-    
+
     setSelectedSourceIds(prev => {
       const newSelected = new Set(prev);
       newSelected.delete(question.id);
@@ -199,14 +309,23 @@ export function useQuestionBank() {
     }
   }, [activeDocId]);
 
-  const isFiltering = grade !== '' || lessonId !== '' || difficulty !== '';
+  const isFiltering =
+    grades.length > 0 ||
+    difficulties.length > 0 ||
+    questionTypes.length > 0 ||
+    topicIds.length > 0 ||
+    tagIds.length > 0 ||
+    keyword !== '';
 
   return {
     state: {
       activeDocId,
-      grade,
-      lessonId,
-      difficulty,
+      grades,
+      difficulties,
+      questionTypes,
+      topicIds,
+      tagIds,
+      keyword,
       sourceQuestions,
       selectedQuestions,
       isLoading,
@@ -217,14 +336,17 @@ export function useQuestionBank() {
       isFiltering
     },
     actions: {
-      setGrade,
-      setLessonId,
-      setDifficulty,
+      setGrades,
+      setDifficulties,
+      setQuestionTypes,
+      setTopicIds,
+      setTagIds,
+      setKeyword,
       setPage,
       setIsModalOpen,
       setSelectedQuestions,
       handleDocClick,
-      handleFilterChange,
+      handleAdvancedFilterChange,
       handleSaveCollection,
       handleToggleSelect,
       handleSelectAllSource,
