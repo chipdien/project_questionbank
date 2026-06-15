@@ -14,6 +14,9 @@ import { cleanMathpixData } from '@/lib/utils/math-utils';
 
 import { Question, Pagination } from '@/types';
 import { Difficulty } from '@/actions/difficulty';
+import AppBadge from '@/components/ui/AppBadge';
+import AppCheckbox from '@/components/ui/AppCheckbox';
+import AppButton from '@/components/ui/AppButton';
 
 interface QuestionsDataGridProps {
   questions: Question[];
@@ -22,48 +25,6 @@ interface QuestionsDataGridProps {
   pagination: Pagination;
   showSelection?: boolean;
   difficulties?: Difficulty[];
-}
-
-function getDifficultyBadge(difficulty: string | null | undefined, difficulties: Difficulty[] = []) {
-  if (!difficulty) {
-    return <span className="text-on-surface-variant font-medium">---</span>;
-  }
-
-  const found = difficulties.find(d => d.name === difficulty);
-  if (found) {
-    const color = found.color_code;
-    return (
-      <span 
-        className="px-2 py-1 rounded-full text-[10px] font-bold uppercase whitespace-nowrap leading-none border"
-        style={{ 
-          color: color, 
-          backgroundColor: `${color}12`,
-          borderColor: `${color}30`
-        }}
-      >
-        {found.name}
-      </span>
-    );
-  }
-
-  const diff = difficulty.toLowerCase();
-  let color = '#888888';
-  if (diff.includes('hard') || diff.includes('khó')) color = '#ef4444';
-  else if (diff.includes('easy') || diff.includes('dễ')) color = '#22c55e';
-  else if (diff.includes('medium') || diff.includes('trung')) color = '#eab308';
-
-  return (
-    <span 
-      className="px-2 py-1 rounded-full text-[10px] font-bold uppercase whitespace-nowrap leading-none border"
-      style={{ 
-        color: color, 
-        backgroundColor: `${color}12`,
-        borderColor: `${color}30`
-      }}
-    >
-      {difficulty}
-    </span>
-  );
 }
 
 export default function QuestionsDataGrid({
@@ -129,14 +90,13 @@ export default function QuestionsDataGrid({
       {showSelection && (
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold text-on-surface font-headline">Câu hỏi trong tệp</h2>
-          <button
+          <AppButton
             onClick={() => setIsCollectionModalOpen(true)}
             disabled={selectedIds.size === 0}
-            className="flex items-center gap-2 bg-primary cursor-pointer text-on-primary px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            leftIcon="add"
           >
-            <span className="material-symbols-outlined text-sm">add</span>
             Thêm vào bộ sưu tập ({selectedIds.size})
-          </button>
+          </AppButton>
         </div>
       )}
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden mb-4">
@@ -146,11 +106,9 @@ export default function QuestionsDataGrid({
               <tr>
                 {showSelection && (
                   <th className="px-6 py-4 w-4">
-                    <input
-                      type="checkbox"
+                    <AppCheckbox
                       checked={isAllSelected}
                       onChange={toggleAll}
-                      className="rounded border-outline-variant text-primary focus:ring-primary h-4 w-4 transition-all cursor-pointer"
                     />
                   </th>
                 )}
@@ -171,11 +129,9 @@ export default function QuestionsDataGrid({
                 >
                   {showSelection && (
                     <td className="px-6 py-4 w-4">
-                      <input
-                        type="checkbox"
+                      <AppCheckbox
                         checked={selectedIds.has(q.id)}
                         onChange={() => toggleId(q.id)}
-                        className="rounded border-outline-variant text-primary focus:ring-primary h-4 w-4 transition-all cursor-pointer"
                         onClick={(e) => e.stopPropagation()}
                       />
                     </td>
@@ -204,7 +160,7 @@ export default function QuestionsDataGrid({
                     {q.grade ? `Lớp ${q.grade}` : '---'}
                   </td>
                   <td className="px-6 py-4">
-                    {getDifficultyBadge(q.question_difficulty, difficulties)}
+                    <AppBadge difficultyName={q.question_difficulty} difficulties={difficulties} />
                   </td>
                   <td className="px-6 py-4 text-sm text-outline" suppressHydrationWarning>
                     {new Date(q.created_at || Date.now()).toLocaleDateString('vi-VN', { month: 'short', day: '2-digit', year: 'numeric' })}

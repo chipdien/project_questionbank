@@ -3,8 +3,6 @@
 import React from 'react';
 import CollectionSaveModal from '@/app/(main)/collection/components/CollectionSaveModal';
 import { Difficulty } from '@/actions/difficulty';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { Loader2, Plus, Trash2, ChevronLeft, ChevronRight, Search, Bookmark } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -13,10 +11,10 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import { cleanMathpixData } from '@/lib/utils/math-utils';
 import { useQuestionBank, Document, Lesson, Question } from '../hooks/useQuestionBank';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from '@/lib/utils/cn';
+import AppBadge from '@/components/ui/AppBadge';
+import AppSelect from '@/components/ui/AppSelect';
+import AppButton from '@/components/ui/AppButton';
 
 const unselectableMarkdownClass = "text-xs text-on-surface line-clamp-6 prose prose-sm max-w-none [&_p]:my-1 pointer-events-none select-none";
 
@@ -92,7 +90,7 @@ const QuestionItem = React.memo(({
   question,
   isSelected,
   mode,
-  diffColor,
+  difficulties = [],
   onToggleSelect,
   onAddQuestion,
   onRemoveQuestion
@@ -100,7 +98,7 @@ const QuestionItem = React.memo(({
   question: Question;
   isSelected?: boolean;
   mode: 'source' | 'selected';
-  diffColor: string;
+  difficulties?: Difficulty[];
   onToggleSelect?: (id: number) => void;
   onAddQuestion?: (q: Question, e?: React.MouseEvent) => void;
   onRemoveQuestion?: (q: Question, e?: React.MouseEvent) => void;
@@ -136,18 +134,7 @@ const QuestionItem = React.memo(({
                 </svg>
               )}
             </div>
-            {question.question_difficulty && (
-              <span 
-                className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-md border"
-                style={{ 
-                  color: diffColor, 
-                  backgroundColor: `${diffColor}12`,
-                  borderColor: `${diffColor}30`
-                }}
-              >
-                {question.question_difficulty}
-              </span>
-            )}
+            <AppBadge difficultyName={question.question_difficulty} difficulties={difficulties} />
           </div>
           <button
             onClick={(e) => onAddQuestion?.(question, e)}
@@ -169,18 +156,7 @@ const QuestionItem = React.memo(({
     >
       <div className="flex justify-between items-start mb-2">
         <div className="flex gap-2 items-center">
-          {question.question_difficulty && (
-            <span 
-              className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-md border"
-              style={{ 
-                color: diffColor, 
-                backgroundColor: `${diffColor}12`,
-                borderColor: `${diffColor}30`
-              }}
-            >
-              {question.question_difficulty}
-            </span>
-          )}
+          <AppBadge difficultyName={question.question_difficulty} difficulties={difficulties} />
         </div>
         <button
           onClick={(e) => onRemoveQuestion?.(question, e)}
@@ -232,10 +208,7 @@ export default function QuestionBankManager({
     setDifficulties(fresh);
   };
 
-  const getDifficultyColor = (diff: string) => {
-    const found = difficulties.find(d => d.name === diff);
-    return found ? found.color_code : '#888888';
-  };
+
 
   return (
     <div className="flex-1 grid grid-cols-12 gap-4 min-h-0 overflow-hidden">
@@ -249,76 +222,53 @@ export default function QuestionBankManager({
               BỘ LỌC CÂU HỎI
             </h3>
             {isFiltering && (
-              <button
+              <AppButton
+                variant="danger"
+                size="sm"
                 onClick={() => { setGrade(''); setLessonId(''); setDifficulty(''); }}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-error/10 text-error hover:bg-error hover:text-white transition-all text-[10px] font-black uppercase cursor-pointer"
+                leftIcon="close"
               >
-                <span className="material-symbols-outlined text-xs">close</span>
                 Xóa lọc
-              </button>
+              </AppButton>
             )}
           </div>
           <div className="p-5 space-y-5 bg-linear-to-b from-transparent to-surface-container-low/20">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-outline uppercase tracking-wider ml-1 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[16px] text-primary/70">school</span>
-                  Khối lớp
-                </label>
-                <div className="relative group/select">
-                  <select
-                    value={grade}
-                    onChange={(e) => handleFilterChange('grade', e.target.value)}
-                    className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-4 py-3 text-xs font-semibold focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none cursor-pointer hover:bg-surface-container-low hover:border-primary/30"
-                  >
-                    <option value="">Chọn khối lớp</option>
-                    {[6, 7, 8, 9, 10, 11, 12].map(g => (
-                      <option key={g} value={g.toString()}>Khối {g}</option>
-                    ))}
-                  </select>
-                  <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[18px] text-outline-variant pointer-events-none group-hover/select:text-primary transition-colors">expand_more</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-outline uppercase tracking-wider ml-1 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[16px] text-primary/70">leaderboard</span>
-                  Độ khó
-                </label>
-                <div className="relative group/select">
-                  <select
-                    value={difficulty}
-                    onChange={(e) => handleFilterChange('difficulty', e.target.value)}
-                    className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-4 py-3 text-xs font-semibold focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none cursor-pointer hover:bg-surface-container-low hover:border-primary/30"
-                  >
-                    <option value="">Chọn độ khó</option>
-                    {difficulties.map(d => (
-                      <option key={d.id} value={d.name}>{d.name}</option>
-                    ))}
-                  </select>
-                  <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[18px] text-outline-variant pointer-events-none group-hover/select:text-primary transition-colors">expand_more</span>
-                </div>
-              </div>
+              <AppSelect
+                label="Khối lớp"
+                leftIcon="school"
+                value={grade}
+                onChange={(e) => handleFilterChange('grade', e.target.value)}
+              >
+                <option value="">Chọn khối lớp</option>
+                {[6, 7, 8, 9, 10, 11, 12].map(g => (
+                  <option key={g} value={g.toString()}>Khối {g}</option>
+                ))}
+              </AppSelect>
+              <AppSelect
+                label="Độ khó"
+                leftIcon="leaderboard"
+                value={difficulty}
+                onChange={(e) => handleFilterChange('difficulty', e.target.value)}
+              >
+                <option value="">Chọn độ khó</option>
+                {difficulties.map(d => (
+                  <option key={d.id} value={d.name}>{d.name}</option>
+                ))}
+              </AppSelect>
             </div>
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-outline uppercase tracking-wider ml-1 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[16px] text-primary/70">menu_book</span>
-                Bài học
-              </label>
-              <div className="relative group/select">
-                <select
-                  value={lessonId}
-                  onChange={(e) => handleFilterChange('lessonId', e.target.value)}
-                  disabled={!grade}
-                  className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-4 py-3 text-xs font-semibold focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none cursor-pointer hover:bg-surface-container-low hover:border-primary/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-surface-container-low/50"
-                >
-                  <option value="">{!grade ? "Chưa chọn khối lớp" : "Chọn bài học"}</option>
-                  {lessons.filter(l => !grade || l.grade === grade).map(lesson => (
-                    <option key={lesson.id} value={lesson.id.toString()}>{lesson.name}</option>
-                  ))}
-                </select>
-                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[18px] text-outline-variant pointer-events-none group-hover/select:text-primary transition-colors group-disabled:opacity-0">expand_more</span>
-              </div>
-            </div>
+            <AppSelect
+              label="Bài học"
+              leftIcon="menu_book"
+              value={lessonId}
+              onChange={(e) => handleFilterChange('lessonId', e.target.value)}
+              disabled={!grade}
+            >
+              <option value="">{!grade ? "Chưa chọn khối lớp" : "Chọn bài học"}</option>
+              {lessons.filter(l => !grade || l.grade === grade).map(lesson => (
+                <option key={lesson.id} value={lesson.id.toString()}>{lesson.name}</option>
+              ))}
+            </AppSelect>
           </div>
         </div>
 
@@ -369,7 +319,7 @@ export default function QuestionBankManager({
                     question={question}
                     mode="source"
                     isSelected={selectedSourceIds.has(question.id)}
-                    diffColor={getDifficultyColor(question.question_difficulty || '')}
+                    difficulties={difficulties}
                     onToggleSelect={handleToggleSelect}
                     onAddQuestion={handleAddQuestion}
                   />
@@ -434,12 +384,12 @@ export default function QuestionBankManager({
                 ĐÃ CHỌN {selectedSourceIds.size} CÂU
               </span>
             </div>
-            <button
+            <AppButton
               onClick={handleAddSelectedList}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
+              size="sm"
             >
               THÊM VÀO ĐỀ
-            </button>
+            </AppButton>
           </div>
         )}
       </div>
@@ -458,13 +408,13 @@ export default function QuestionBankManager({
               </span>
             )}
             {selectedQuestions.length > 0 && (
-              <button
+              <AppButton
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-on-primary rounded-xl text-[10px] font-bold hover:bg-primary/90 transition-all shadow-sm shadow-primary/20 active:scale-95"
+                size="sm"
+                leftIcon="save"
               >
-                <span className="material-symbols-outlined text-[14px]">save</span>
                 TẠO BỘ SƯU TẬP
-              </button>
+              </AppButton>
             )}
           </div>
         </div>
@@ -476,7 +426,7 @@ export default function QuestionBankManager({
                   key={question.id}
                   question={question}
                   mode="selected"
-                  diffColor={getDifficultyColor(question.question_difficulty || '')}
+                  difficulties={difficulties}
                   onRemoveQuestion={handleRemoveQuestion}
                 />
               ))}

@@ -11,6 +11,8 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 
 import { cleanMathpixData } from '@/lib/utils/math-utils';
+import AppButton from '@/components/ui/AppButton';
+import AppInput from '@/components/ui/AppInput';
 
 interface Question {
   id: number;
@@ -77,7 +79,7 @@ export default function CollectionSaveModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -93,7 +95,7 @@ export default function CollectionSaveModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', duration: 0.5, bounce: 0.3 }}
-            className="relative w-full max-w-2xl bg-surface-container-lowest rounded-[2rem] border border-outline-variant/30 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+            className="relative w-full max-w-2xl bg-surface-container-lowest rounded-4xl border border-outline-variant/30 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
           >
             {isSuccess ? (
               /* Success View */
@@ -115,19 +117,22 @@ export default function CollectionSaveModal({
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md pt-4">
-                  <button
+                  <AppButton
                     onClick={handleViewCollections}
-                    className="flex-1 px-8 py-3.5 bg-primary text-on-primary rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all"
+                    className="flex-1 py-3.5"
+                    size="lg"
+                    leftIcon={<LibraryBig className="w-5 h-5" />}
                   >
-                    <LibraryBig className="w-5 h-5" />
                     Xem Bộ sưu tập
-                  </button>
-                  <button
+                  </AppButton>
+                  <AppButton
                     onClick={handleCreateNext}
-                    className="flex-1 px-8 py-3.5 bg-surface-container-highest text-on-surface rounded-2xl font-bold hover:bg-surface-container-high active:scale-95 transition-all border border-outline-variant/30"
+                    className="flex-1 py-3.5"
+                    size="lg"
+                    variant="outline"
                   >
                     Tạo bộ khác
-                  </button>
+                  </AppButton>
                 </div>
               </div>
             ) : (
@@ -155,38 +160,19 @@ export default function CollectionSaveModal({
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                   {/* Title Input */}
-                  <div className="space-y-2">
-                    <label htmlFor="collection-title" className="text-sm font-bold ml-1 text-on-surface">
-                      Tiêu đề bộ sưu tập
-                    </label>
-                    <input
-                      id="collection-title"
-                      type="text"
-                      value={title}
-                      onChange={(e) => {
-                        setTitle(e.target.value);
-                        if (error) setError(null);
-                      }}
-                      autoFocus
-                      placeholder="Ví dụ: Đề thi thử Toán học kỳ I"
-                      className={`w-full px-4 py-3 rounded-2xl bg-surface-container-low border text-sm transition-all focus:outline-none focus:ring-2 ${error
-                        ? 'border-error/50 focus:ring-error/20 bg-error/5'
-                        : 'border-outline-variant/30 focus:border-primary/50 focus:ring-primary/10'
-                        }`}
-                    />
-                    <AnimatePresence>
-                      {error && (
-                        <motion.p
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="text-xs text-error font-bold flex items-center gap-1.5 ml-1"
-                        >
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          {error}
-                        </motion.p>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                  <AppInput
+                    id="collection-title"
+                    label="Tiêu đề bộ sưu tập"
+                    type="text"
+                    value={title}
+                    onChange={(e) => {
+                      setTitle(e.target.value);
+                      if (error) setError(null);
+                    }}
+                    autoFocus
+                    placeholder="Ví dụ: Đề thi thử Toán học kỳ I"
+                    error={error || undefined}
+                  />
 
                   {/* Preview List */}
                   <div className="space-y-3">
@@ -206,7 +192,7 @@ export default function CollectionSaveModal({
                           className="group p-4 rounded-2xl bg-surface-container-low/50 border border-outline-variant/20 hover:border-primary/30 transition-all"
                         >
                           <div className="flex gap-3">
-                            <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                            <div className="shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
                               {index + 1}
                             </div>
                             <div className="flex-1 text-xs leading-relaxed text-on-surface-variant prose prose-sm max-w-none overflow-x-auto">
@@ -227,32 +213,22 @@ export default function CollectionSaveModal({
 
                 {/* Footer */}
                 <div className="p-6 border-t border-outline-variant/10 bg-surface-container-low/50 flex flex-col-reverse sm:flex-row items-center gap-3 justify-end">
-                  <button
+                  <AppButton
                     onClick={onClose}
-                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-sm text-outline hover:bg-surface-container-highest transition-all"
+                    variant="ghost"
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-sm"
                   >
                     Hủy bỏ
-                  </button>
-                  <button
+                  </AppButton>
+                  <AppButton
                     disabled={isSaving || selectedQuestions.length === 0}
+                    isLoading={isSaving}
                     onClick={handleSave}
-                    className={`w-full sm:w-auto px-8 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-95 ${isSaving || selectedQuestions.length === 0
-                      ? 'bg-outline-variant/50 text-on-surface/30 cursor-not-allowed'
-                      : 'bg-primary text-on-primary hover:bg-primary/90'
-                      }`}
+                    className="w-full sm:w-auto px-8 py-2.5 rounded-xl text-sm"
+                    leftIcon={<CheckCircle2 className="w-4 h-4" />}
                   >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Đang lưu...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="w-4 h-4" />
-                        Tạo bộ sưu tập
-                      </>
-                    )}
-                  </button>
+                    Tạo bộ sưu tập
+                  </AppButton>
                 </div>
               </>
             )}
