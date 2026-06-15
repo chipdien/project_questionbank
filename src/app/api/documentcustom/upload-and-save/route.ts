@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { uploadToS3 } from "@/lib/utils/s3-utils";
-import db from "@/lib/db";
-import { ResultSetHeader } from "mysql2";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { prisma } from "@/lib/db";
 import crypto from "crypto";
 import { getCurrentUserId } from "@/lib/utils/auth-utils";
 
@@ -36,18 +35,17 @@ export async function POST(req: NextRequest) {
         .digest('hex');
     }
 
-    const [rows] = await db.query<any[]>(
-      "SELECT title, pdf_url, s3_object_key, created_by_id FROM lms_documents_custom WHERE content_hash = ? ORDER BY created_at DESC LIMIT 1",
-      [contentHash]
-    );
-    const documents = rows as any[];
+    const existingDoc = await prisma.lms_documents_custom.findFirst({
+      where: { content_hash: contentHash },
+      orderBy: { created_at: 'desc' },
+      select: { title: true, pdf_url: true, s3_object_key: true, created_by_id: true },
+    });
 
     let s3Url = "";
     let objectKey = "";
     let needsS3Upload = true;
 
-    if (documents && documents.length > 0) {
-      const existingDoc = documents[0];
+    if (existingDoc) {
       if (existingDoc.created_by_id === userId) {
         // Cùng 1 user tải lên -> chặn để tránh rác DB (giao diện đã có bước check-duplicate)
         return NextResponse.json({
@@ -55,8 +53,8 @@ export async function POST(req: NextRequest) {
         }, { status: 409 });
       } else {
         // Của user khác tải lên -> tái sử dụng file trên S3, không upload lại
-        s3Url = existingDoc.pdf_url;
-        objectKey = existingDoc.s3_object_key;
+        s3Url = existingDoc.pdf_url ?? "";
+        objectKey = existingDoc.s3_object_key ?? "";
         needsS3Upload = false;
       }
     }
@@ -76,47 +74,42 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Lưu vào Database
-    const connection = await db.getConnection();
-    try {
-      await connection.beginTransaction();
-      const now = new Date();
-
+    const documentId = await prisma.$transaction(async (tx) => {
       // Lưu bảng chính
-      const [docResult] = await connection.execute<ResultSetHeader>(
-        `INSERT INTO lms_documents_custom (title, created_at, updated_at, pdf_url, s3_object_key, content_blocks, content_hash, created_by_id) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [title, now, now, s3Url, objectKey, contentBlocks, contentHash, userId]
-      );
-
-      const documentId = docResult.insertId;
+      const doc = await tx.lms_documents_custom.create({
+        data: {
+          title,
+          created_at: new Date(),
+          updated_at: new Date(),
+          pdf_url: s3Url,
+          s3_object_key: objectKey,
+          content_blocks: contentBlocks,
+          content_hash: contentHash,
+          created_by_id: userId,
+        },
+      });
 
       // Lưu quan hệ câu hỏi
       if (Array.isArray(questionIds) && questionIds.length > 0) {
-        const questionDocValues = questionIds.map((qId: any) => [now, now, qId, documentId]);
-        const placeholders = questionDocValues.map(() => '(?, ?, ?, ?)').join(', ');
-        const flatValues = questionDocValues.flat();
-
-        await connection.execute(
-          `INSERT INTO lms_documents_custom_questions (created_at, updated_at, question_id, document_custom_id) VALUES ${placeholders}`,
-          flatValues
-        );
+        await tx.lms_documents_custom_questions.createMany({
+          data: questionIds.map((qId: any) => ({
+            created_at: new Date(),
+            updated_at: new Date(),
+            question_id: Number(qId),
+            document_custom_id: doc.id,
+          })),
+        });
       }
 
-      await connection.commit();
+      return doc.id;
+    });
 
-      return NextResponse.json({
-        success: true,
-        documentId,
-        s3Url,
-        message: "Upload và lưu tài liệu thành công!"
-      });
-
-    } catch (dbError) {
-      await connection.rollback();
-      throw dbError;
-    } finally {
-      connection.release();
-    }
+    return NextResponse.json({
+      success: true,
+      documentId,
+      s3Url,
+      message: "Upload và lưu tài liệu thành công!"
+    });
 
   } catch (error: any) {
     console.error("Error in upload-and-save API:", error);

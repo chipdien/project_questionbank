@@ -1,12 +1,12 @@
 import { cookies, headers } from 'next/headers';
-import { query } from '@/lib/db';
+import { prisma } from '@/lib/db';
 
 export interface User {
   id: number;
   email: string;
   username: string;
-  nickname: string;
-  level_rank?: number;
+  nickname: string | null;
+  level_rank: number | null;
   [key: string]: any;
 }
 
@@ -34,13 +34,23 @@ export async function getCurrentUser(): Promise<User | null> {
   }
 
   try {
-    const result = await query<User[]>('SELECT * FROM lms_users WHERE id = ? LIMIT 1', [userId]);
-    if (result && result.length > 0) {
-      const user = result[0];
-      if (user.level_rank === 0) {
-        user.level_rank = 5; // Virtualize 0 (SSO Super Admin) as 5 for consistent permission checking
+    const user = await prisma.lms_users.findUnique({
+      where: { id: userId },
+    });
+    
+    if (user) {
+      const formattedUser: User = {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        nickname: user.nickname,
+        level_rank: user.level_rank,
+      };
+
+      if (formattedUser.level_rank === 0 || formattedUser.level_rank === null) {
+        formattedUser.level_rank = 5; // Virtualize 0 (SSO Super Admin) as 5 for consistent permission checking
       }
-      return user;
+      return formattedUser;
     }
 
     return null;

@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start -p $PORT",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +18,7 @@
     "@aws-sdk/client-s3": "^3.1030.0",
     "@aws-sdk/s3-request-presigner": "^3.1030.0",
     "@google/genai": "^1.48.0",
+    "@prisma/client": "^5.14.0",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/sortablejs": "^1.15.9",
     "autoprefixer": "^10.4.27",
@@ -47,6 +50,7 @@
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "prisma": "^5.14.0",
     "tsx": "^4.21.0",
     "typescript": "^5.7.0"
   }

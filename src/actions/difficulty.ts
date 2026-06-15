@@ -1,6 +1,6 @@
 'use server';
 
-import { query } from '@/lib/db';
+import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { isUserAdmin } from '@/lib/utils/auth-utils';
 
@@ -18,10 +18,20 @@ export interface Difficulty {
  */
 export async function getDifficulties(): Promise<Difficulty[]> {
   try {
-    const rows = await query<Difficulty[]>(
-      'SELECT * FROM lms_difficulties ORDER BY display_order ASC, name ASC'
-    );
-    return rows || [];
+    const rows = await prisma.lms_difficulties.findMany({
+      orderBy: [
+        { display_order: 'asc' },
+        { name: 'asc' },
+      ],
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      color_code: r.color_code ?? '#888888',
+      display_order: r.display_order ?? 0,
+      created_at: r.created_at?.toISOString(),
+      updated_at: r.updated_at?.toISOString(),
+    }));
   } catch (error) {
     console.error('Error fetching difficulties:', error);
     return [];
@@ -49,19 +59,22 @@ export async function addDifficulty(
     }
 
     // Kiểm tra trùng tên
-    const existing = await query<Difficulty[]>(
-      'SELECT id FROM lms_difficulties WHERE name = ? LIMIT 1',
-      [cleanName]
-    );
+    const existing = await prisma.lms_difficulties.findFirst({
+      where: { name: cleanName },
+      select: { id: true },
+    });
 
-    if (existing && existing.length > 0) {
+    if (existing) {
       return { success: false, error: `Độ khó "${cleanName}" đã tồn tại.` };
     }
 
-    await query(
-      'INSERT INTO lms_difficulties (name, color_code, display_order) VALUES (?, ?, ?)',
-      [cleanName, colorCode, displayOrder]
-    );
+    await prisma.lms_difficulties.create({
+      data: {
+        name: cleanName,
+        color_code: colorCode,
+        display_order: displayOrder,
+      },
+    });
 
     try {
       revalidatePath('/question-bank');
@@ -99,29 +112,39 @@ export async function updateDifficulty(
     }
 
     // Kiểm tra trùng tên với các bản ghi khác
-    const existing = await query<Difficulty[]>(
-      'SELECT id FROM lms_difficulties WHERE name = ? AND id != ? LIMIT 1',
-      [cleanNewName, id]
-    );
+    const existing = await prisma.lms_difficulties.findFirst({
+      where: {
+        name: cleanNewName,
+        id: { not: id },
+      },
+      select: { id: true },
+    });
 
-    if (existing && existing.length > 0) {
+    if (existing) {
       return { success: false, error: `Độ khó "${cleanNewName}" đã trùng tên với một bản ghi khác.` };
     }
 
-    // Cập nhật cấu hình độ khó
-    await query(
-      'UPDATE lms_difficulties SET name = ?, color_code = ?, display_order = ? WHERE id = ?',
-      [cleanNewName, colorCode, displayOrder, id]
-    );
+    // Sử dụng transaction để đảm bảo cập nhật lms_difficulties và lms_questions đồng bộ
+    await prisma.$transaction(async (tx) => {
+      // Cập nhật cấu hình độ khó
+      await tx.lms_difficulties.update({
+        where: { id },
+        data: {
+          name: cleanNewName,
+          color_code: colorCode,
+          display_order: displayOrder,
+        },
+      });
 
-    // Nếu thay đổi tên hiển thị, đồng bộ toàn bộ câu hỏi liên kết sang tên mới
-    if (cleanOldName !== cleanNewName) {
-      console.log(`Syncing questions from difficulty "${cleanOldName}" to "${cleanNewName}"...`);
-      await query(
-        'UPDATE lms_questions SET question_difficulty = ? WHERE question_difficulty = ?',
-        [cleanNewName, cleanOldName]
-      );
-    }
+      // Nếu thay đổi tên hiển thị, đồng bộ toàn bộ câu hỏi liên kết sang tên mới
+      if (cleanOldName !== cleanNewName) {
+        console.log(`Syncing questions from difficulty "${cleanOldName}" to "${cleanNewName}"...`);
+        await tx.lms_questions.updateMany({
+          where: { question_difficulty: cleanOldName },
+          data: { question_difficulty: cleanNewName },
+        });
+      }
+    });
 
     try {
       revalidatePath('/question-bank');
@@ -157,24 +180,28 @@ export async function deleteDifficulty(
     }
 
     // Kiểm tra xem độ khó thay thế có tồn tại không
-    const replacementCheck = await query<Difficulty[]>(
-      'SELECT id FROM lms_difficulties WHERE name = ? LIMIT 1',
-      [cleanReplacementName]
-    );
+    const replacementCheck = await prisma.lms_difficulties.findFirst({
+      where: { name: cleanReplacementName },
+      select: { id: true },
+    });
 
-    if (!replacementCheck || replacementCheck.length === 0) {
+    if (!replacementCheck) {
       return { success: false, error: `Độ khó thay thế "${cleanReplacementName}" không tồn tại.` };
     }
 
-    // 1. Cập nhật các câu hỏi thuộc độ khó bị xóa sang độ khó thay thế
-    console.log(`Moving questions from "${cleanName}" to "${cleanReplacementName}" before deletion...`);
-    await query(
-      'UPDATE lms_questions SET question_difficulty = ? WHERE question_difficulty = ?',
-      [cleanReplacementName, cleanName]
-    );
+    await prisma.$transaction(async (tx) => {
+      // 1. Cập nhật các câu hỏi thuộc độ khó bị xóa sang độ khó thay thế
+      console.log(`Moving questions from "${cleanName}" to "${cleanReplacementName}" before deletion...`);
+      await tx.lms_questions.updateMany({
+        where: { question_difficulty: cleanName },
+        data: { question_difficulty: cleanReplacementName },
+      });
 
-    // 2. Xóa độ khó
-    await query('DELETE FROM lms_difficulties WHERE id = ?', [id]);
+      // 2. Xóa độ khó
+      await tx.lms_difficulties.delete({
+        where: { id },
+      });
+    });
 
     try {
       revalidatePath('/question-bank');

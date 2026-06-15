@@ -30,6 +30,16 @@ Bạn đang tìm kiếm hướng dẫn? Hãy truy cập bộ tài liệu chuyên
 
 ---
 
+## ⚠️ CẢNH BÁO AN TOÀN DATABASE (DATABASE SAFETY)
+
+> [!CAUTION]
+> **Cơ sở dữ liệu đang có dữ liệu thực tế (production).**
+> * **TUYỆT ĐỐI KHÔNG** chạy các lệnh phá hủy dữ liệu như `npx prisma migrate reset` hoặc `npx prisma db push --force-reset`.
+> * Mọi nâng cấp cấu trúc cơ sở dữ liệu trên production phải được triển khai thông qua các file SQL migration an toàn bằng lệnh:
+>   `npx prisma migrate deploy`
+> * Tham khảo thêm tài liệu chi tiết tại [prisma/README.md](prisma/README.md).
+
+---
 
 ## 🏗️ Bắt đầu nhanh (Quick Start)
 

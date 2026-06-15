@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import db from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { getCurrentUserId } from "@/lib/utils/auth-utils";
 
 export async function POST(req: NextRequest) {
@@ -16,15 +16,19 @@ export async function POST(req: NextRequest) {
     }
 
     // Chỉ check trùng lặp đối với bản ghi của user hiện tại
-    const [rows] = await db.query<any[]>(
-      "SELECT title FROM lms_documents_custom WHERE content_hash = ? AND created_by_id = ? ORDER BY created_at DESC LIMIT 1",
-      [contentHash, userId]
-    );
+    const doc = await prisma.lms_documents_custom.findFirst({
+      where: {
+        content_hash: contentHash,
+        created_by_id: userId,
+      },
+      orderBy: { created_at: 'desc' },
+      select: { title: true },
+    });
 
-    if (rows && rows.length > 0) {
+    if (doc) {
       return NextResponse.json({
         isDuplicate: true,
-        duplicateTitle: rows[0].title || "Tài liệu cũ"
+        duplicateTitle: doc.title || "Tài liệu cũ"
       });
     }
 

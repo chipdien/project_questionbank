@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
       headers.set('Last-Modified', object.lastModified.toUTCString());
     }
 
-    return new NextResponse(object.body, { status: 200, headers });
+    return new NextResponse(object.body as any, { status: 200, headers });
   } catch (error: any) {
     console.error('[S3 Object API] Failed to read S3 object:', error);
     const status = error?.name === 'NoSuchKey' || error?.$metadata?.httpStatusCode === 404 ? 404 : 500;
