@@ -41,7 +41,7 @@ export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
                 {user?.nickname || user?.username || 'Đang tải...'}
               </span>
               <span className="text-[10px] text-outline uppercase tracking-wider">
-                {user?.level_rank === 1 ? 'Giáo viên' : (user?.level_rank === 0 ? 'Admin' : 'Thành viên')}
+                {user?.level_rank === 1 ? 'Giáo viên' : ((user?.level_rank || 0) >= 5 || user?.level_rank === 0 ? 'Admin' : 'Thành viên')}
               </span>
             </div>
             <div className="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center overflow-hidden border border-primary/10">

@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createCollectionAction } from '@/actions/collection';
+import AppButton from '@/components/ui/AppButton';
+import AppInput from '@/components/ui/AppInput';
 import { useRouter } from 'next/navigation';
 
 interface AddToCollectionModalProps {
@@ -73,19 +75,20 @@ export default function AddToCollectionModal({ selectedIds, onClose, onSuccess }
               </p>
 
               <div className="flex flex-col w-full gap-3">
-                <button
+                <AppButton
                   onClick={handleGoToCollections}
-                  className="w-full py-3 bg-primary text-white text-sm font-bold rounded-xl shadow-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl"
+                  leftIcon="arrow_forward"
                 >
-                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
                   Xem danh sách Bộ sưu tập
-                </button>
-                <button
+                </AppButton>
+                <AppButton
                   onClick={onSuccess}
-                  className="w-full py-3 bg-surface-container-low text-on-surface text-sm font-bold rounded-xl hover:bg-surface-container-high transition-all"
+                  className="w-full py-3 rounded-xl"
+                  variant="outline"
                 >
                   Ở lại Trang chủ
-                </button>
+                </AppButton>
               </div>
             </div>
           ) : (
@@ -102,42 +105,37 @@ export default function AddToCollectionModal({ selectedIds, onClose, onSuccess }
 
               <form onSubmit={handleSubmit} className="p-6">
                 <div className="mb-6">
-                  <label htmlFor="collection-title" className="block text-sm font-bold text-on-surface mb-2">
-                    Tên bộ sưu tập
-                  </label>
-                  <input
+                  <AppInput
                     id="collection-title"
+                    label="Tên bộ sưu tập"
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Nhập tên bộ sưu tập (VD: Đề ôn tập HK1)..."
                     autoFocus
                     required
-                    className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface"
                   />
                 </div>
 
                 <div className="flex justify-end gap-3 mt-8">
-                  <button
+                  <AppButton
                     type="button"
                     onClick={onClose}
-                    className="px-5 py-2.5 rounded-lg text-sm font-bold text-on-surface hover:bg-surface-container-low transition-colors"
+                    variant="ghost"
+                    className="px-5 py-2.5 rounded-lg text-sm"
                     disabled={isSubmitting}
                   >
                     Hủy
-                  </button>
-                  <button
+                  </AppButton>
+                  <AppButton
                     type="submit"
-                    className="px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-lg shadow-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     disabled={!title.trim() || isSubmitting}
+                    isLoading={isSubmitting}
+                    className="px-6 py-2.5 rounded-lg text-sm"
+                    leftIcon="check"
                   >
-                    {isSubmitting ? (
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    ) : (
-                      <span className="material-symbols-outlined text-lg">check</span>
-                    )}
                     Tạo và lưu
-                  </button>
+                  </AppButton>
                 </div>
               </form>
             </>

@@ -3,7 +3,7 @@
  */
 const fixMarkdownTable = (text: string): string => {
   // 1. Tìm tất cả các hàng separator tiềm năng để xác định ranh giới bảng
-  const separatorRegex = /\|(?:\s*[:\-]+\s*\|){2,}/g;
+  const separatorRegex = new RegExp('\\|' + '(?:\\s*[:\\-]+\\s*\\|){2,}', 'g');
   let result = text;
 
   // Dùng loop để tìm và sửa từng bảng trong văn bản
@@ -92,7 +92,7 @@ const fixMarkdownTable = (text: string): string => {
   }
 
   // 3. Chuẩn hóa ký hiệu toán học bên trong bảng
-  result = result.replace(/\|\s*([^|$\n]+?)\s*(?=\|)/g, (match, content) => {
+  result = result.replace(new RegExp('\\|\\s*([^|' + '$\\n]+?)\\s*(?=\\|)', 'g'), (match, content) => {
     const trimmed = content.trim();
     if (!trimmed || trimmed.includes('$')) return match;
 
@@ -127,7 +127,7 @@ export const cleanMathpixData = (text: string | null | undefined): string => {
 
   // 1. Bước quan trọng nhất: Khử double-escape từ database/JSON
   // Sử dụng regex có điều kiện để chỉ khử dấu \ khi theo sau là chữ cái hoặc ký hiệu lệnh
-  let cleaned = text.replace(/\\\\(?=[a-zA-Z|(){}\[\]%′'])/g, '\\');
+  let cleaned = text.replace(new RegExp('\\\\\\\\(?=[a-zA-Z' + '|(){}\\[\\]%′\'])', 'g'), '\\');
 
   // 2. Xử lý bảng Markdown trước khi xử lý Math (để tránh làm hỏng cấu trúc pipe)
   cleaned = fixMarkdownTable(cleaned);
@@ -146,3 +146,33 @@ export const cleanMathpixData = (text: string | null | undefined): string => {
 
   return cleaned;
 };
+
+/**
+ * Kết hợp statement và content của câu hỏi một cách thông minh để hiển thị.
+ */
+export const getQuestionDisplayContent = (
+  statement: string | null | undefined,
+  content: string | null | undefined
+): string => {
+  const cleanStmt = statement?.trim() || '';
+  const cleanContent = content?.trim() || '';
+
+  // Nếu statement rỗng hoặc chỉ là chỉ số tạm "1", ta hiển thị content
+  if (!cleanStmt || cleanStmt === '1') {
+    return cleanContent;
+  }
+
+  // Nếu content rỗng hoặc chỉ là ký tự đặc biệt như dấu chấm, ta hiển thị statement
+  if (!cleanContent || cleanContent === '.') {
+    return cleanStmt;
+  }
+
+  // Nếu hai cột giống hệt nhau
+  if (cleanStmt === cleanContent) {
+    return cleanStmt;
+  }
+
+  // Kết hợp cả hai khi cả hai đều hợp lệ và khác nhau
+  return `${cleanStmt}\n\n${cleanContent}`;
+};
+

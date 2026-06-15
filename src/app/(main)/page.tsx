@@ -2,13 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import { query } from '@/lib/db';
 import QuestionsManager from '@/app/(main)/question-bank/components/QuestionsManager';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { getDifficulties } from '@/actions/difficulty';
 import { getCurrentUser } from '@/lib/utils/auth-utils';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 interface Option {
   id: number;
@@ -21,6 +16,7 @@ interface Option {
 interface Question {
   id: number;
   statement: string;
+  content?: string | null;
   grade: string;
   question_difficulty: string;
   question_type: string;
@@ -47,22 +43,6 @@ interface Lesson {
   grade?: string;
 }
 
-function getDifficultyBadge(difficulty: string | null | undefined) {
-  if (!difficulty) {
-    return <span className="text-on-surface-variant font-medium">---</span>;
-  }
-
-  const diff = difficulty.toLowerCase();
-
-  if (diff.includes('hard') || diff.includes('khó')) {
-    return <span className="px-2 py-1 rounded-full bg-error/10 text-error text-[10px] font-bold uppercase whitespace-nowrap leading-none">Khó</span>;
-  }
-  if (diff.includes('easy') || diff.includes('dễ')) {
-    return <span className="px-2 py-1 rounded-full bg-success/10 text-success text-[10px] font-bold uppercase whitespace-nowrap leading-none">Dễ</span>;
-  }
-  return <span className="px-2 py-1 rounded-full bg-warning/10 text-warning text-[10px] font-bold uppercase whitespace-nowrap leading-none">Trung Bình</span>;
-}
-
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
@@ -83,6 +63,7 @@ export default async function DashboardPage(props: PageProps) {
   let lessons: Lesson[] = [];
   let userId: number | null = null;
   let levelRank = 0;
+  let difficulties: any[] = [];
   
   try {
     const user = await getCurrentUser();
@@ -110,6 +91,7 @@ export default async function DashboardPage(props: PageProps) {
     );
 
     lessons = await query<Lesson[]>('SELECT id, name, grade FROM lms_lessons ORDER BY name ASC');
+    difficulties = await getDifficulties();
   } catch (error) {
     console.error("Failed to load documents or lessons:", error);
   }
@@ -138,7 +120,7 @@ export default async function DashboardPage(props: PageProps) {
       totalPages = Math.ceil(totalQuestions / PAGE_SIZE);
 
       questions = await query<Question[]>(
-        `SELECT q.id, q.statement, q.grade, q.question_difficulty, q.question_type, q.created_at,
+        `SELECT q.id, q.statement, q.content, q.grade, q.question_difficulty, q.question_type, q.created_at,
          (SELECT l.name FROM lms_lessons l 
           JOIN lms_questions_lessons ql ON l.id = ql.lesson_id 
           WHERE ql.question_id = q.id LIMIT 1) as lesson_name
@@ -156,7 +138,7 @@ export default async function DashboardPage(props: PageProps) {
       totalPages = Math.ceil(totalQuestions / PAGE_SIZE);
 
       questions = await query<Question[]>(
-        `SELECT id, statement, grade, question_difficulty, question_type, created_at,
+        `SELECT id, statement, content, grade, question_difficulty, question_type, created_at,
          (SELECT l.name FROM lms_lessons l 
           JOIN lms_questions_lessons ql ON l.id = ql.lesson_id 
           WHERE ql.question_id = lms_questions.id LIMIT 1) as lesson_name
@@ -212,6 +194,8 @@ export default async function DashboardPage(props: PageProps) {
           pageSize: DOC_PAGE_SIZE
         }}
         currentUserId={userId}
+        difficulties={difficulties}
+        isAdmin={levelRank >= 5}
       />
     </div>
   );

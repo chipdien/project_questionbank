@@ -9,6 +9,7 @@ export interface Option {
 export interface Question {
   id: number;
   statement: string;
+  content?: string | null;
   grade: string;
   question_difficulty: string;
   question_type: string;

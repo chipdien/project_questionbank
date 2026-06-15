@@ -8,7 +8,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 
-import { cleanMathpixData } from '@/lib/utils/math-utils';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
 
 interface Option {
   id: number;
@@ -21,6 +21,7 @@ interface Option {
 interface Question {
   id: number;
   statement: string;
+  content?: string | null;
   grade: string;
   question_difficulty: string;
   question_type: string;
@@ -98,7 +99,7 @@ export default function QuestionModal({ question, onClose }: QuestionModalProps)
                   remarkPlugins={[remarkMath, remarkGfm]}
                   rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
                 >
-                  {cleanMathpixData(question.statement)}
+                  {cleanMathpixData(getQuestionDisplayContent(question.statement, question.content))}
                 </ReactMarkdown>
               </div>
             </div>

@@ -38,3 +38,30 @@ Tài liệu này ghi lại các lỗi kỹ thuật phát hiện được trong q
 - **Status**: Fixed
 
 ---
+
+## [2026-06-15 14:02] - Tailwind CSS v4 CSS Parsing Error due to SQL Auto-scan
+
+- **Type**: Process / Integration
+- **Severity**: High
+- **File**: `src/app/globals.css:2416`
+- **Agent**: eMon (Antigravity)
+- **Root Cause**: Tailwind CSS v4 mặc định tự động quét toàn bộ thư mục dự án (Automatic Source Detection). Nó đã quét qua tệp SQL dump lớn trong thư mục `docs/db/` và phân tích nhầm các cú pháp toán học chứa dấu hai chấm và gạch đứng (như `:|x|` hoặc `:|-24|`) thành utility class Tailwind có tên `[-:|]`. Lớp CSS sinh ra `.-:| { -: |; }` chứa cú pháp lỗi, khiến PostCSS parser trong Next.js dev server bị crash (Error 500).
+- **Error Message**: 
+  ```
+  Uncaught Error: ./src/app/globals.css:2416:9
+  Parsing CSS source code failed
+    2414 |   }
+    2415 |   .\[-\:\|\] {
+  > 2416 |     -: |;
+         |         ^
+    2417 |   }
+  Unexpected token Semicolon
+  ```
+- **Fix Applied**: 
+  1. Tắt tính năng tự động quét nguồn (Auto-scan) của Tailwind v4 bằng cách đổi `@import "tailwindcss";` thành `@import "tailwindcss" source(none);` trong `src/app/globals.css`.
+  2. Chỉ cho phép Tailwind quét các thư mục quy định cụ thể thông qua `@source` (`src/app`, `src/components`, `src/lib`).
+  3. Đồng thời đổi các Regex literal trong `src/lib/utils/math-utils.ts` có chứa `|` và `[]` sang `new RegExp` kết hợp nối chuỗi để ngăn chặn tuyệt đối trình quét của Tailwind trong tương lai.
+- **Prevention**: Luôn tắt chế độ auto-scan của Tailwind CSS v4 trong các dự án có chứa tệp dữ liệu tĩnh lớn (như SQL dump, tài liệu md) bằng cách sử dụng `source(none)` và định cấu hình `@source` rõ ràng cho các thư mục frontend.
+- **Status**: Fixed
+
+---
