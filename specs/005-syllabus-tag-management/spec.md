@@ -8,6 +8,12 @@
 
 **Input**: User description: "tạo chức năng quản lý syllabus (lms_topics) và quản lý tags"
 
+## Clarifications
+
+### Session 2026-06-16
+
+- Q: Rà soát lại codebase, kiểm tra xem sau khi merge các nhánh thì có đoạn code nào chưa chuyển sang prisma hay không? Nếu có tồn tại code kết nối cơ sở dữ liệu kiểu cũ, thì chuyển sang prisma → A: Đã rà soát và xác định không còn code kết nối cơ sở dữ liệu kiểu cũ (`mysql2`) trong thư mục ứng dụng chính (`src/`). Đã di chuyển thành công cả hai script một lần (`scripts/migrate-mathpix-images.ts` và `scripts/migrate-link-s3-answer.mjs`) từ `mysql2` sang sử dụng Prisma Client để đảm bảo 100% codebase đồng bộ.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Quản lý Cây Chủ đề Học thuật (Syllabus/Topics Hierarchy) (Priority: P1)
