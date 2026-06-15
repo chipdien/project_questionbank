@@ -14,6 +14,12 @@ import { topicsService, Topic } from '@/services/topics';
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
 import QuestionEditModal from '@/components/common/QuestionEditModal';
 
+// Shared img renderer: skip images with empty src to prevent React warning
+const markdownComponents = {
+  img: ({ src, alt, ...props }: any) =>
+    src ? <img src={src} alt={alt || ''} {...props} /> : null,
+};
+
 interface Option {
   id: string;
   question_id: string;
@@ -286,6 +292,7 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
                         <ReactMarkdown
                           remarkPlugins={[remarkMath, remarkGfm]}
                           rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
+                          components={markdownComponents}
                         >
                           {cleanMathpixData(getQuestionDisplayContent(q.statement, q.content))}
                         </ReactMarkdown>
@@ -312,6 +319,7 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
                                     <ReactMarkdown
                                       remarkPlugins={[remarkMath, remarkGfm]}
                                       rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
+                                      components={markdownComponents}
                                     >
                                       {cleanMathpixData(opt.content || opt.statement || '')}
                                     </ReactMarkdown>
