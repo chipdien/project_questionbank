@@ -11,7 +11,7 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 
 
-import { cleanMathpixData } from '@/lib/utils/math-utils';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
 
 interface QuestionLibraryProps {
   onSelect?: (question: any) => void;
@@ -202,11 +202,11 @@ export default function QuestionLibrary({ onSelect, onSelectMany }: QuestionLibr
 
                 <div className="text-xs text-on-surface line-clamp-4 prose prose-sm max-w-none [&_p]:my-1 pointer-events-none">
                   <ReactMarkdown
-                    key={q.statement}
+                    key={q.id}
                     remarkPlugins={[remarkMath, remarkGfm]}
                     rehypePlugins={[rehypeKatex, rehypeRaw]}
                   >
-                    {cleanMathpixData(q.statement)}
+                    {cleanMathpixData(getQuestionDisplayContent(q.statement, q.content))}
                   </ReactMarkdown>
                 </div>
               </div>
