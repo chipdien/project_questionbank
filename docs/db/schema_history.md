@@ -4,6 +4,22 @@ Tài liệu này ghi lại các bước thay đổi cấu trúc cơ sở dữ li
 
 ---
 
+## [2026-06-15] - Separate Answer/Solution File Upload
+
+### 📝 Mô tả thay đổi
+- Bổ sung cột `link_s3_answer` vào bảng `lms_documents` để lưu link file Đáp án/Lời giải gốc trên S3.
+- Hỗ trợ luồng tải lên đồng thời 2 file: 1 file Đề bài và 1 file Đáp án/Lời giải riêng biệt. AI (Gemini) sẽ đối chiếu đề bài với đáp án/lời giải tương ứng để điền chính xác `hint` (lời giải) và `weight = 1` (đáp án đúng) khi phân tích.
+
+### 🛠️ Câu lệnh SQL (DDL)
+```sql
+ALTER TABLE lms_documents ADD COLUMN link_s3_answer TEXT DEFAULT NULL;
+```
+
+### 🎯 Ý nghĩa cột
+- `link_s3_answer`: Link S3 tới file đáp án gốc. `NULL` nếu tài liệu chỉ có file đề bài (luồng cũ).
+
+---
+
 ## [2026-04-16] - Local Users Synchronization & Async Tasks
 ### 📝 Mô tả thay đổi
 - Chuyển đổi phương thức lưu trữ Cookie User bằng đồng bộ Database cục bộ. Tạo bảng `lms_users` làm bản sao hồ sơ của người dùng từ API đăng nhập, giúp giải quyết triệt để lỗi "JSON parse/encode" từ Cookie.

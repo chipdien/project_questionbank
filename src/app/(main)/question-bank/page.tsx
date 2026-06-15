@@ -10,6 +10,7 @@ interface Document {
   created_at: string;
   public?: string | null;
   link_s3?: string | null;
+  link_s3_answer?: string | null;
   teacher_name?: string | null;
   created_by_id?: number | null;
 }
@@ -35,7 +36,7 @@ export default async function QuestionBankPage() {
 
     // Lọc: của mình OR public OR cũ (NULL) OR Admin
     documents = await query<Document[]>(
-      `SELECT d.id, d.title, d.created_at, d.\`public\`, d.link_s3, COALESCE(u.nickname, u.username) as teacher_name, d.created_by_id
+      `SELECT d.id, d.title, d.created_at, d.\`public\`, d.link_s3, d.link_s3_answer, COALESCE(u.nickname, u.username) as teacher_name, d.created_by_id
        FROM lms_documents d
        LEFT JOIN lms_users u ON d.created_by_id = u.id
        WHERE d.created_by_id = ? OR d.\`public\` = '1' OR d.created_by_id IS NULL OR ? >= 5

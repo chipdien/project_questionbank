@@ -51,14 +51,14 @@ export class IngestService {
   /**
    * Phân tích văn bản thô bằng Gemini.
    */
-  static async processAi(rawText: string) {
-    return await QuestionParserService.parseQuestions(rawText);
+  static async processAi(rawText: string, rawAnswerText?: string) {
+    return await QuestionParserService.parseQuestions(rawText, rawAnswerText);
   }
 
   /**
    * Lưu dữ liệu đã có cấu trúc vào CSDL.
    */
-  static async saveToDatabase(taskId: number, fileName: string, rawText: string, structuredData: any, isPublic: boolean = false, linkS3: string | null = null, userId: number | null = null) {
+  static async saveToDatabase(taskId: number, fileName: string, rawText: string, structuredData: any, isPublic: boolean = false, linkS3: string | null = null, userId: number | null = null, linkS3Answer: string | null = null) {
     const connection = await pool.getConnection();
 
     try {
@@ -68,8 +68,8 @@ export class IngestService {
 
       // 1. Insert into lms_documents
       const [docResult] = await connection.execute<ResultSetHeader>(
-        'INSERT INTO lms_documents (title, content, `public`, link_s3, created_at, updated_at, created_by_id, updated_by_id, teacher_owned) VALUES (?, ?, ?, ?, NOW(), NOW(), ?, ?, ?)',
-        [fileName, rawText, publicVal, linkS3, userId, userId, userId]
+        'INSERT INTO lms_documents (title, content, `public`, link_s3, link_s3_answer, created_at, updated_at, created_by_id, updated_by_id, teacher_owned) VALUES (?, ?, ?, ?, ?, NOW(), NOW(), ?, ?, ?)',
+        [fileName, rawText, publicVal, linkS3, linkS3Answer, userId, userId, userId]
       );
       const documentId = docResult.insertId;
 

@@ -86,29 +86,32 @@ export async function getS3ObjectBytes(key: string, bucketName?: string): Promis
 export async function uploadToS3(buffer: Buffer, key: string, contentType: string): Promise<string> {
   const bucketName = process.env.AWS_S3_BUCKET_NAME;
   const region = process.env.AWS_REGION;
+  const folderPrefix = process.env.AWS_S3_FOLDER_PREFIX || '';
 
   if (!bucketName || !region) {
     throw new Error('Thiếu cấu hình tên bucket hoặc region AWS S3 (AWS_S3_BUCKET_NAME, AWS_REGION).');
   }
 
   const client = getS3Client();
+  const prefixedKey = folderPrefix ? `${folderPrefix.replace(/\/$/, '')}/${key.replace(/^\//, '')}` : key;
+
   await client.send(
     new PutObjectCommand({
       Bucket: bucketName,
-      Key: key,
+      Key: prefixedKey,
       Body: buffer,
       ContentType: contentType,
     })
   );
 
-  return `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
+  return `https://${bucketName}.s3.${region}.amazonaws.com/${prefixedKey}`;
 }
 
 /**
  * Download an image from Mathpix CDN and upload it to AWS S3.
  * Returns the new S3 URL.
  */
-export async function downloadAndUploadToS3(url: string, prefix: string = 'mathpix-images'): Promise<string> {
+export async function downloadAndUploadToS3(url: string, prefix: string = 'images'): Promise<string> {
   try {
     console.log(`[S3-Utils] Downloading image from Mathpix CDN: ${url}`);
     
