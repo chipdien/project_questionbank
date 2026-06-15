@@ -10,6 +10,7 @@ function serialize(obj: any) {
   );
 }
 
+// PUT: Full update with auth check (used by document builder, question-bank editor)
 export async function PUT(
   request: NextRequest,
   { params }: { params: any }
@@ -114,5 +115,67 @@ export async function PUT(
   } catch (error: any) {
     console.error('Error updating question:', error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+  }
+}
+
+// PATCH: Lightweight update used by QuestionEditModal in topic management
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: any }
+) {
+  try {
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
+    const questionId = BigInt(id);
+    const body = await request.json();
+    const { statement, content, hint, options, question_difficulty, question_type } = body;
+
+    const updatedQuestion = await prisma.$transaction(async (tx) => {
+      // 1. Cập nhật câu hỏi
+      const q = await tx.lms_questions.update({
+        where: { id: questionId },
+        data: {
+          statement: statement !== undefined ? statement : undefined,
+          content: content !== undefined ? content : undefined,
+          hint: hint !== undefined ? hint : undefined,
+          question_difficulty: question_difficulty !== undefined ? question_difficulty : undefined,
+          question_type: question_type !== undefined ? question_type : undefined,
+          updated_at: new Date(),
+        }
+      });
+
+      // 2. Cập nhật các lựa chọn đáp án (nếu gửi lên)
+      if (options && Array.isArray(options)) {
+        for (const opt of options) {
+          if (opt.id) {
+            await tx.lms_options.update({
+              where: { id: BigInt(opt.id) },
+              data: {
+                content: opt.content !== undefined ? opt.content : undefined,
+                weight: opt.weight !== undefined ? Number(opt.weight) : undefined,
+                order: opt.order !== undefined ? Number(opt.order) : undefined,
+                updated_at: new Date(),
+              }
+            });
+          }
+        }
+      }
+
+      // Lấy câu hỏi đầy đủ sau cập nhật kèm options
+      const fullOptions = await tx.lms_options.findMany({
+        where: { question_id: questionId },
+        orderBy: { order: 'asc' }
+      });
+
+      return {
+        ...q,
+        options: fullOptions
+      };
+    });
+
+    return NextResponse.json(serialize(updatedQuestion));
+  } catch (error: any) {
+    console.error(`Error in PATCH /api/questions/${(await params).id}:`, error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

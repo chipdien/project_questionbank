@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Plus, ArrowLeft, ChevronDown } from 'lucide-react';
+import { Save, Plus, ArrowLeft, ChevronDown, Eye } from 'lucide-react';
 import { Topic } from '@/services/topics';
+import Link from 'next/link';
 
 interface TopicDetailsPanelProps {
   topic: Topic | null;
@@ -301,6 +302,15 @@ export default function TopicDetailsPanel({
               />
               <span>Tạo liên tiếp chủ đề cùng cấp</span>
             </label>
+          )}
+          {!isNew && topic && (
+            <Link
+              href={`/topics/${topic.id}/questions`}
+              className="px-4 py-2.5 text-sm font-semibold rounded-xl bg-secondary/10 hover:bg-secondary/20 text-secondary border border-secondary/25 transition-all flex items-center gap-2 mr-auto"
+            >
+              <Eye className="w-4 h-4" />
+              <span>Xem câu hỏi ({topic._count?.questions || 0})</span>
+            </Link>
           )}
           <button
             type="button"
