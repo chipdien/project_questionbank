@@ -3,6 +3,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
 import { getCurrentUserId } from "@/lib/utils/auth-utils";
+import { uploadToS3 } from "@/lib/utils/s3-utils";
 
 export async function POST(req: NextRequest) {
   try {
