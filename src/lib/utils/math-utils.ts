@@ -125,9 +125,19 @@ const fixMarkdownTable = (text: string): string => {
 export const cleanMathpixData = (text: string | null | undefined): string => {
   if (!text) return 'N/A';
 
+  // 0. Thay thế các ảnh Mathpix CDN cũ đã hết hạn (không di cư được sang S3) bằng ghi chú thay vì để lỗi 404
+  const expiredMarkdownImageRegex = /!\[.*?\]\(https?:\/\/(images|cdn)\.mathpix\.com\/[^\s\)\]\"\'\>\`]+\)/g;
+  const expiredHtmlImageRegex = /<img[^>]+src=["']https?:\/\/(images|cdn)\.mathpix\.com\/[^"']+["'][^>]*>/gi;
+
+  // Ảnh đã di cư sang S3 được lưu dưới dạng URL public trực tiếp
+  // (bucket cho phép đọc công khai) nên render thẳng, không qua proxy.
+  let cleaned = text
+    .replace(expiredMarkdownImageRegex, '*(Hình ảnh đã hết hạn)*')
+    .replace(expiredHtmlImageRegex, '*(Hình ảnh đã hết hạn)*');
+
   // 1. Bước quan trọng nhất: Khử double-escape từ database/JSON
   // Sử dụng regex có điều kiện để chỉ khử dấu \ khi theo sau là chữ cái hoặc ký hiệu lệnh
-  let cleaned = text.replace(new RegExp('\\\\\\\\(?=[a-zA-Z' + '|(){}\\[\\]%′\'])', 'g'), '\\');
+  cleaned = cleaned.replace(new RegExp('\\\\\\\\(?=[a-zA-Z' + '|(){}\\[\\]%′\'])', 'g'), '\\');
 
   // 2. Xử lý bảng Markdown trước khi xử lý Math (để tránh làm hỏng cấu trúc pipe)
   cleaned = fixMarkdownTable(cleaned);

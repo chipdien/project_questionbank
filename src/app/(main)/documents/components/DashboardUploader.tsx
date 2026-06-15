@@ -26,17 +26,43 @@ export default function DashboardUploader() {
   const [currentStep, setCurrentStep] = useState<number>(-1);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [attachAnswer, setAttachAnswer] = useState(false);
+  const [answerFile, setAnswerFile] = useState<File | null>(null);
+  // Ngữ cảnh để gửi lại khi file đáp án không khớp với đề
+  const [mismatchRetry, setMismatchRetry] = useState<{ file: File; isPublic: boolean } | null>(null);
+  const [retryAnswerFile, setRetryAnswerFile] = useState<File | null>(null);
   const router = useRouter();
 
-  const handleUpload = async (file: File, isPublic: boolean) => {
+  const resetAnswerSelection = () => {
+    setAttachAnswer(false);
+    setAnswerFile(null);
+  };
+
+  const closeModal = () => {
+    setPendingFile(null);
+    resetAnswerSelection();
+  };
+
+  const closeMismatchModal = () => {
+    setMismatchRetry(null);
+    setRetryAnswerFile(null);
+  };
+
+  const handleUpload = async (file: File, isPublic: boolean, answer: File | null = null) => {
     setIsUploading(true);
     setErrorMsg(null);
     setCurrentStep(0); // Bắt đầu bước 1: Tải file
     setPendingFile(null); // Đóng modal
+    closeMismatchModal();
 
     const formData = new FormData();
     formData.append('document', file);
     formData.append('is_public', isPublic ? '1' : '0');
+    // Đính kèm file đáp án/lời giải riêng (nếu có)
+    if (answer) {
+      formData.append('answer_document', answer);
+    }
+    resetAnswerSelection();
 
     try {
       // Giả lập đang xử lý bước 1
@@ -49,6 +75,15 @@ export default function DashboardUploader() {
       });
 
       const data = await response.json();
+
+      // File đáp án không khớp với đề -> hỏi người dùng chọn lại hoặc bỏ qua
+      if (data.answerMismatch) {
+        setIsUploading(false);
+        setCurrentStep(-1);
+        setRetryAnswerFile(null);
+        setMismatchRetry({ file, isPublic });
+        return;
+      }
 
       if (!response.ok || !data.success) {
         const errorMsg = data.error || 'Đã xảy ra lỗi khi xử lý.';
@@ -233,32 +268,133 @@ export default function DashboardUploader() {
       {/* Modal xác nhận Public */}
       <Modal
         isOpen={!!pendingFile}
-        onClose={() => setPendingFile(null)}
+        onClose={closeModal}
         title="Chia sẻ tài liệu?"
         footer={
           <>
             <button
               className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors text-on-surface-variant hover:bg-surface-container-high"
-              onClick={() => setPendingFile(null)}
+              onClick={closeModal}
             >
               Hủy
             </button>
             <button
               className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors bg-surface-container text-on-surface hover:bg-surface-container-highest"
-              onClick={() => pendingFile && handleUpload(pendingFile, false)}
+              onClick={() => pendingFile && handleUpload(pendingFile, false, attachAnswer ? answerFile : null)}
             >
               Không (Private)
             </button>
             <button
               className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors bg-primary text-white hover:bg-primary/90"
-              onClick={() => pendingFile && handleUpload(pendingFile, true)}
+              onClick={() => pendingFile && handleUpload(pendingFile, true, attachAnswer ? answerFile : null)}
             >
               Có (Public)
             </button>
           </>
         }
       >
-        Bạn có muốn đặt tài liệu <span className="font-semibold text-primary">"{pendingFile?.name}"</span> ở chế độ công khai không?
+        <div className="space-y-4">
+          <p>
+            Bạn có muốn đặt tài liệu <span className="font-semibold text-primary">"{pendingFile?.name}"</span> ở chế độ công khai không?
+          </p>
+
+          {/* Tùy chọn tải kèm file Đáp án/Lời giải */}
+          <div className="rounded-xl border border-outline-variant/30 bg-surface-container-low p-3">
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="w-4 h-4 accent-primary cursor-pointer"
+                checked={attachAnswer}
+                onChange={(e) => {
+                  setAttachAnswer(e.target.checked);
+                  if (!e.target.checked) setAnswerFile(null);
+                }}
+              />
+              <span className="text-sm font-semibold text-on-surface flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-base text-primary">fact_check</span>
+                Tải kèm file Đáp án/Lời giải
+              </span>
+            </label>
+
+            {attachAnswer && (
+              <div className="mt-3 pl-7">
+                <input
+                  type="file"
+                  accept=".pdf,.docx,.png,.jpg,.jpeg"
+                  onChange={(e) => setAnswerFile(e.target.files?.[0] ?? null)}
+                  className="block w-full text-xs text-on-surface-variant file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 file:cursor-pointer cursor-pointer"
+                />
+                {answerFile ? (
+                  <p className="mt-2 text-xs text-primary font-medium truncate">
+                    Đã chọn: {answerFile.name}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-xs text-outline-variant">
+                    AI sẽ đối chiếu đề bài với file đáp án này để điền lời giải & đánh dấu đáp án đúng.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal khi file đáp án không khớp với đề */}
+      <Modal
+        isOpen={!!mismatchRetry}
+        onClose={closeMismatchModal}
+        title="File đáp án không khớp với đề"
+        footer={
+          <>
+            <button
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors text-on-surface-variant hover:bg-surface-container-high"
+              onClick={closeMismatchModal}
+            >
+              Hủy
+            </button>
+            <button
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors bg-surface-container text-on-surface hover:bg-surface-container-highest"
+              onClick={() => mismatchRetry && handleUpload(mismatchRetry.file, mismatchRetry.isPublic, null)}
+            >
+              Chỉ lưu đề
+            </button>
+            <button
+              disabled={!retryAnswerFile}
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={() => mismatchRetry && retryAnswerFile && handleUpload(mismatchRetry.file, mismatchRetry.isPublic, retryAnswerFile)}
+            >
+              Tải lại với đáp án mới
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p>
+            AI nhận thấy file đáp án bạn vừa tải lên <span className="font-semibold text-error">không khớp</span> với nội dung đề bài
+            <span className="font-semibold text-primary"> "{mismatchRetry?.file.name}"</span>.
+          </p>
+          <p className="text-xs text-outline-variant">
+            Bạn có thể chọn lại đúng file đáp án/lời giải, hoặc bỏ qua để chỉ lưu đề bài.
+          </p>
+
+          <div className="rounded-xl border border-outline-variant/30 bg-surface-container-low p-3">
+            <p className="text-sm font-semibold text-on-surface mb-2 flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-base text-primary">fact_check</span>
+              Chọn lại file Đáp án/Lời giải
+            </p>
+            <input
+              type="file"
+              accept=".pdf,.docx,.png,.jpg,.jpeg"
+              onChange={(e) => setRetryAnswerFile(e.target.files?.[0] ?? null)}
+              className="block w-full text-xs text-on-surface-variant file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 file:cursor-pointer cursor-pointer"
+            />
+            {retryAnswerFile && (
+              <p className="mt-2 text-xs text-primary font-medium truncate">
+                Đã chọn: {retryAnswerFile.name}
+              </p>
+            )}
+          </div>
+        </div>
       </Modal>
     </div>
   );

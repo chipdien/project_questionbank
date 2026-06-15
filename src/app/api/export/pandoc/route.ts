@@ -6,6 +6,8 @@ import fsSync from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import os from 'os';
+import { getS3ObjectBytes } from '@/lib/utils/s3-utils';
+import { getS3ObjectRefFromProxyUrl, getS3ObjectRefFromUrl } from '@/lib/utils/s3-url-utils';
 
 const execAsync = util.promisify(exec);
 
@@ -153,7 +155,23 @@ ${footerLatex}
     let processedMd = markdownContent;
     let imgCounter = 0;
 
-    // Helper xử lý URL ảnh, trả về tên file
+    const getImageExtension = (source: string, contentType?: string | null): string => {
+      let ext = source.split('.').pop()?.split(/[#?]/)[0] || 'jpg';
+      if (ext.length > 4 || !ext.match(/^[a-z0-9]+$/i)) {
+        ext = contentType?.split('/')[1] || 'jpg';
+      }
+      return ext === 'jpeg' ? 'jpg' : ext;
+    };
+
+    const saveImage = async (buffer: Buffer, source: string, contentType?: string | null): Promise<string> => {
+      const ext = getImageExtension(source, contentType);
+      const imgName = `image${imgCounter++}.${ext}`;
+      const imgPath = path.join(tmpDir, imgName);
+      await fs.writeFile(imgPath, buffer);
+      return imgName;
+    };
+
+    // Helper xu ly URL anh, tra ve ten file
     const downloadImage = async (rawUrl: string): Promise<string | null> => {
       let actualUrl = rawUrl;
       if (rawUrl.includes('/api/proxy-image?url=')) {
@@ -169,25 +187,28 @@ ${footerLatex}
       }
 
       try {
-        const res = await fetch(actualUrl);
+        const s3Ref = getS3ObjectRefFromProxyUrl(actualUrl, req.url) || getS3ObjectRefFromUrl(actualUrl);
+        if (s3Ref) {
+          const object = await getS3ObjectBytes(s3Ref.key, s3Ref.bucket);
+          return await saveImage(Buffer.from(object.body), s3Ref.key, object.contentType);
+        }
+
+        const resolvedUrl = actualUrl.startsWith('/') ? new URL(actualUrl, req.url).toString() : actualUrl;
+        const headers = new Headers();
+        if (resolvedUrl.startsWith(new URL(req.url).origin)) {
+          const cookie = req.headers.get('cookie');
+          if (cookie) headers.set('cookie', cookie);
+        }
+
+        const res = await fetch(resolvedUrl, { headers });
         if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
 
         const contentType = res.headers.get('content-type');
         const buffer = Buffer.from(await res.arrayBuffer());
 
-        let ext = actualUrl.split('.').pop()?.split(/[#?]/)[0] || 'jpg';
-        if (ext.length > 4 || !ext.match(/^[a-z0-9]+$/i)) {
-          ext = contentType?.split('/')[1] || 'jpg';
-        }
-        if (ext === 'jpeg') ext = 'jpg';
-
-        const imgName = `image${imgCounter++}.${ext}`;
-        const imgPath = path.join(tmpDir, imgName);
-        await fs.writeFile(imgPath, buffer);
-
-        return imgName;
+        return await saveImage(buffer, resolvedUrl, contentType);
       } catch (e: any) {
-        console.error("Lỗi download ảnh: ", actualUrl, e.message);
+        console.error('Loi download anh: ', actualUrl, e.message);
         return null;
       }
     };

@@ -81,7 +81,7 @@ export default async function DashboardPage(props: PageProps) {
     totalDocPages = Math.ceil(totalDocuments / DOC_PAGE_SIZE);
 
     documents = await query<Document[]>(
-      `SELECT d.id, d.title, d.created_at, d.is_ai_classified, d.\`public\`, d.link_s3, COALESCE(u.nickname, u.username) as teacher_name, d.teacher_owned, d.created_by_id 
+      `SELECT d.id, d.title, d.created_at, d.is_ai_classified, d.\`public\`, d.link_s3, d.link_s3_answer, COALESCE(u.nickname, u.username) as teacher_name, d.teacher_owned, d.created_by_id
        FROM lms_documents d
        LEFT JOIN lms_users u ON d.created_by_id = u.id
        WHERE d.created_by_id = ? OR d.\`public\` = '1' OR d.created_by_id IS NULL OR ? >= 5
