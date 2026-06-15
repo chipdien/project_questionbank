@@ -33,7 +33,13 @@ export default function TopicsPage() {
     setLoading(true);
     try {
       const data = await topicsService.fetchTopics();
-      setTopics(data);
+      // Sắp xếp các topics theo thứ tự hiển thị (order_index) từ thấp đến cao
+      const sortedData = [...data].sort((a, b) => {
+        const orderA = parseInt(a.order_index || '0', 10);
+        const orderB = parseInt(b.order_index || '0', 10);
+        return orderA - orderB;
+      });
+      setTopics(sortedData);
     } catch (err: any) {
       toast.error('Không thể tải danh sách chủ đề: ' + err.message);
     } finally {
