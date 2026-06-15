@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { query } from '@/lib/db';
 import QuestionsManager from '@/app/(main)/question-bank/components/QuestionsManager';
+import { getDifficulties } from '@/actions/difficulty';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { getCurrentUser } from '@/lib/utils/auth-utils';
@@ -47,20 +48,46 @@ interface Lesson {
   grade?: string;
 }
 
-function getDifficultyBadge(difficulty: string | null | undefined) {
+function getDifficultyBadge(difficulty: string | null | undefined, difficulties: any[] = []) {
   if (!difficulty) {
     return <span className="text-on-surface-variant font-medium">---</span>;
   }
 
-  const diff = difficulty.toLowerCase();
+  const found = difficulties.find(d => d.name === difficulty);
+  if (found) {
+    const color = found.color_code;
+    return (
+      <span 
+        className="px-2 py-1 rounded-full text-[10px] font-bold uppercase whitespace-nowrap leading-none border"
+        style={{ 
+          color: color, 
+          backgroundColor: `${color}12`,
+          borderColor: `${color}30`
+        }}
+      >
+        {found.name}
+      </span>
+    );
+  }
 
-  if (diff.includes('hard') || diff.includes('khó')) {
-    return <span className="px-2 py-1 rounded-full bg-error/10 text-error text-[10px] font-bold uppercase whitespace-nowrap leading-none">Khó</span>;
-  }
-  if (diff.includes('easy') || diff.includes('dễ')) {
-    return <span className="px-2 py-1 rounded-full bg-success/10 text-success text-[10px] font-bold uppercase whitespace-nowrap leading-none">Dễ</span>;
-  }
-  return <span className="px-2 py-1 rounded-full bg-warning/10 text-warning text-[10px] font-bold uppercase whitespace-nowrap leading-none">Trung Bình</span>;
+  const diff = difficulty.toLowerCase();
+  let color = '#888888';
+  if (diff.includes('hard') || diff.includes('khó')) color = '#ef4444';
+  else if (diff.includes('easy') || diff.includes('dễ')) color = '#22c55e';
+  else if (diff.includes('medium') || diff.includes('trung')) color = '#eab308';
+
+  return (
+    <span 
+      className="px-2 py-1 rounded-full text-[10px] font-bold uppercase whitespace-nowrap leading-none border"
+      style={{ 
+        color: color, 
+        backgroundColor: `${color}12`,
+        borderColor: `${color}30`
+      }}
+    >
+      {difficulty}
+    </span>
+  );
 }
 
 interface PageProps {
@@ -83,6 +110,7 @@ export default async function DashboardPage(props: PageProps) {
   let lessons: Lesson[] = [];
   let userId: number | null = null;
   let levelRank = 0;
+  let difficulties: any[] = [];
   
   try {
     const user = await getCurrentUser();
@@ -110,6 +138,7 @@ export default async function DashboardPage(props: PageProps) {
     );
 
     lessons = await query<Lesson[]>('SELECT id, name, grade FROM lms_lessons ORDER BY name ASC');
+    difficulties = await getDifficulties();
   } catch (error) {
     console.error("Failed to load documents or lessons:", error);
   }
@@ -212,6 +241,8 @@ export default async function DashboardPage(props: PageProps) {
           pageSize: DOC_PAGE_SIZE
         }}
         currentUserId={userId}
+        difficulties={difficulties}
+        isAdmin={levelRank >= 5}
       />
     </div>
   );

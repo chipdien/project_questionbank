@@ -13,6 +13,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { cleanMathpixData } from '@/lib/utils/math-utils';
 
 import { Question, Pagination } from '@/types';
+import { Difficulty } from '@/actions/difficulty';
 
 interface QuestionsDataGridProps {
   questions: Question[];
@@ -20,22 +21,49 @@ interface QuestionsDataGridProps {
   onSelectionChange?: (ids: Set<number>) => void;
   pagination: Pagination;
   showSelection?: boolean;
+  difficulties?: Difficulty[];
 }
 
-function getDifficultyBadge(difficulty: string | null | undefined) {
+function getDifficultyBadge(difficulty: string | null | undefined, difficulties: Difficulty[] = []) {
   if (!difficulty) {
     return <span className="text-on-surface-variant font-medium">---</span>;
   }
 
-  const diff = difficulty.toLowerCase();
+  const found = difficulties.find(d => d.name === difficulty);
+  if (found) {
+    const color = found.color_code;
+    return (
+      <span 
+        className="px-2 py-1 rounded-full text-[10px] font-bold uppercase whitespace-nowrap leading-none border"
+        style={{ 
+          color: color, 
+          backgroundColor: `${color}12`,
+          borderColor: `${color}30`
+        }}
+      >
+        {found.name}
+      </span>
+    );
+  }
 
-  if (diff.includes('hard') || diff.includes('khó')) {
-    return <span className="px-2 py-1 rounded-full bg-error/10 text-error text-[10px] font-bold uppercase whitespace-nowrap leading-none">Khó</span>;
-  }
-  if (diff.includes('easy') || diff.includes('dễ')) {
-    return <span className="px-2 py-1 rounded-full bg-success/10 text-success text-[10px] font-bold uppercase whitespace-nowrap leading-none">Dễ</span>;
-  }
-  return <span className="px-2 py-1 rounded-full bg-warning/10 text-warning text-[10px] font-bold uppercase whitespace-nowrap leading-none">Trung Bình</span>;
+  const diff = difficulty.toLowerCase();
+  let color = '#888888';
+  if (diff.includes('hard') || diff.includes('khó')) color = '#ef4444';
+  else if (diff.includes('easy') || diff.includes('dễ')) color = '#22c55e';
+  else if (diff.includes('medium') || diff.includes('trung')) color = '#eab308';
+
+  return (
+    <span 
+      className="px-2 py-1 rounded-full text-[10px] font-bold uppercase whitespace-nowrap leading-none border"
+      style={{ 
+        color: color, 
+        backgroundColor: `${color}12`,
+        borderColor: `${color}30`
+      }}
+    >
+      {difficulty}
+    </span>
+  );
 }
 
 export default function QuestionsDataGrid({
@@ -43,7 +71,8 @@ export default function QuestionsDataGrid({
   externalSelectedIds,
   onSelectionChange,
   pagination,
-  showSelection = true
+  showSelection = true,
+  difficulties = []
 }: QuestionsDataGridProps) {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [internalSelectedIds, setInternalSelectedIds] = useState<Set<number>>(new Set());
@@ -175,7 +204,7 @@ export default function QuestionsDataGrid({
                     {q.grade ? `Lớp ${q.grade}` : '---'}
                   </td>
                   <td className="px-6 py-4">
-                    {getDifficultyBadge(q.question_difficulty)}
+                    {getDifficultyBadge(q.question_difficulty, difficulties)}
                   </td>
                   <td className="px-6 py-4 text-sm text-outline" suppressHydrationWarning>
                     {new Date(q.created_at || Date.now()).toLocaleDateString('vi-VN', { month: 'short', day: '2-digit', year: 'numeric' })}

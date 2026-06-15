@@ -12,10 +12,13 @@ import { twMerge } from 'tailwind-merge';
 import { toast } from 'react-hot-toast';
 import { Question, Document, Lesson, Pagination } from '@/types';
 import DashboardUploader from '@/app/(main)/documents/components/DashboardUploader';
+import { Difficulty } from '@/actions/difficulty';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+import { getDifficulties } from '@/actions/difficulty';
 
 interface QuestionsManagerProps {
   questions: Question[];
@@ -25,11 +28,34 @@ interface QuestionsManagerProps {
   pagination: Pagination;
   docPagination: Pagination;
   currentUserId: number | null;
+  difficulties?: Difficulty[];
+  isAdmin?: boolean;
 }
 
-export default function QuestionsManager({ questions, documents, activeDocId, lessons, pagination, docPagination, currentUserId }: QuestionsManagerProps) {
+export default function QuestionsManager({ 
+  questions, 
+  documents, 
+  activeDocId, 
+  lessons, 
+  pagination, 
+  docPagination, 
+  currentUserId,
+  difficulties = [],
+  isAdmin = false
+}: QuestionsManagerProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [difficultiesList, setDifficultiesList] = useState<Difficulty[]>(difficulties);
   const router = useRouter();
+
+  const handleRefreshDifficulties = async () => {
+    try {
+      const fresh = await getDifficulties();
+      setDifficultiesList(fresh);
+    } catch (err) {
+      console.error('Failed to refresh difficulties:', err);
+    }
+  };
+
 
   const activeDoc = documents.find(d => d.id === activeDocId);
   const isAiClassified = activeDoc?.is_ai_classified === 1;
@@ -227,6 +253,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
             onAIClassify={handleAIClassify}
             lessons={lessons}
             isAiClassified={isAiClassified}
+            difficulties={difficultiesList}
           />
         )}
       </div>
@@ -238,6 +265,7 @@ export default function QuestionsManager({ questions, documents, activeDocId, le
           externalSelectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
           pagination={pagination}
+          difficulties={difficultiesList}
         />
       </div>
     </div>

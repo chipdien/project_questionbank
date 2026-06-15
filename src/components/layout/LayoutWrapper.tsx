@@ -18,7 +18,7 @@ export default function LayoutWrapper({ children, user }: LayoutWrapperProps) {
     <>
       <Toaster position="top-right" />
       <TopNavBar user={user} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
-      <Sidebar isCollapsed={isCollapsed} />
+      <Sidebar isCollapsed={isCollapsed} user={user} />
       <main 
         id="main-content"
         className={`mt-16 h-[calc(100vh-64px)] overflow-y-auto bg-background relative ${

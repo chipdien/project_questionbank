@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { query } from '@/lib/db';
 import QuestionBankManager from '@/app/(main)/question-bank/components/QuestionBankManager';
-import { getCurrentUser } from '@/lib/utils/auth-utils';
+import { getCurrentUser, isUserAdmin } from '@/lib/utils/auth-utils';
 
 interface Document {
   id: number;
@@ -21,14 +21,17 @@ interface Lesson {
 }
 
 export default async function QuestionBankPage() {
-  // Fetch initial documents and lessons
+  // Fetch initial documents, lessons, and dynamic difficulties
   let documents: Document[] = [];
   let lessons: Lesson[] = [];
+  let difficulties: any[] = [];
+  let isAdmin = false;
 
   try {
     const user = await getCurrentUser();
     const userId = user?.id || null;
     const levelRank = user?.level_rank || 0;
+    isAdmin = levelRank >= 5;
 
     // Lọc: của mình OR public OR cũ (NULL) OR Admin
     documents = await query<Document[]>(
@@ -41,6 +44,7 @@ export default async function QuestionBankPage() {
     );
 
     lessons = await query<Lesson[]>('SELECT id, name, grade FROM lms_lessons ORDER BY name ASC');
+    difficulties = await query<any[]>('SELECT id, name, color_code, display_order FROM lms_difficulties ORDER BY display_order ASC, name ASC');
   } catch (error) {
     console.error("Failed to load data:", error);
   }
@@ -51,7 +55,12 @@ export default async function QuestionBankPage() {
         <h1 className="text-2xl font-bold text-on-surface font-headline">Ngân hàng câu hỏi</h1>
       </div>
 
-      <QuestionBankManager initialDocuments={documents} lessons={lessons} />
+      <QuestionBankManager 
+        initialDocuments={documents} 
+        lessons={lessons} 
+        initialDifficulties={difficulties}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 }

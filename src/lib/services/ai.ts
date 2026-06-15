@@ -155,6 +155,18 @@ export class QuestionClassifierService {
       throw new Error("GEMINI_API_KEY is not configured.");
     }
 
+    // Import query utility dynamically or use it directly
+    const { query } = require('@/lib/db');
+    let difficultyEnum = ["Dễ", "Trung Bình", "Khó"]; // Fallback mặc định
+    try {
+      const dbDiffs = await query('SELECT name FROM lms_difficulties ORDER BY display_order ASC');
+      if (dbDiffs && dbDiffs.length > 0) {
+        difficultyEnum = dbDiffs.map((d: any) => d.name);
+      }
+    } catch (dbError) {
+      console.error('Failed to load dynamic difficulties for AI, using fallback:', dbError);
+    }
+
     const lessonsContext = lessons.map(l => `ID: ${l.id}, Name: ${l.name}`).join('\n');
     const questionsContext = questions.map(q => `ID: ${q.id}, Content: ${q.statement}`).join('\n---\n');
 
@@ -166,13 +178,21 @@ ${lessonsContext}
 
 Yêu cầu:
 1. Khối lớp: Chọn từ 6 đến 12 dựa trên nội dung kiến thức của câu hỏi.
-2. Độ khó: Phân loại 'Dễ', 'Trung Bình', hoặc 'Khó'.
+2. Độ khó: Phân loại một trong các mức: ${difficultyEnum.map(d => `'${d}'`).join(', ')}.
 3. Bài học: Tìm trong danh sách trên bài học có nội dung sát nhất với câu hỏi. Trả về ID của bài học đó. Nếu hoàn toàn không có bài học nào liên quan, hãy trả về null.
 
 Lưu ý quan trọng:
 - Chỉ trả về dữ liệu JSON theo đúng schema được yêu cầu.
 - Không tự ý tạo ra ID bài học mới không có trong danh sách.
 - Đảm bảo ánh xạ đúng ID câu hỏi (question_id).`;
+
+    // Clone schema và gán enum động
+    const dynamicSchema = JSON.parse(JSON.stringify(ClassificationSchema));
+    if (
+      dynamicSchema.properties?.classifications?.items?.properties?.difficulty
+    ) {
+      dynamicSchema.properties.classifications.items.properties.difficulty.enum = difficultyEnum;
+    }
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
@@ -185,7 +205,7 @@ Lưu ý quan trọng:
       config: {
         systemInstruction: systemInstruction,
         responseMimeType: 'application/json',
-        responseSchema: ClassificationSchema,
+        responseSchema: dynamicSchema,
         temperature: 0.1,
       }
     });

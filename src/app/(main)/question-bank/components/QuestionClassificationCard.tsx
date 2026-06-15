@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { Difficulty } from '@/actions/difficulty';
 
 interface QuestionClassificationCardProps {
   selectedCount: number;
@@ -12,6 +13,7 @@ interface QuestionClassificationCardProps {
   onAIClassify?: () => Promise<void>;
   lessons: { id: number; name: string; grade?: string }[];
   isAiClassified?: boolean;
+  difficulties?: Difficulty[];
 }
 
 export default function QuestionClassificationCard({
@@ -19,7 +21,8 @@ export default function QuestionClassificationCard({
   onApply,
   onAIClassify: onAIAIClassify,
   lessons,
-  isAiClassified = false
+  isAiClassified = false,
+  difficulties = []
 }: QuestionClassificationCardProps) {
   const [difficulty, setDifficulty] = useState('');
   const [lessonId, setLessonId] = useState('');
@@ -64,7 +67,7 @@ export default function QuestionClassificationCard({
         </div>
       </div>
 
-      <form className="space-y-6 flex-grow" onSubmit={(e) => e.preventDefault()}>
+      <form className="space-y-6 grow" onSubmit={(e) => e.preventDefault()}>
         {/* Khá»‘i lá»›p */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-bold text-outline uppercase tracking-widest pl-1" htmlFor="grade">
@@ -114,7 +117,7 @@ export default function QuestionClassificationCard({
           </div>
         </div>
 
-        {/* Đ�™ khó */}
+        {/* Độ khó */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-bold text-outline uppercase tracking-widest pl-1" htmlFor="difficulty">
             <span className="material-symbols-outlined text-sm">signal_cellular_alt</span>
@@ -128,9 +131,9 @@ export default function QuestionClassificationCard({
               onChange={(e) => setDifficulty(e.target.value)}
             >
               <option value="">Tất cả độ khó</option>
-              <option value="Dễ">Dễ</option>
-              <option value="Trung Bình">Trung Bình</option>
-              <option value="Khó">Khó</option>
+              {difficulties.map(d => (
+                <option key={d.id} value={d.name}>{d.name}</option>
+              ))}
             </select>
             <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-outline group-hover/select:text-primary transition-colors">
               keyboard_arrow_down
@@ -159,7 +162,7 @@ export default function QuestionClassificationCard({
               <span className={`material-symbols-outlined text-xl text-primary ${isClassifying ? 'animate-spin' : ''} group-hover/btn-ai:scale-110 transition-transform`}>
                 {isClassifying ? 'progress_activity' : (isAiClassified ? 'check_circle' : 'auto_awesome')}
               </span>
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
                 {isClassifying ? 'Đang phân loại...' : (isAiClassified ? 'Đã phân loại AI' : 'Phân loại bằng AI')}
               </span>
             </button>

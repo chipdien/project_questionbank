@@ -2,6 +2,7 @@
 
 import React from 'react';
 import CollectionSaveModal from '@/app/(main)/collection/components/CollectionSaveModal';
+import { Difficulty } from '@/actions/difficulty';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Loader2, Plus, Trash2, ChevronLeft, ChevronRight, Search, Bookmark } from 'lucide-react';
@@ -91,7 +92,7 @@ const QuestionItem = React.memo(({
   question,
   isSelected,
   mode,
-  diffColorClass,
+  diffColor,
   onToggleSelect,
   onAddQuestion,
   onRemoveQuestion
@@ -99,7 +100,7 @@ const QuestionItem = React.memo(({
   question: Question;
   isSelected?: boolean;
   mode: 'source' | 'selected';
-  diffColorClass: string;
+  diffColor: string;
   onToggleSelect?: (id: number) => void;
   onAddQuestion?: (q: Question, e?: React.MouseEvent) => void;
   onRemoveQuestion?: (q: Question, e?: React.MouseEvent) => void;
@@ -136,7 +137,14 @@ const QuestionItem = React.memo(({
               )}
             </div>
             {question.question_difficulty && (
-              <span className={cn("text-[9px] font-bold uppercase", diffColorClass)}>
+              <span 
+                className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-md border"
+                style={{ 
+                  color: diffColor, 
+                  backgroundColor: `${diffColor}12`,
+                  borderColor: `${diffColor}30`
+                }}
+              >
                 {question.question_difficulty}
               </span>
             )}
@@ -162,7 +170,14 @@ const QuestionItem = React.memo(({
       <div className="flex justify-between items-start mb-2">
         <div className="flex gap-2 items-center">
           {question.question_difficulty && (
-            <span className={cn("text-[9px] font-bold uppercase", diffColorClass)}>
+            <span 
+              className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-md border"
+              style={{ 
+                color: diffColor, 
+                backgroundColor: `${diffColor}12`,
+                borderColor: `${diffColor}30`
+              }}
+            >
               {question.question_difficulty}
             </span>
           )}
@@ -185,10 +200,19 @@ QuestionItem.displayName = 'QuestionItem';
 interface QuestionBankManagerProps {
   initialDocuments: Document[];
   lessons: Lesson[];
+  initialDifficulties?: Difficulty[];
+  isAdmin?: boolean;
 }
 
-export default function QuestionBankManager({ initialDocuments, lessons }: QuestionBankManagerProps) {
+export default function QuestionBankManager({ 
+  initialDocuments, 
+  lessons,
+  initialDifficulties = [],
+  isAdmin = false
+}: QuestionBankManagerProps) {
   const { state, actions } = useQuestionBank();
+
+  const [difficulties, setDifficulties] = React.useState<Difficulty[]>(initialDifficulties);
 
   const {
     activeDocId, grade, lessonId, difficulty, sourceQuestions,
@@ -202,11 +226,15 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
     handleSelectAllSource, handleAddQuestion, handleAddSelectedList, handleRemoveQuestion
   } = actions;
 
+  const handleRefreshDifficulties = async () => {
+    const { getDifficulties } = await import('@/actions/difficulty');
+    const fresh = await getDifficulties();
+    setDifficulties(fresh);
+  };
+
   const getDifficultyColor = (diff: string) => {
-    if (diff === 'Khó') return 'text-error';
-    if (diff === 'Trung Bình') return 'text-warning';
-    if (diff === 'Dễ') return 'text-success';
-    return 'text-outline';
+    const found = difficulties.find(d => d.name === diff);
+    return found ? found.color_code : '#888888';
   };
 
   return (
@@ -263,9 +291,9 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
                     className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-4 py-3 text-xs font-semibold focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none appearance-none cursor-pointer hover:bg-surface-container-low hover:border-primary/30"
                   >
                     <option value="">Chọn độ khó</option>
-                    <option value="Dễ">Dễ</option>
-                    <option value="Trung Bình">Trung Bình</option>
-                    <option value="Khó">Khó</option>
+                    {difficulties.map(d => (
+                      <option key={d.id} value={d.name}>{d.name}</option>
+                    ))}
                   </select>
                   <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[18px] text-outline-variant pointer-events-none group-hover/select:text-primary transition-colors">expand_more</span>
                 </div>
@@ -341,7 +369,7 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
                     question={question}
                     mode="source"
                     isSelected={selectedSourceIds.has(question.id)}
-                    diffColorClass={getDifficultyColor(question.question_difficulty || '')}
+                    diffColor={getDifficultyColor(question.question_difficulty || '')}
                     onToggleSelect={handleToggleSelect}
                     onAddQuestion={handleAddQuestion}
                   />
@@ -448,7 +476,7 @@ export default function QuestionBankManager({ initialDocuments, lessons }: Quest
                   key={question.id}
                   question={question}
                   mode="selected"
-                  diffColorClass={getDifficultyColor(question.question_difficulty || '')}
+                  diffColor={getDifficultyColor(question.question_difficulty || '')}
                   onRemoveQuestion={handleRemoveQuestion}
                 />
               ))}
