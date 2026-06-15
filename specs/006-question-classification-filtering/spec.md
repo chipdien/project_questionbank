@@ -67,21 +67,22 @@ Là một Giáo viên, tôi muốn nhập từ khóa tìm kiếm (ví dụ: "par
 - **FR-001**: Hệ thống PHẢI hỗ trợ liên kết câu hỏi (`lms_questions`) với một hoặc nhiều Chủ đề (`lms_topics`) và một hoặc nhiều Thẻ (`lms_tags`).
 - **FR-002**: Hệ thống PHẢI cung cấp giao diện Bộ lọc (Filter Panel) trực quan bên cạnh danh sách câu hỏi, hỗ trợ lọc theo:
   - Khối lớp (Grade)
-  - Độ khó (Difficulty)
+  - Độ khó (Difficulty) - Gồm 5 cấp độ: Nhận biết, Thông hiểu, Vận dụng thấp, Vận dụng cao, Vận dụng thực tế / Chuyên sâu.
+  - Loại hình câu hỏi (Question Type) - Gồm: Trắc nghiệm 1 đáp án đúng (`single_choice`), Trắc nghiệm nhiều đáp án đúng (`multiple_choice`), Đúng/Sai (`true_false`), Điền khuyết (`fill_in_the_blank`), Tự luận (`essay`).
   - Chủ đề (Topics) - hiển thị dạng cây phân cấp (Tree View) hoặc Dropdown phân cấp thu gọn được.
-  - Thẻ tag (Tags) - phân tách rõ ràng theo các nhóm Category (SOURCE, METHOD, SKILL).
+  - Thẻ tag (Tags) - phân tách rõ ràng theo các nhóm Category: SOURCE (Nguồn gốc), METHOD (Phương pháp giải), SKILL (Kỹ năng tư duy), và TYPE (Phân biệt Lý thuyết / Vận dụng).
 - **FR-003**: Hệ thống PHẢI hỗ trợ lọc đệ quy theo chủ đề. Khi người dùng chọn lọc một chủ đề, hệ thống phải tự động trả về cả các câu hỏi liên kết với các chủ đề con cháu của nó (bằng cách so sánh đường dẫn `path` bắt đầu bằng `path` của chủ đề đã chọn).
 - **FR-004**: Hệ thống PHẢI cung cấp ô tìm kiếm toàn văn hỗ trợ tìm kiếm không dấu/có dấu trên trường `statement` và `content` của câu hỏi.
-- **FR-005**: API/Server Action lấy danh sách câu hỏi (`getLibraryQuestions` hoặc tương đương) PHẢI được nâng cấp để hỗ trợ các tham số lọc nâng cao: `grades`, `difficulties`, `topicIds` (mảng ID), `tagIds` (mảng ID), và `keyword`.
-- **FR-006**: Giao diện hiển thị câu hỏi PHẢI hiển thị đầy đủ các badge phân loại trực quan (Khối lớp, Độ khó với màu sắc tương ứng từ `lms_difficulties`, Tên chủ đề liên kết, và các thẻ tag).
+- **FR-005**: API/Server Action lấy danh sách câu hỏi (`getLibraryQuestions` hoặc tương đương) PHẢI được nâng cấp để hỗ trợ các tham số lọc nâng cao: `grades`, `difficulties`, `questionTypes` (mảng loại câu hỏi), `topicIds` (mảng ID), `tagIds` (mảng ID), và `keyword`.
+- **FR-006**: Giao diện hiển thị câu hỏi PHẢI hiển thị đầy đủ các badge phân loại trực quan (Khối lớp, Độ khó với màu sắc tương ứng từ `lms_difficulties`, Loại hình câu hỏi, Tên chủ đề liên kết, và các thẻ tag).
 - **FR-007**: Hệ thống PHẢI lưu trữ trạng thái bộ lọc trên URL (Query Parameters) để người dùng có thể chia sẻ liên kết kết quả lọc hoặc quay lại trang trước đó mà không bị mất bộ lọc.
 
 ### Key Entities *(include if feature involves data)*
 
-- **lms_questions (Câu hỏi)**: Thực thể chính cần được lọc và phân loại.
+- **lms_questions (Câu hỏi)**: Thực thể chính cần được lọc và phân loại, chứa các trường `grade`, `question_difficulty`, `question_type`, `statement`, `content`.
 - **lms_topics (Chủ đề học thuật)**: Cấu trúc cây phân cấp chủ đề gắn liền với câu hỏi qua bảng trung gian `lms_topics_questions`.
-- **lms_tags (Thẻ phân loại bổ trợ)**: Các tag gán cho câu hỏi qua bảng trung gian `lms_questions_tags`, phân loại theo cột `category`.
-- **lms_difficulties (Độ khó)**: Chứa danh sách mức độ khó và mã màu hiển thị của chúng.
+- **lms_tags (Thẻ phân loại bổ trợ)**: Các tag gán cho câu hỏi qua bảng trung gian `lms_questions_tags`, phân loại theo cột `category` (SOURCE, METHOD, SKILL, TYPE).
+- **lms_difficulties (Độ khó)**: Chứa danh sách mức độ khó (5 mức) và mã màu hiển thị của chúng.
 
 ## Success Criteria *(mandatory)*
 
@@ -94,5 +95,6 @@ Là một Giáo viên, tôi muốn nhập từ khóa tìm kiếm (ví dụ: "par
 
 ## Assumptions
 
-- Các chỉ mục (indexes) trên các cột được lọc như `lms_questions.grade`, `lms_questions.question_difficulty`, `lms_topics.path`, `lms_tags.category` đã được thiết lập tối ưu trong cơ sở dữ liệu.
+- Các chỉ mục (indexes) trên các cột được lọc như `lms_questions.grade`, `lms_questions.question_difficulty`, `lms_questions.question_type`, `lms_topics.path`, `lms_tags.category` đã được thiết lập tối ưu trong cơ sở dữ liệu.
 - Cây chủ đề `lms_topics` đã có trường `path` hợp lệ và được tính toán chính xác để phục vụ cho việc lọc đệ quy.
+
