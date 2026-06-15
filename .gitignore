@@ -139,3 +139,4 @@ desktop.ini
 
 # AI Agents
 # .agent/
+/src/generated/prisma

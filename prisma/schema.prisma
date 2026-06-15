@@ -1,0 +1,329 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model lms_collections {
+  id            BigInt    @id @default(autoincrement())
+  created_at    DateTime?
+  updated_at    DateTime?
+  created_by_id BigInt?
+  updated_by_id BigInt?
+  title         String?   @db.VarChar(255)
+  teacher_id    BigInt?
+
+  @@index([created_by_id], map: "lms_collections_created_by_id")
+  @@index([teacher_id], map: "lms_collections_teacher_id")
+  @@index([updated_by_id], map: "lms_collections_updated_by_id")
+}
+
+model lms_difficulties {
+  id            Int       @id @default(autoincrement())
+  name          String    @unique(map: "name") @db.VarChar(100)
+  color_code    String?   @default("#888888") @db.VarChar(7)
+  display_order Int?      @default(0)
+  created_at    DateTime? @default(now()) @db.Timestamp(0)
+  updated_at    DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([name], map: "idx_name")
+}
+
+model lms_documents {
+  id               BigInt    @id @default(autoincrement())
+  created_at       DateTime?
+  updated_at       DateTime?
+  created_by_id    BigInt?
+  updated_by_id    BigInt?
+  title            String?   @db.VarChar(255)
+  teacher_owned    BigInt?
+  public           String?   @db.VarChar(255)
+  content          String?   @db.LongText
+  session_id       BigInt?
+  is_ai_classified Boolean?  @default(false)
+  link_s3          String?   @db.Text
+  link_s3_answer   String?   @db.Text
+
+  @@index([created_by_id], map: "lms_documents_created_by_id")
+  @@index([session_id], map: "lms_documents_session_id")
+  @@index([teacher_owned], map: "lms_documents_teacher_owned")
+  @@index([updated_by_id], map: "lms_documents_updated_by_id")
+}
+
+model lms_documents_classes {
+  created_at  DateTime @db.DateTime(0)
+  updated_at  DateTime @db.DateTime(0)
+  document_id BigInt
+  class_id    BigInt
+
+  @@id([document_id, class_id])
+  @@index([class_id], map: "lms_documents_classes_class_id")
+  @@index([document_id], map: "lms_documents_classes_document_id")
+}
+
+model lms_documents_custom {
+  id             Int       @id @default(autoincrement())
+  title          String    @db.VarChar(255)
+  pdf_url        String?   @db.Text
+  s3_object_key  String?   @db.VarChar(255)
+  content_blocks String?   @db.LongText
+  content_hash   String?   @db.VarChar(64)
+  created_by_id  Int?
+  created_at     DateTime? @default(now()) @db.Timestamp(0)
+  updated_at     DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([content_hash], map: "idx_content_hash")
+  @@index([title], map: "idx_title")
+}
+
+model lms_documents_custom_questions {
+  id                 Int       @id @default(autoincrement())
+  document_custom_id Int
+  question_id        Int
+  created_at         DateTime? @default(now()) @db.Timestamp(0)
+  updated_at         DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model lms_documents_sessions {
+  created_at  DateTime @db.DateTime(0)
+  updated_at  DateTime @db.DateTime(0)
+  document_id BigInt
+  session_id  BigInt
+
+  @@id([document_id, session_id])
+  @@index([session_id], map: "lms_documents_sessions_session_id")
+}
+
+model lms_exams {
+  id            BigInt    @id @default(autoincrement())
+  created_at    DateTime?
+  updated_at    DateTime?
+  created_by_id BigInt?
+  updated_by_id BigInt?
+  title         String?   @db.VarChar(255)
+  year          Float?
+  organize      String?   @db.VarChar(255)
+  type          String?   @db.VarChar(255)
+  grade         Float?    @default(0)
+
+  @@index([updated_by_id], map: "lms_exams_updated_by_id")
+}
+
+model lms_lessons {
+  created_at    DateTime?
+  updated_at    DateTime?
+  id            BigInt    @id @default(autoincrement())
+  created_by_id BigInt?
+  updated_by_id BigInt?
+  name          String?   @db.VarChar(255)
+  code          String?   @db.VarChar(255)
+  topic_id      BigInt?
+  order_index   BigInt?
+  grade         Float?
+  domain_id     BigInt?
+  short_code    String?   @db.VarChar(10)
+
+  @@index([domain_id], map: "lms_lessons_domain_id")
+  @@index([topic_id], map: "lms_lessons_topic_id")
+  @@index([updated_by_id], map: "lms_lessons_updated_by_id")
+}
+
+model lms_lessons_sessions {
+  created_at    DateTime?
+  updated_at    DateTime?
+  id            BigInt    @id @default(autoincrement())
+  created_by_id BigInt?
+  updated_by_id BigInt?
+  lesson_id     BigInt?
+  name          String?   @db.VarChar(255)
+  type          String?   @default("CONTENT") @db.VarChar(255)
+  body          String?   @db.LongText
+  order_index   BigInt?
+
+  @@index([lesson_id], map: "lms_lessons_sessions_lesson_id")
+  @@index([updated_by_id], map: "lms_lessons_sessions_updated_by_id")
+}
+
+model lms_options {
+  id            BigInt    @id @default(autoincrement())
+  created_at    DateTime?
+  updated_at    DateTime?
+  created_by_id BigInt?
+  updated_by_id BigInt?
+  question_id   BigInt?
+  content       String?   @db.LongText
+  weight        Float?    @default(0)
+  order         BigInt?
+  set           Float?    @default(0)
+
+  @@index([created_by_id], map: "lms_options_created_by_id")
+  @@index([question_id], map: "lms_options_question_id")
+  @@index([updated_by_id], map: "lms_options_updated_by_id")
+}
+
+model lms_processing_tasks {
+  id          Int       @id @default(autoincrement())
+  file_hash   String    @db.VarChar(64)
+  file_name   String    @db.VarChar(255)
+  status      String?   @default("PENDING") @db.VarChar(50)
+  raw_text    String?   @db.LongText
+  document_id Int?
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([file_hash], map: "idx_file_hash")
+}
+
+model lms_questions {
+  id                  BigInt    @id @default(autoincrement())
+  created_at          DateTime?
+  updated_at          DateTime?
+  created_by_id       BigInt?
+  updated_by_id       BigInt?
+  statement           String?   @db.LongText
+  content             String?   @db.LongText
+  complex             String?   @db.VarChar(255)
+  question_type       String?   @db.VarChar(255)
+  question_level      String?   @db.VarChar(255)
+  ref_question_id     BigInt?
+  public              String?   @db.VarChar(255)
+  hint                String?   @db.LongText
+  domain_id           BigInt?
+  grade               Float?    @default(0)
+  active              String?   @db.VarChar(255)
+  process             String?   @default("0") @db.VarChar(255)
+  status              String?   @db.VarChar(255)
+  question_difficulty String?   @db.VarChar(255)
+  question_id         BigInt?
+  origin_id           BigInt?
+  sort_question       BigInt?
+  owned_by_id         BigInt?
+  teacher_owned_by_id BigInt?
+  code                String?   @db.VarChar(6)
+
+  @@index([created_by_id], map: "lms_questions_created_by_id")
+  @@index([domain_id], map: "lms_questions_domain_id")
+  @@index([owned_by_id], map: "lms_questions_owned_by_id")
+  @@index([question_id], map: "lms_questions_question_id")
+  @@index([teacher_owned_by_id], map: "lms_questions_teacher_owned_by_id")
+  @@index([updated_by_id], map: "lms_questions_updated_by_id")
+}
+
+model lms_questions_collections {
+  created_at    DateTime @db.DateTime(0)
+  updated_at    DateTime @db.DateTime(0)
+  collection_id BigInt
+  question_id   BigInt
+
+  @@id([collection_id, question_id])
+  @@index([collection_id], map: "lms_questions_collections_collection_id")
+  @@index([question_id], map: "lms_questions_collections_question_id")
+}
+
+model lms_questions_documents {
+  created_at  DateTime @db.DateTime(0)
+  updated_at  DateTime @db.DateTime(0)
+  document_id BigInt
+  question_id BigInt
+
+  @@id([document_id, question_id])
+  @@index([document_id], map: "lms_questions_documents_document_id")
+  @@index([question_id], map: "lms_questions_documents_question_id")
+}
+
+model lms_questions_exams {
+  created_at  DateTime @db.DateTime(0)
+  updated_at  DateTime @db.DateTime(0)
+  question_id BigInt
+  exam_id     BigInt
+
+  @@id([question_id, exam_id])
+  @@index([exam_id], map: "lms_questions_exams_exam_id")
+  @@index([question_id], map: "lms_questions_exams_question_id")
+}
+
+model lms_questions_lessons {
+  created_at  DateTime @db.DateTime(0)
+  updated_at  DateTime @db.DateTime(0)
+  question_id BigInt
+  lesson_id   BigInt
+
+  @@id([question_id, lesson_id])
+  @@index([lesson_id], map: "lms_questions_lessons_lesson_id")
+}
+
+model lms_requests {
+  id              BigInt    @id @default(autoincrement())
+  created_at      DateTime?
+  updated_at      DateTime?
+  created_by_id   BigInt?
+  updated_by_id   BigInt?
+  title           String?   @db.VarChar(255)
+  content         String?   @db.LongText
+  type            String?   @db.VarChar(255)
+  content_suggest String?   @db.LongText
+
+  @@index([created_by_id], map: "lms_requests_created_by_id")
+  @@index([updated_by_id], map: "lms_requests_updated_by_id")
+}
+
+model lms_syllabus {
+  id            BigInt    @id @default(autoincrement())
+  created_at    DateTime?
+  updated_at    DateTime?
+  created_by_id BigInt?
+  updated_by_id BigInt?
+  title         String?   @db.VarChar(255)
+  description   String?   @db.LongText
+  grade         Float?
+  domain_id     BigInt?
+  public        String?   @default("1") @db.VarChar(255)
+  code          String?   @db.VarChar(255)
+  order_index   BigInt?
+
+  @@index([created_by_id], map: "lms_syllabus_created_by_id")
+  @@index([domain_id], map: "lms_syllabus_domain_id")
+  @@index([updated_by_id], map: "lms_syllabus_updated_by_id")
+}
+
+model lms_topics {
+  id            BigInt    @id @default(autoincrement())
+  created_at    DateTime?
+  updated_at    DateTime?
+  created_by_id BigInt?
+  updated_by_id BigInt?
+  subject_id    BigInt?
+  title         String?   @db.VarChar(255)
+  content       String?   @db.LongText
+  syllabus_id   BigInt?
+  code          String?   @db.VarChar(255)
+  order_index   BigInt?
+
+  @@index([created_by_id], map: "lms_topics_created_by_id")
+  @@index([syllabus_id], map: "lms_topics_syllabus_id")
+  @@index([updated_by_id], map: "lms_topics_updated_by_id")
+}
+
+model lms_topics_questions {
+  created_at  DateTime @db.DateTime(0)
+  updated_at  DateTime @db.DateTime(0)
+  topic_id    BigInt
+  question_id BigInt
+
+  @@id([topic_id, question_id])
+  @@index([question_id], map: "lms_topics_questions_question_id")
+  @@index([topic_id], map: "lms_topics_questions_topic_id")
+}
+
+model lms_users {
+  id         Int       @id
+  email      String    @db.VarChar(255)
+  username   String    @db.VarChar(255)
+  nickname   String?   @db.VarChar(255)
+  level_rank Int?      @default(0)
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+}
