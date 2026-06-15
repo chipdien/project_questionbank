@@ -143,9 +143,11 @@ export default function TopicDetailsPanel({
               onChange={(e) => setType(e.target.value)}
               className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
             >
-              <option value="SYLLABUS">Giáo trình (Syllabus)</option>
-              <option value="TOPIC">Chuyên đề (Topic)</option>
-              <option value="LESSON">Bài học (Lesson)</option>
+              <option value="SYLLABUS">SYLLABUS (Khung chương trình tổng quan)</option>
+              <option value="DOMAIN">DOMAIN (Phân môn/Lĩnh vực kiến thức)</option>
+              <option value="TOPIC">TOPIC (Chương/Chuyên đề lớn)</option>
+              <option value="LESSON">LESSON (Bài học chi tiết)</option>
+              <option value="SUB_LESSON">SUB_LESSON (Các phần kỹ năng/bài tập nhỏ hơn)</option>
             </select>
           </div>
 

@@ -30,6 +30,7 @@ export async function updateDescendantsPaths(
   newPath: string,
   tx?: any
 ): Promise<void> {
+  if (!oldPath) return;
   const client = tx || prisma;
   // Tìm tất cả các node con cháu có path bắt đầu bằng oldPath (không bao gồm chính node hiện tại)
   const descendants = await client.lms_topics.findMany({

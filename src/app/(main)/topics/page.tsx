@@ -163,7 +163,7 @@ export default function TopicsPage() {
             onClick={toggleMultiSelectMode}
             className={`px-4 py-2.5 rounded-xl border text-sm font-semibold flex items-center gap-2 transition-all ${
               isMultiSelectMode
-                ? 'bg-amber-500/15 text-amber-600 border-amber-500/30'
+                ? 'bg-warning/15 text-warning border-warning/30'
                 : 'border-outline-variant hover:bg-outline-variant/15 text-on-surface-variant'
             }`}
           >
@@ -174,7 +174,7 @@ export default function TopicsPage() {
           {isMultiSelectMode && selectedIds.size > 0 && (
             <button
               onClick={() => setBulkMoveModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700 transition-all text-sm font-semibold flex items-center gap-2"
+              className="px-4 py-2.5 rounded-xl bg-warning text-on-warning hover:bg-warning-dark active:opacity-90 transition-all text-sm font-semibold flex items-center gap-2"
             >
               <ArrowRightLeft className="w-4 h-4" />
               <span>Di chuyển ({selectedIds.size})</span>
