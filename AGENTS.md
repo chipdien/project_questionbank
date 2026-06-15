@@ -1,12 +1,13 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan: [specs/002-prisma-migration-integration/plan.md](file:///Volumes/DATA/workspace/vietelite_questionbank/specs/002-prisma-migration-integration/plan.md)
+shell commands, and other important information, read the current plan
+at specs/003-prisma-database-refactoring/plan.md
 <!-- SPECKIT END -->
 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **project_questionbank** (582 symbols, 1010 relationships, 34 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **project_questionbank** (707 symbols, 1138 relationships, 34 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 

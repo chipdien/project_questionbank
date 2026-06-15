@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-import { query } from '@/lib/db';
+import { prisma } from '@/lib/db';
 import QuestionsManager from '@/app/(main)/question-bank/components/QuestionsManager';
 import { getDifficulties } from '@/actions/difficulty';
 import { getCurrentUser } from '@/lib/utils/auth-utils';
@@ -70,27 +70,59 @@ export default async function DashboardPage(props: PageProps) {
     userId = user?.id || null;
     levelRank = user?.level_rank || 0;
 
+    const docQueryOr: any[] = [
+      { created_by_id: userId !== null ? BigInt(userId) : null },
+      { public: '1' },
+      { created_by_id: null },
+    ];
+
     // Lấy tổng số document để phân trang
-    const docCountResult = await query<{ total: number }[]>(
-      `SELECT COUNT(*) as total 
-       FROM lms_documents 
-       WHERE created_by_id = ? OR \`public\` = '1' OR created_by_id IS NULL OR ? >= 5`,
-      [userId, levelRank]
-    );
-    totalDocuments = docCountResult[0]?.total || 0;
+    totalDocuments = await prisma.lms_documents.count({
+      where: levelRank >= 5 ? {} : { OR: docQueryOr },
+    });
     totalDocPages = Math.ceil(totalDocuments / DOC_PAGE_SIZE);
 
-    documents = await query<Document[]>(
-      `SELECT d.id, d.title, d.created_at, d.is_ai_classified, d.\`public\`, d.link_s3, COALESCE(u.nickname, u.username) as teacher_name, d.teacher_owned, d.created_by_id 
-       FROM lms_documents d
-       LEFT JOIN lms_users u ON d.created_by_id = u.id
-       WHERE d.created_by_id = ? OR d.\`public\` = '1' OR d.created_by_id IS NULL OR ? >= 5
-       ORDER BY d.created_at DESC 
-       LIMIT ? OFFSET ?`,
-      [userId, levelRank, DOC_PAGE_SIZE, docOffset]
-    );
+    const documentsRaw = await prisma.lms_documents.findMany({
+      where: levelRank >= 5 ? {} : { OR: docQueryOr },
+      orderBy: { created_at: 'desc' },
+      skip: docOffset,
+      take: DOC_PAGE_SIZE,
+    });
 
-    lessons = await query<Lesson[]>('SELECT id, name, grade FROM lms_lessons ORDER BY name ASC');
+    const userIds = documentsRaw
+      .map(d => d.created_by_id)
+      .filter((id): id is bigint => id !== null);
+
+    const users = await prisma.lms_users.findMany({
+      where: { id: { in: userIds.map(id => Number(id)) } },
+      select: { id: true, username: true, nickname: true },
+    });
+
+    const userMap = new Map(users.map(u => [u.id, u.nickname || u.username]));
+
+    documents = documentsRaw.map(d => ({
+      id: Number(d.id),
+      title: d.title ?? '',
+      created_at: d.created_at?.toISOString() ?? '',
+      is_ai_classified: d.is_ai_classified ? 1 : 0,
+      public: d.public,
+      link_s3: d.link_s3,
+      teacher_name: d.created_by_id ? userMap.get(Number(d.created_by_id)) || null : null,
+      teacher_owned: d.teacher_owned ? Number(d.teacher_owned) : null,
+      created_by_id: d.created_by_id ? Number(d.created_by_id) : null,
+    }));
+
+    const lessonsRaw = await prisma.lms_lessons.findMany({
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, grade: true },
+    });
+
+    lessons = lessonsRaw.map(l => ({
+      id: Number(l.id),
+      name: l.name ?? '',
+      grade: l.grade ? String(l.grade) : undefined,
+    }));
+
     difficulties = await getDifficulties();
   } catch (error) {
     console.error("Failed to load documents or lessons:", error);
@@ -112,53 +144,111 @@ export default async function DashboardPage(props: PageProps) {
   try {
     if (activeDocId) {
       // Lấy tổng số lượng câu hỏi để tính phân trang
-      const countResult = await query<{ total: number }[]>(
-        'SELECT COUNT(*) as total FROM lms_questions_documents WHERE document_id = ?',
-        [activeDocId]
-      );
-      totalQuestions = countResult[0]?.total || 0;
+      totalQuestions = await prisma.lms_questions_documents.count({
+        where: { document_id: BigInt(activeDocId) },
+      });
       totalPages = Math.ceil(totalQuestions / PAGE_SIZE);
 
-      questions = await query<Question[]>(
-        `SELECT q.id, q.statement, q.content, q.grade, q.question_difficulty, q.question_type, q.created_at,
-         (SELECT l.name FROM lms_lessons l 
-          JOIN lms_questions_lessons ql ON l.id = ql.lesson_id 
-          WHERE ql.question_id = q.id LIMIT 1) as lesson_name
-         FROM lms_questions q
-         JOIN lms_questions_documents qd ON q.id = qd.question_id
-         WHERE qd.document_id = ?
-         ORDER BY q.created_at DESC
-         LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
-        [activeDocId]
-      );
+      const qdRelations = await prisma.lms_questions_documents.findMany({
+        where: { document_id: BigInt(activeDocId) },
+        select: { question_id: true },
+      });
+
+      const qIds = qdRelations.map(r => r.question_id);
+
+      const questionsRaw = await prisma.lms_questions.findMany({
+        where: { id: { in: qIds } },
+        orderBy: { created_at: 'desc' },
+        skip: offset,
+        take: PAGE_SIZE,
+      });
+
+      const questionLessons = await prisma.lms_questions_lessons.findMany({
+        where: { question_id: { in: questionsRaw.map(q => q.id) } },
+        select: { question_id: true, lesson_id: true },
+      });
+
+      const lessonIds = questionLessons.map(ql => ql.lesson_id);
+      const lessonDetails = await prisma.lms_lessons.findMany({
+        where: { id: { in: lessonIds } },
+        select: { id: true, name: true },
+      });
+
+      const lessonNameMap = new Map(lessonDetails.map(l => [l.id, l.name]));
+
+      questions = questionsRaw.map(q => {
+        const linkedLessonId = questionLessons.find(ql => ql.question_id === q.id)?.lesson_id;
+        const lessonName = linkedLessonId ? lessonNameMap.get(linkedLessonId) || null : null;
+
+        return {
+          id: Number(q.id),
+          statement: q.statement ?? '',
+          content: q.content,
+          grade: q.grade !== null ? String(q.grade) : '0',
+          question_difficulty: q.question_difficulty ?? '',
+          question_type: q.question_type ?? '',
+          created_at: q.created_at?.toISOString() ?? '',
+          lesson_name: lessonName ?? undefined,
+        };
+      });
     } else {
       // Fallback nếu không có file list nào (mặc định lấy file mới nhất hoặc vài câu hỏi mẫu)
-      const countResult = await query<{ total: number }[]>('SELECT COUNT(*) as total FROM lms_questions');
-      totalQuestions = countResult[0]?.total || 0;
+      totalQuestions = await prisma.lms_questions.count();
       totalPages = Math.ceil(totalQuestions / PAGE_SIZE);
 
-      questions = await query<Question[]>(
-        `SELECT id, statement, content, grade, question_difficulty, question_type, created_at,
-         (SELECT l.name FROM lms_lessons l 
-          JOIN lms_questions_lessons ql ON l.id = ql.lesson_id 
-          WHERE ql.question_id = lms_questions.id LIMIT 1) as lesson_name
-         FROM lms_questions 
-         ORDER BY created_at DESC 
-         LIMIT ${PAGE_SIZE} OFFSET ${offset}`
-      );
+      const questionsRaw = await prisma.lms_questions.findMany({
+        orderBy: { created_at: 'desc' },
+        skip: offset,
+        take: PAGE_SIZE,
+      });
+
+      const questionLessons = await prisma.lms_questions_lessons.findMany({
+        where: { question_id: { in: questionsRaw.map(q => q.id) } },
+        select: { question_id: true, lesson_id: true },
+      });
+
+      const lessonIds = questionLessons.map(ql => ql.lesson_id);
+      const lessonDetails = await prisma.lms_lessons.findMany({
+        where: { id: { in: lessonIds } },
+        select: { id: true, name: true },
+      });
+
+      const lessonNameMap = new Map(lessonDetails.map(l => [l.id, l.name]));
+
+      questions = questionsRaw.map(q => {
+        const linkedLessonId = questionLessons.find(ql => ql.question_id === q.id)?.lesson_id;
+        const lessonName = linkedLessonId ? lessonNameMap.get(linkedLessonId) || null : null;
+
+        return {
+          id: Number(q.id),
+          statement: q.statement ?? '',
+          content: q.content,
+          grade: q.grade !== null ? String(q.grade) : '0',
+          question_difficulty: q.question_difficulty ?? '',
+          question_type: q.question_type ?? '',
+          created_at: q.created_at?.toISOString() ?? '',
+          lesson_name: lessonName ?? undefined,
+        };
+      });
     }
 
     if (questions.length > 0) {
-      const qIds = questions.map(q => q.id);
-      const placeholders = qIds.map(() => '?').join(',');
-      const options = await query<Option[]>(
-        `SELECT * FROM lms_options WHERE question_id IN (${placeholders})`,
-        qIds
-      );
+      const qIds = questions.map(q => BigInt(q.id));
+      const optionsRaw = await prisma.lms_options.findMany({
+        where: { question_id: { in: qIds } },
+      });
 
       questions = questions.map(q => ({
         ...q,
-        options: options.filter(opt => opt.question_id === q.id)
+        options: optionsRaw
+          .filter(opt => Number(opt.question_id) === q.id)
+          .map(opt => ({
+            id: Number(opt.id),
+            question_id: Number(opt.question_id),
+            content: opt.content ?? '',
+            order: opt.order ? Number(opt.order) : 0,
+            weight: opt.weight ?? 0,
+          })),
       }));
     }
   } catch (error) {
@@ -185,13 +275,13 @@ export default async function DashboardPage(props: PageProps) {
           currentPage,
           totalPages,
           totalItems: totalQuestions,
-          pageSize: PAGE_SIZE
+          pageSize: PAGE_SIZE,
         }}
         docPagination={{
           currentPage: currentDocPage,
           totalPages: totalDocPages,
           totalItems: totalDocuments,
-          pageSize: DOC_PAGE_SIZE
+          pageSize: DOC_PAGE_SIZE,
         }}
         currentUserId={userId}
         difficulties={difficulties}
@@ -200,4 +290,3 @@ export default async function DashboardPage(props: PageProps) {
     </div>
   );
 }
-
