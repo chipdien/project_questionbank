@@ -10,7 +10,7 @@ import rehypeRaw from 'rehype-raw';
 import QuestionModal from '@/app/(main)/question-bank/components/QuestionModal';
 import AddToCollectionModal from '@/app/(main)/collection/components/AddToCollectionModal';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { cleanMathpixData } from '@/lib/utils/math-utils';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
 
 import { Question, Pagination } from '@/types';
 import { Difficulty } from '@/actions/difficulty';
@@ -146,7 +146,7 @@ export default function QuestionsDataGrid({
                         remarkPlugins={[remarkMath, remarkGfm]}
                         rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
                       >
-                        {cleanMathpixData(q.statement)}
+                        {cleanMathpixData(getQuestionDisplayContent(q.statement, q.content))}
                       </ReactMarkdown>
 
                     </div>

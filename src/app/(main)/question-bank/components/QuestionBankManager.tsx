@@ -9,7 +9,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
-import { cleanMathpixData } from '@/lib/utils/math-utils';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
 import { useQuestionBank, Document, Lesson, Question } from '../hooks/useQuestionBank';
 import { cn } from '@/lib/utils/cn';
 import AppBadge from '@/components/ui/AppBadge';
@@ -109,7 +109,7 @@ const QuestionItem = React.memo(({
         remarkPlugins={[remarkMath, remarkGfm]}
         rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
       >
-        {cleanMathpixData(question.statement)}
+        {cleanMathpixData(getQuestionDisplayContent(question.statement, question.content))}
       </ReactMarkdown>
     </div>
   );
@@ -241,7 +241,7 @@ export default function QuestionBankManager({
                 onChange={(e) => handleFilterChange('grade', e.target.value)}
               >
                 <option value="">Chọn khối lớp</option>
-                {[6, 7, 8, 9, 10, 11, 12].map(g => (
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(g => (
                   <option key={g} value={g.toString()}>Khối {g}</option>
                 ))}
               </AppSelect>

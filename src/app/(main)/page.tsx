@@ -16,6 +16,7 @@ interface Option {
 interface Question {
   id: number;
   statement: string;
+  content?: string | null;
   grade: string;
   question_difficulty: string;
   question_type: string;
@@ -119,7 +120,7 @@ export default async function DashboardPage(props: PageProps) {
       totalPages = Math.ceil(totalQuestions / PAGE_SIZE);
 
       questions = await query<Question[]>(
-        `SELECT q.id, q.statement, q.grade, q.question_difficulty, q.question_type, q.created_at,
+        `SELECT q.id, q.statement, q.content, q.grade, q.question_difficulty, q.question_type, q.created_at,
          (SELECT l.name FROM lms_lessons l 
           JOIN lms_questions_lessons ql ON l.id = ql.lesson_id 
           WHERE ql.question_id = q.id LIMIT 1) as lesson_name
@@ -137,7 +138,7 @@ export default async function DashboardPage(props: PageProps) {
       totalPages = Math.ceil(totalQuestions / PAGE_SIZE);
 
       questions = await query<Question[]>(
-        `SELECT id, statement, grade, question_difficulty, question_type, created_at,
+        `SELECT id, statement, content, grade, question_difficulty, question_type, created_at,
          (SELECT l.name FROM lms_lessons l 
           JOIN lms_questions_lessons ql ON l.id = ql.lesson_id 
           WHERE ql.question_id = lms_questions.id LIMIT 1) as lesson_name

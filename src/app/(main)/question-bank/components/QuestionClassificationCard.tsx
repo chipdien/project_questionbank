@@ -79,7 +79,7 @@ export default function QuestionClassificationCard({
           onChange={(e) => setGrade(e.target.value)}
         >
           <option value="0">Tất cả khối lớp</option>
-          {[6, 7, 8, 9, 10, 11, 12].map((g) => (
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
             <option key={g} value={g}>Lớp {g}</option>
           ))}
         </AppSelect>

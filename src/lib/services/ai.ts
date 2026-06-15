@@ -71,8 +71,8 @@ const ClassificationSchema: Schema = {
           },
           grade: {
             type: Type.STRING,
-            description: "Khối lớp (chỉ điền số từ 6 đến 12 dưới dạng chuỗi)",
-            enum: ["6", "7", "8", "9", "10", "11", "12"]
+            description: "Khối lớp (chỉ điền số từ 1 đến 12 dưới dạng chuỗi)",
+            enum: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
           },
           difficulty: {
             type: Type.STRING,
@@ -177,7 +177,7 @@ Dưới đây là danh sách các Bài học (ID và Tên) có sẵn trong hệ 
 ${lessonsContext}
 
 Yêu cầu:
-1. Khối lớp: Chọn từ 6 đến 12 dựa trên nội dung kiến thức của câu hỏi.
+1. Khối lớp: Chọn từ 1 đến 12 dựa trên nội dung kiến thức của câu hỏi.
 2. Độ khó: Phân loại một trong các mức: ${difficultyEnum.map(d => `'${d}'`).join(', ')}.
 3. Bài học: Tìm trong danh sách trên bài học có nội dung sát nhất với câu hỏi. Trả về ID của bài học đó. Nếu hoàn toàn không có bài học nào liên quan, hãy trả về null.
 
