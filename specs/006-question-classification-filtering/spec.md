@@ -50,32 +50,42 @@ Là một Giáo viên, tôi muốn nhập từ khóa tìm kiếm (ví dụ: "par
 
 **Acceptance Scenarios**:
 
-1. **Given** Người dùng đang nhập từ khóa tìm kiếm và áp dụng các bộ lọc, **When** bấm Enter hoặc hệ thống tự động tìm kiếm, **Then** danh sách kết quả hiển thị khớp cả từ khóa (tìm kiếm trong trường `statement` và `content`) lẫn các tiêu chí lọc đã chọn.
-
----
-
-### Edge Cases
-
-- **Lọc theo chủ đề con đệ quy**: Đảm bảo thuật toán lọc theo chủ đề quét đúng trường `path` của `lms_topics` để lấy tất cả câu hỏi thuộc các node con cháu mà không gây nghẽn hiệu năng truy vấn.
-- **Không có kết quả**: Khi bộ lọc quá sâu dẫn đến không có câu hỏi nào khớp, hệ thống hiển thị giao diện thông báo không tìm thấy kết quả cùng nút bấm "Xóa bộ lọc" để quay lại trạng thái trước đó.
-- **Phân trang khi lọc**: Khi thay đổi bộ lọc, số trang (pagination) phải tự động reset về trang 1 và hiển thị đúng tổng số lượng kết quả mới.
-
-## Requirements *(mandatory)*
-
-### Functional Requirements
-
-- **FR-001**: Hệ thống PHẢI hỗ trợ liên kết câu hỏi (`lms_questions`) với một hoặc nhiều Chủ đề (`lms_topics`) và một hoặc nhiều Thẻ (`lms_tags`).
+1. **Given** Ng- **FR-001**: Hệ thống PHẢI hỗ trợ liên kết câu hỏi (`lms_questions`) với một hoặc nhiều Chủ đề (`lms_topics`) và một hoặc nhiều Thẻ (`lms_tags`).
 - **FR-002**: Hệ thống PHẢI cung cấp giao diện Bộ lọc (Filter Panel) trực quan bên cạnh danh sách câu hỏi, hỗ trợ lọc theo:
   - Khối lớp (Grade)
   - Độ khó (Difficulty) - Gồm 5 cấp độ: Nhận biết, Thông hiểu, Vận dụng thấp, Vận dụng cao, Vận dụng thực tế / Chuyên sâu.
   - Loại hình câu hỏi (Question Type) - Gồm: Trắc nghiệm 1 đáp án đúng (`single_choice`), Trắc nghiệm nhiều đáp án đúng (`multiple_choice`), Đúng/Sai (`true_false`), Điền khuyết (`fill_in_the_blank`), Tự luận (`essay`).
+  - Cấu trúc câu hỏi: Câu hỏi độc lập (`complex` khác `main` và `sub`), Câu hỏi chùm (`complex = main`), hoặc cả hai.
   - Chủ đề (Topics) - hiển thị dạng cây phân cấp (Tree View) hoặc Dropdown phân cấp thu gọn được.
-  - Thẻ tag (Tags) - phân tách rõ ràng theo các nhóm Category: SOURCE (Nguồn gốc), METHOD (Phương pháp giải), SKILL (Kỹ năng tư duy), và TYPE (Phân biệt Lý thuyết / Vận dụng).
+  - Thẻ tag (Tags) - phân tách rõ ràng theo các nhóm Category: SOURCE (Nguồn gốc), METHOD (Phương pháp giải), SKILL (Kỹ năng tư duy), TYPE (Phân biệt Lý thuyết / Vận dụng), EXAM (Kỳ thi nhắm tới), và YEAR (Năm thi).
 - **FR-003**: Hệ thống PHẢI hỗ trợ lọc đệ quy theo chủ đề. Khi người dùng chọn lọc một chủ đề, hệ thống phải tự động trả về cả các câu hỏi liên kết với các chủ đề con cháu của nó (bằng cách so sánh đường dẫn `path` bắt đầu bằng `path` của chủ đề đã chọn).
-- **FR-004**: Hệ thống PHẢI cung cấp ô tìm kiếm toàn văn hỗ trợ tìm kiếm không dấu/có dấu trên trường `statement` và `content` của câu hỏi.
-- **FR-005**: API/Server Action lấy danh sách câu hỏi (`getLibraryQuestions` hoặc tương đương) PHẢI được nâng cấp để hỗ trợ các tham số lọc nâng cao: `grades`, `difficulties`, `questionTypes` (mảng loại câu hỏi), `topicIds` (mảng ID), `tagIds` (mảng ID), và `keyword`.
-- **FR-006**: Giao diện hiển thị câu hỏi PHẢI hiển thị đầy đủ các badge phân loại trực quan (Khối lớp, Độ khó với màu sắc tương ứng từ `lms_difficulties`, Loại hình câu hỏi, Tên chủ đề liên kết, và các thẻ tag).
-- **FR-007**: Hệ thống PHẢI lưu trữ trạng thái bộ lọc trên URL (Query Parameters) để người dùng có thể chia sẻ liên kết kết quả lọc hoặc quay lại trang trước đó mà không bị mất bộ lọc.
+- **FR-004**: Giao diện hiển thị danh sách kết quả tìm kiếm/lọc chỉ hiển thị các câu hỏi độc lập và câu hỏi chùm (`complex = main` hoặc `complex` trống/null). Các câu hỏi con (`complex = sub`) PHẢI được hiển thị lồng/group bên trong câu hỏi chùm cha của nó tương ứng (thông qua liên kết `ref_question_id`), không hiển thị rời rạc độc lập.
+- **FR-005**: Hệ thống PHẢI cung cấp ô tìm kiếm toàn văn hỗ trợ tìm kiếm không dấu/có dấu trên trường `statement` và `content` của câu hỏi.
+- **FR-006**: API/Server Action lấy danh sách câu hỏi (`getLibraryQuestions` hoặc tương đương) PHẢI được nâng cấp để hỗ trợ các tham số lọc nâng cao: `grades`, `difficulties`, `questionTypes` (mảng loại câu hỏi), `topicIds` (mảng ID), `tagIds` (mảng ID), `complex` (lọc theo cấu trúc), và `keyword`.
+- **FR-007**: Giao diện hiển thị câu hỏi PHẢI hiển thị đầy đủ các badge phân loại trực quan (Khối lớp, Độ khó với màu sắc tương ứng từ `lms_difficulties`, Loại hình câu hỏi, Tên chủ đề liên kết, và các thẻ tag).
+- **FR-008**: Hệ thống PHẢI lưu trữ trạng thái bộ lọc trên URL (Query Parameters) để người dùng có thể chia sẻ liên kết kết quả lọc hoặc quay lại trang trước đó mà không bị mất bộ lọc.
+
+### Key Entities *(include if feature involves data)*
+
+- **lms_questions (Câu hỏi)**: Thực thể chính cần được lọc và phân loại, chứa các trường `grade`, `question_difficulty`, `question_type`, `complex`, `ref_question_id`, `statement`, `content`.
+- **lms_topics (Chủ đề học thuật)**: Cấu trúc cây phân cấp chủ đề gắn liền với câu hỏi qua bảng trung gian `lms_topics_questions`.
+- **lms_tags (Thẻ phân loại bổ trợ)**: Các tag gán cho câu hỏi qua bảng trung gian `lms_questions_tags`, phân loại theo cột `category` (SOURCE, METHOD, SKILL, TYPE, EXAM, YEAR).
+- **lms_difficulties (Độ khó)**: Chứa danh sách mức độ khó (5 mức) và mã màu hiển thị của chúng.
+
+## Success Criteria *(mandatory)*
+
+### Measurable Outcomes
+
+- **SC-001**: Thời gian phản hồi của API/Action lấy danh sách câu hỏi khi áp dụng bộ lọc phức tạp (nhiều lớp) trên cơ sở dữ liệu thử nghiệm 10,000 câu hỏi phải dưới 300ms.
+- **SC-002**: Tốc độ render giao diện và tương tác với cây bộ lọc chủ đề mượt mà, không giật lag (đáp ứng tiêu chuẩn 60fps khi tương tác).
+- **SC-003**: 100% các câu hỏi thuộc chủ đề con cháu phải được hiển thị chính xác khi người dùng chọn lọc theo chủ đề cha tương ứng.
+- **SC-004**: Người dùng có thể thực hiện thao tác lọc và tìm ra câu hỏi mong muốn chỉ trong vòng dưới 3 lượt click chuột.
+
+## Assumptions
+
+- Các chỉ mục (indexes) trên các cột được lọc như `lms_questions.grade`, `lms_questions.question_difficulty`, `lms_questions.question_type`, `lms_questions.complex`, `lms_topics.path`, `lms_tags.category` đã được thiết lập tối ưu trong cơ sở dữ liệu.
+- Cây chủ đề `lms_topics` đã có trường `path` hợp lệ và được tính toán chính xác để phục vụ cho việc lọc đệ quy.
+�t bộ lọc.
 
 ### Key Entities *(include if feature involves data)*
 
