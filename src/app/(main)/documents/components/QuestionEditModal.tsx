@@ -91,12 +91,12 @@ export default function QuestionEditModal({
     });
   };
 
-  const handleOptionWeightChange = (correctIdx: number) => {
+  const handleOptionWeightChange = (targetIdx: number) => {
     setLocalQuestion((prev: any) => {
       if (!prev) return prev;
       const newOptions = (prev.options || []).map((o: any, idx: number) => ({
         ...o,
-        weight: idx === correctIdx ? 1 : 0
+        weight: idx === targetIdx ? (o.weight === 1 ? 0 : 1) : o.weight
       }));
       return { ...prev, options: newOptions };
     });
@@ -265,12 +265,11 @@ export default function QuestionEditModal({
                             </label>
                             <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-primary select-none">
                               <input
-                                type="radio"
-                                name="correct-option"
+                                type="checkbox"
                                 checked={opt.weight === 1}
                                 disabled={!isOwner || isSaving}
                                 onChange={() => handleOptionWeightChange(idx)}
-                                className="w-3.5 h-3.5 accent-primary cursor-pointer"
+                                className="w-3.5 h-3.5 rounded accent-primary cursor-pointer"
                               />
                               <span>Đáp án đúng</span>
                             </label>
