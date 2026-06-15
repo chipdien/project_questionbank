@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, AlertTriangle, ArrowRightLeft, Trash2 } from 'lucide-react';
+import { X, AlertTriangle, ArrowRightLeft, Trash2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Topic, RelatedData, topicsService } from '@/services/topics';
 
@@ -21,17 +21,28 @@ export default function TopicDeleteTransferModal({
   onSuccess
 }: TopicDeleteTransferModalProps) {
   const [targetTopicId, setTargetTopicId] = useState('');
+  const [filterText, setFilterText] = useState('');
   const [includeSubtopics, setIncludeSubtopics] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
 
   if (!isOpen) return null;
 
   // Lọc danh sách chủ đề đích hợp lệ (không phải chính nó và không phải con cháu của nó)
-  const eligibleTargets = allTopics.filter(t => {
-    if (t.id === topic.id) return false;
-    if (topic.path && t.path?.startsWith(topic.path)) return false;
-    return true;
-  });
+  const getEligibleTargets = () => {
+    const list = allTopics.filter(t => {
+      if (t.id === topic.id) return false;
+      if (topic.path && t.path?.startsWith(topic.path)) return false;
+      return true;
+    });
+
+    if (!filterText.trim()) return list;
+
+    const term = filterText.toLowerCase();
+    return list.filter(t =>
+      t.title?.toLowerCase().includes(term) ||
+      t.code?.toLowerCase().includes(term)
+    );
+  };
 
   const handleTransferAndDelete = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,14 +121,27 @@ export default function TopicDeleteTransferModal({
               
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-on-surface-variant">Chủ đề đích thay thế <span className="text-red-500">*</span></label>
+                
+                {/* Thanh tìm kiếm nhanh */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-outline" />
+                  <input
+                    type="text"
+                    placeholder="Tìm nhanh chủ đề nhận..."
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                    className="w-full h-10 pl-9 pr-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-xs transition-all"
+                  />
+                </div>
+
                 <select
                   required
                   value={targetTopicId}
                   onChange={(e) => setTargetTopicId(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
+                  className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
                 >
                   <option value="">-- Chọn chủ đề nhận câu hỏi --</option>
-                  {eligibleTargets.map(t => (
+                  {getEligibleTargets().map(t => (
                     <option key={t.id} value={t.id}>
                       {t.title} ({t.code || t.id})
                     </option>

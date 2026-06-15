@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ArrowRightLeft } from 'lucide-react';
+import { X, ArrowRightLeft, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Topic, topicsService } from '@/services/topics';
 
@@ -19,13 +19,14 @@ export default function TopicBulkMoveModal({
   onSuccess
 }: TopicBulkMoveModalProps) {
   const [targetParentId, setTargetParentId] = useState('');
+  const [filterText, setFilterText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   if (!isOpen) return null;
 
   // Lọc ra các chủ đề gốc và các chủ đề không bị dịch chuyển (và không phải con cháu của các chủ đề bị dịch chuyển)
   const getEligibleParents = () => {
-    return allTopics.filter(t => {
+    const list = allTopics.filter(t => {
       // Không nằm trong danh sách đang bị dịch chuyển
       if (selectedTopics.some(st => st.id === t.id)) return false;
       // Không được là con cháu của bất kỳ node nào đang bị dịch chuyển
@@ -34,6 +35,14 @@ export default function TopicBulkMoveModal({
       }
       return true;
     });
+
+    if (!filterText.trim()) return list;
+
+    const term = filterText.toLowerCase();
+    return list.filter(t => 
+      t.title?.toLowerCase().includes(term) || 
+      t.code?.toLowerCase().includes(term)
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -79,10 +88,23 @@ export default function TopicBulkMoveModal({
 
           <div className="flex flex-col gap-1.5 mt-2">
             <label className="text-xs font-semibold text-on-surface-variant">Chọn chủ đề cha đích</label>
+            
+            {/* Thanh tìm kiếm nhanh */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-outline" />
+              <input
+                type="text"
+                placeholder="Tìm nhanh chủ đề nhận..."
+                value={filterText}
+                onChange={(e) => setFilterText(e.target.value)}
+                className="w-full h-10 pl-9 pr-3 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-xs transition-all"
+              />
+            </div>
+
             <select
               value={targetParentId}
               onChange={(e) => setTargetParentId(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
+              className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
             >
               <option value="">-- Chọn chủ đề gốc (Không có cha) --</option>
               {getEligibleParents().map(t => (
