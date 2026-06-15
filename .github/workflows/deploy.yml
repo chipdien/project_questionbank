@@ -5,7 +5,11 @@ on:
     branches:
       - main
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
+
   deploy:
     runs-on: ubuntu-latest
 
@@ -31,16 +35,21 @@ jobs:
             
             # 2. Truy cập thư mục dự án
             cd /www/wwwroot/qb.vietelite.edu.vn
+
+            # 3. ÉP BUỘC XÓA BỎ THAY ĐỔI LOCAL ĐỂ ĐÓN CODE MỚI
+            # Lệnh này sẽ đưa các file .env.example, package.json về trạng thái sạch của commit cũ
+            git reset --hard HEAD
             
-            # 3. Kéo mã nguồn mới nhất
+            # 4. Kéo mã nguồn mới nhất
             git pull origin main
             
-            # 4. Cài đặt dependencies
-            npm install
+            # 5. Cài đặt dependencies
+            npm install --frozen-lockfile || npm install
             
-            # 5. Build dự án Next.js
+            # 6. Build dự án Next.js
             npm run build
             
-            # 6. Khởi động lại hoặc chạy mới PM2 với cổng 5002
-            PORT=5002 pm2 reload vietelite-questionbank || PORT=5002 pm2 restart vietelite-questionbank || PORT=5002 pm2 start npm --name "vietelite-questionbank" -- run start -- -p 5002
+            # 7. Khởi động lại hoặc chạy mới PM2 với cổng 5002
+            # PORT=5002 pm2 reload vietelite-questionbank || PORT=5002 pm2 restart vietelite-questionbank || PORT=5002 pm2 start npm --name "vietelite-questionbank" -- run start -- -p 5002
+            pm2 reload vietelite-questionbank || pm2 start npm --name "vietelite-questionbank" -- run start -- -p 5002
 
