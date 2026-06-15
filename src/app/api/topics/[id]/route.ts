@@ -22,7 +22,13 @@ export async function PATCH(
     const { id } = await params;
     const topicId = BigInt(id);
     const body = await request.json();
-    const { title, parentId, type, content, subjectId, syllabusId, code, orderIndex } = body;
+    const { title, type, content, code } = body;
+
+    // Hỗ trợ cả camelCase và snake_case từ payload
+    const parentId = body.parentId !== undefined ? body.parentId : body.parent_id;
+    const subjectId = body.subjectId !== undefined ? body.subjectId : body.subject_id;
+    const syllabusId = body.syllabusId !== undefined ? body.syllabusId : body.syllabus_id;
+    const orderIndex = body.orderIndex !== undefined ? body.orderIndex : body.order_index;
 
     // Lấy thông tin node hiện tại trước khi cập nhật
     const currentTopic = await prisma.lms_topics.findUnique({
@@ -40,7 +46,7 @@ export async function PATCH(
     if (code !== undefined) updateData.code = code;
     if (subjectId !== undefined) updateData.subject_id = subjectId ? BigInt(subjectId) : null;
     if (syllabusId !== undefined) updateData.syllabus_id = syllabusId ? BigInt(syllabusId) : null;
-    if (orderIndex !== undefined) updateData.order_index = orderIndex ? BigInt(orderIndex) : null;
+    if (orderIndex !== undefined) updateData.order_index = orderIndex !== null && orderIndex !== undefined ? BigInt(orderIndex) : null;
 
     // Xử lý di chuyển node cha (parent_id thay đổi)
     if (parentId !== undefined) {
