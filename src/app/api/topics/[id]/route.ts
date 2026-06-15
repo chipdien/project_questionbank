@@ -108,18 +108,28 @@ export async function DELETE(
       return Response.json({ error: 'Topic not found' }, { status: 404 });
     }
 
-    // 1. Phá vỡ liên kết bằng cách set parent_id = null cho tất cả các con trực tiếp
-    await prisma.lms_topics.updateMany({
-      where: { parent_id: topicId },
-      data: { parent_id: null }
+    // Kiểm tra xem có chủ đề con hay không
+    const subtopicsCount = await prisma.lms_topics.count({
+      where: { parent_id: topicId }
     });
 
-    // 2. Xóa các mối liên kết câu hỏi liên quan đến topic này
-    await prisma.lms_topics_questions.deleteMany({
+    // Kiểm tra xem có câu hỏi liên kết hay không
+    const questionsCount = await prisma.lms_topics_questions.count({
       where: { topic_id: topicId }
     });
 
-    // 3. Xóa chính node đó
+    if (subtopicsCount > 0 || questionsCount > 0) {
+      return Response.json({
+        error: 'Cannot delete topic. It contains subtopics or has linked questions.',
+        code: 'RESTRICT_DELETE',
+        details: {
+          subtopics_count: subtopicsCount,
+          questions_count: questionsCount
+        }
+      }, { status: 400 });
+    }
+
+    // Xóa chính node đó (do không có con hay câu hỏi liên kết)
     const deleted = await prisma.lms_topics.delete({
       where: { id: topicId }
     });
