@@ -7,6 +7,11 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const QuestionSchema: Schema = {
   type: Type.OBJECT,
   properties: {
+    answer_matched: {
+      type: Type.BOOLEAN,
+      description: "Chỉ dùng khi có file đáp án riêng. true nếu file đáp án thực sự tương ứng với đề bài; false nếu file đáp án rõ ràng KHÔNG liên quan đến đề (sai môn, sai nội dung, các câu không khớp). Để null nếu không có file đáp án.",
+      nullable: true
+    },
     questions: {
       type: Type.ARRAY,
       description: "Danh sách các câu hỏi được trích xuất từ văn bản LaTeX",
@@ -100,12 +105,14 @@ export class QuestionParserService {
   /**
    * Phân tích văn bản gốc và trích xuất thành cấu trúc JSON chuẩn.
    */
-  static async parseQuestions(rawLatex: string) {
+  static async parseQuestions(rawLatex: string, rawAnswerText?: string) {
     if (!process.env.GEMINI_API_KEY) {
       throw new Error("GEMINI_API_KEY is not configured.");
     }
 
-    const systemInstruction = `Bạn là một trợ lý AI xử lý tài liệu Toán học xuất sắc.
+    const hasAnswerFile = !!(rawAnswerText && rawAnswerText.trim().length > 0);
+
+    const baseInstruction = `Bạn là một trợ lý AI xử lý tài liệu Toán học xuất sắc.
 Nhiệm vụ của bạn là nhận vào văn bản text được trích xuất từ OCR (dưới định dạng LaTeX) và bóc tách thành các câu hỏi có cấu trúc.
 Chú ý:
 - Văn bản đầu vào có thể chứa cả các đề bài (ví dụ "Câu 1:", "Bài 1.") và các lựa chọn đáp án kiểu "A.", "B.", "C.", "D.".
@@ -114,12 +121,35 @@ Chú ý:
 - Đảm bảo giữ nguyên các công thức LaTeX hợp lệ (được bao bọc trong $ hoặc $$).
 - TUYỆT ĐỐI GIỮ NGUYÊN mọi cú pháp hình ảnh (ví dụ: ![](...) hoặc thẻ <img>) trong nội dung câu hỏi và đáp án. Không được tự ý xóa bỏ hình ảnh.`;
 
+    const answerInstruction = `
+
+QUAN TRỌNG - XỬ LÝ FILE ĐÁP ÁN RIÊNG:
+Bạn được cung cấp ĐỒNG THỜI hai nguồn văn bản:
+1. "VĂN BẢN ĐỀ BÀI": chứa nội dung các câu hỏi/đề bài.
+2. "VĂN BẢN ĐÁP ÁN & LỜI GIẢI": chứa đáp án đúng và lời giải chi tiết cho các câu hỏi tương ứng.
+
+Yêu cầu đối chiếu:
+- Chỉ bóc tách câu hỏi từ "VĂN BẢN ĐỀ BÀI" (statement, options lấy từ file đề).
+- TRƯỚC TIÊN, hãy đánh giá độ liên quan tổng thể giữa hai văn bản:
+  + Nếu "VĂN BẢN ĐÁP ÁN & LỜI GIẢI" RÕ RÀNG KHÔNG phải là đáp án/lời giải của đề này (khác môn học, nội dung hoàn toàn không tương ứng, các câu không thể ánh xạ được), hãy đặt answer_matched = false và BỎ QUA HOÀN TOÀN file đáp án: mọi hint để chuỗi rỗng, mọi weight = 0. KHÔNG được suy đoán hay ghép ép theo số thứ tự.
+  + Nếu file đáp án thực sự khớp với đề (phần lớn câu có thể đối chiếu được), hãy đặt answer_matched = true rồi tiến hành đối chiếu bên dưới.
+- Khi đã khớp: với mỗi câu hỏi, tìm đáp án & lời giải tương ứng trong "VĂN BẢN ĐÁP ÁN & LỜI GIẢI" (đối chiếu theo số thứ tự câu, ví dụ "Câu 1" trong đề khớp với "Câu 1" trong đáp án).
+- Điền LỜI GIẢI CHI TIẾT từ file đáp án vào trường hint của câu hỏi đó.
+- Đánh dấu weight = 1 cho đúng lựa chọn (option) được xác định là đáp án đúng dựa trên file đáp án; các lựa chọn còn lại weight = 0.
+- Nếu một câu hỏi cụ thể không tìm thấy đáp án tương ứng (dù tổng thể đã khớp), để hint là chuỗi rỗng và giữ weight = 0 cho mọi lựa chọn của câu đó.`;
+
+    const systemInstruction = hasAnswerFile ? baseInstruction + answerInstruction : baseInstruction;
+
+    const userText = hasAnswerFile
+      ? `===== VĂN BẢN ĐỀ BÀI =====\n${rawLatex}\n\n===== VĂN BẢN ĐÁP ÁN & LỜI GIẢI =====\n${rawAnswerText}`
+      : rawLatex;
+
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [
         {
           role: 'user',
-          parts: [{ text: rawLatex }]
+          parts: [{ text: userText }]
         }
       ],
       config: {

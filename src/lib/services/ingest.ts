@@ -87,8 +87,8 @@ export class IngestService {
   /**
    * Phân tích văn bản thô bằng Gemini.
    */
-  static async processAi(rawText: string) {
-    return await QuestionParserService.parseQuestions(rawText);
+  static async processAi(rawText: string, rawAnswerText?: string) {
+    return await QuestionParserService.parseQuestions(rawText, rawAnswerText);
   }
 
   /**

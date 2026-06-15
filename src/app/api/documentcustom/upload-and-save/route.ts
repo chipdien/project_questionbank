@@ -61,28 +61,16 @@ export async function POST(req: NextRequest) {
 
     if (needsS3Upload) {
       // 1. Upload lên S3 từ Server
-      const s3Client = new S3Client({
-        region: process.env.AWS_REGION!,
-        credentials: {
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-        },
-      });
-
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
-      objectKey = `documents/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
+      const localKey = `result/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
 
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      await s3Client.send(new PutObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_NAME!,
-        Key: objectKey,
-        Body: buffer,
-        ContentType: file.type || "application/pdf",
-      }));
-
-      s3Url = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${objectKey}`;
+      s3Url = await uploadToS3(buffer, localKey, file.type || "application/pdf");
+      
+      const folderPrefix = process.env.AWS_S3_FOLDER_PREFIX || '';
+      objectKey = folderPrefix ? `${folderPrefix.replace(/\/$/, '')}/${localKey}` : localKey;
     }
 
     // 2. Lưu vào Database

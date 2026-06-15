@@ -10,6 +10,7 @@ interface Document {
   created_at: string;
   public?: string | null;
   link_s3?: string | null;
+  link_s3_answer?: string | null;
   teacher_name?: string | null;
   created_by_id?: number | null;
 }

@@ -27,6 +27,7 @@ export interface Document {
   is_ai_classified?: number;
   pdf_url?: string | null;
   link_s3?: string | null;
+  link_s3_answer?: string | null;
   public?: string | null;
   teacher_name?: string | null;
   teacher_owned?: number | null;
