@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { IngestService } from '@/lib/services/ingest';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getCurrentUserId } from '@/lib/utils/auth-utils';
+import { replaceMathpixImagesInText } from '@/lib/utils/s3-utils';
 
 export const maxDuration = 300; // 5 minutes
 
@@ -141,6 +142,13 @@ export async function POST(req: NextRequest) {
         rawText = imgData.text || '';
       } else {
         throw new Error('Định dạng file không hỗ trợ.');
+      }
+
+      // 4. Convert Mathpix CDN images to S3
+      try {
+        rawText = await replaceMathpixImagesInText(rawText);
+      } catch (imgError) {
+        console.error('Lỗi khi convert ảnh Mathpix sang S3:', imgError);
       }
 
       // 4. Update Task with Raw Text
