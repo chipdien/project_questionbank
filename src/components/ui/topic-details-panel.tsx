@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Plus, ArrowLeft } from 'lucide-react';
+import { Save, Plus, ArrowLeft, ChevronDown } from 'lucide-react';
 import { Topic } from '@/services/topics';
 
 interface TopicDetailsPanelProps {
@@ -25,7 +25,15 @@ export default function TopicDetailsPanel({
   const [orderIndex, setOrderIndex] = useState('0');
   const [isSaving, setIsSaving] = useState(false);
 
+  // States for custom searchable dropdowns
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [parentSearchTerm, setParentSearchTerm] = useState('');
+  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+
   useEffect(() => {
+    setIsDropdownOpen(false);
+    setParentSearchTerm('');
+    setIsTypeDropdownOpen(false);
     if (topic) {
       setTitle(topic.title || '');
       setCode(topic.code || '');
@@ -136,38 +144,137 @@ export default function TopicDetailsPanel({
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 relative">
             <label className="text-xs font-semibold text-on-surface-variant">Loại chủ đề</label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
+            
+            {/* Custom Type Trigger Button */}
+            <div
+              onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
+              className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface text-sm transition-all flex items-center justify-between cursor-pointer hover:bg-outline-variant/10"
             >
-              <option value="SYLLABUS">SYLLABUS (Khung chương trình tổng quan)</option>
-              <option value="DOMAIN">DOMAIN (Phân môn/Lĩnh vực kiến thức)</option>
-              <option value="TOPIC">TOPIC (Chương/Chuyên đề lớn)</option>
-              <option value="LESSON">LESSON (Bài học chi tiết)</option>
-              <option value="SUB_LESSON">SUB_LESSON (Các phần kỹ năng/bài tập nhỏ hơn)</option>
-            </select>
+              <span className="truncate">
+                {type === 'SYLLABUS' && 'SYLLABUS (Khung chương trình tổng quan)'}
+                {type === 'DOMAIN' && 'DOMAIN (Phân môn/Lĩnh vực kiến thức)'}
+                {type === 'TOPIC' && 'TOPIC (Chương/Chuyên đề lớn)'}
+                {type === 'LESSON' && 'LESSON (Bài học chi tiết)'}
+                {type === 'SUB_LESSON' && 'SUB_LESSON (Các phần kỹ năng/bài tập nhỏ hơn)'}
+              </span>
+              <ChevronDown className="w-4 h-4 text-on-surface-variant/70 shrink-0" />
+            </div>
+
+            {/* Dropdown Panel */}
+            {isTypeDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setIsTypeDropdownOpen(false)} />
+                <div className="absolute top-[72px] left-0 w-full bg-surface border border-outline-variant rounded-xl shadow-lg z-20 flex flex-col py-1 animate-in fade-in slide-in-from-top-1 duration-150 max-h-60 overflow-y-auto">
+                  {[
+                    { value: 'SYLLABUS', label: 'SYLLABUS (Khung chương trình tổng quan)' },
+                    { value: 'DOMAIN', label: 'DOMAIN (Phân môn/Lĩnh vực kiến thức)' },
+                    { value: 'TOPIC', label: 'TOPIC (Chương/Chuyên đề lớn)' },
+                    { value: 'LESSON', label: 'LESSON (Bài học chi tiết)' },
+                    { value: 'SUB_LESSON', label: 'SUB_LESSON (Các phần kỹ năng/bài tập nhỏ hơn)' }
+                  ].map(opt => {
+                    const isSelected = type === opt.value;
+                    return (
+                      <div
+                        key={opt.value}
+                        onClick={() => {
+                          setType(opt.value);
+                          setIsTypeDropdownOpen(false);
+                        }}
+                        className={`px-4 py-2.5 text-sm cursor-pointer hover:bg-primary/10 transition-colors truncate ${
+                          isSelected ? 'bg-primary/5 text-primary font-semibold' : 'text-on-surface-variant'
+                        }`}
+                      >
+                        {opt.label}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 relative">
             <label className="text-xs font-semibold text-on-surface-variant">Chủ đề cha</label>
-            <select
-              value={parentId}
-              onChange={(e) => setParentId(e.target.value)}
-              className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
+            
+            {/* Custom Searchable Parent Trigger Button */}
+            <div
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface text-sm transition-all flex items-center justify-between cursor-pointer hover:bg-outline-variant/10"
             >
-              <option value="">-- Chọn chủ đề gốc --</option>
-              {getEligibleParents().map(t => {
-                const qCount = t._count?.questions ? ` (${t._count.questions} câu)` : '';
-                return (
-                  <option key={t.id} value={t.id}>
-                    {t.title ? `${t.title} (${t.code || t.id})${qCount}` : t.id}
-                  </option>
-                );
-              })}
-            </select>
+              <span className="truncate">
+                {parentId
+                  ? allTopics.find(t => t.id === parentId)?.title || `Chủ đề #${parentId}`
+                  : '-- Chọn chủ đề gốc --'}
+              </span>
+              <ChevronDown className="w-4 h-4 text-on-surface-variant/70 shrink-0" />
+            </div>
+
+            {/* Dropdown Panel */}
+            {isDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
+                <div className="absolute top-[72px] left-0 w-full bg-surface border border-outline-variant rounded-xl shadow-lg z-20 flex flex-col max-h-60 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                  {/* Search Bar inside Dropdown */}
+                  <div className="p-2 border-b border-outline-variant/20 sticky top-0 bg-surface z-10">
+                    <input
+                      type="text"
+                      value={parentSearchTerm}
+                      onChange={(e) => setParentSearchTerm(e.target.value)}
+                      onClick={(e) => e.stopPropagation()} // Cản sự kiện đóng dropdown
+                      placeholder="Tìm nhanh chủ đề cha..."
+                      className="w-full h-9 px-3 rounded-lg border border-outline-variant bg-surface-container-low text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-xs"
+                    />
+                  </div>
+
+                  {/* Option List */}
+                  <div className="overflow-y-auto flex-1 py-1">
+                    <div
+                      onClick={() => {
+                        setParentId('');
+                        setIsDropdownOpen(false);
+                        setParentSearchTerm('');
+                      }}
+                      className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary/10 transition-colors ${
+                        !parentId ? 'bg-primary/5 text-primary font-semibold' : 'text-on-surface-variant'
+                      }`}
+                    >
+                      -- Chọn chủ đề gốc --
+                    </div>
+
+                    {getEligibleParents()
+                      .filter(t => {
+                        if (!parentSearchTerm.trim()) return true;
+                        const term = parentSearchTerm.toLowerCase();
+                        return (
+                          t.title?.toLowerCase().includes(term) ||
+                          t.code?.toLowerCase().includes(term)
+                        );
+                      })
+                      .map(t => {
+                        const qCount = t._count?.questions ? ` (${t._count.questions} câu)` : '';
+                        const isSelected = parentId === t.id;
+                        return (
+                          <div
+                            key={t.id}
+                            onClick={() => {
+                              setParentId(t.id);
+                              setIsDropdownOpen(false);
+                              setParentSearchTerm('');
+                            }}
+                            className={`px-4 py-2 text-sm cursor-pointer hover:bg-primary/10 transition-colors truncate ${
+                              isSelected ? 'bg-primary/5 text-primary font-semibold' : 'text-on-surface-variant'
+                            }`}
+                          >
+                            {t.title ? `${t.title} (${t.code || t.id})${qCount}` : t.id}
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
