@@ -1,0 +1,55 @@
+name: Deploy to aaPanel VPS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: SSH and Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            # 1. Load môi trường Node.js / NVM trên aaPanel
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            source ~/.bashrc || true
+            
+            # Cấu hình an toàn cho Git (tránh lỗi Safe Directory của aaPanel)
+            git config --global --add safe.directory /www/wwwroot/qb.vietelite.edu.vn
+            
+            # 2. Truy cập thư mục dự án
+            cd /www/wwwroot/qb.vietelite.edu.vn
+
+            # 3. ÉP BUỘC XÓA BỎ THAY ĐỔI LOCAL ĐỂ ĐÓN CODE MỚI
+            # Lệnh này sẽ đưa các file .env.example, package.json về trạng thái sạch của commit cũ
+            git reset --hard HEAD
+            
+            # 4. Kéo mã nguồn mới nhất
+            git pull origin main
+            
+            # 5. Cài đặt dependencies
+            npm install --frozen-lockfile || npm install
+            
+            # 6. Build dự án Next.js
+            npm run build
+            
+            # 7. Khởi động lại hoặc chạy mới PM2 với cổng 5002
+            # PORT=5002 pm2 reload vietelite-questionbank || PORT=5002 pm2 restart vietelite-questionbank || PORT=5002 pm2 start npm --name "vietelite-questionbank" -- run start -- -p 5002
+            pm2 reload vietelite-questionbank || pm2 start npm --name "vietelite-questionbank" -- run start -- -p 5002
+
