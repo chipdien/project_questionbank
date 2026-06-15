@@ -101,7 +101,8 @@ export class IngestService {
     structuredData: any,
     isPublic: boolean = false,
     linkS3: string | null = null,
-    userId: number | null = null
+    userId: number | null = null,
+    linkS3Answer: string | null = null
   ) {
     try {
       const publicVal = isPublic ? '1' : '0';
@@ -115,6 +116,7 @@ export class IngestService {
             content: rawText,
             public: publicVal,
             link_s3: linkS3,
+            link_s3_answer: linkS3Answer,
             created_at: new Date(),
             updated_at: new Date(),
             created_by_id: userIdBigInt,

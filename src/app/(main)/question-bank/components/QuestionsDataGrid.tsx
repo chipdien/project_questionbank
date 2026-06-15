@@ -25,6 +25,8 @@ interface QuestionsDataGridProps {
   pagination: Pagination;
   showSelection?: boolean;
   difficulties?: Difficulty[];
+  currentUserId?: number | null;
+  isAdmin?: boolean;
 }
 
 export default function QuestionsDataGrid({
@@ -33,7 +35,9 @@ export default function QuestionsDataGrid({
   onSelectionChange,
   pagination,
   showSelection = true,
-  difficulties = []
+  difficulties = [],
+  currentUserId,
+  isAdmin = false
 }: QuestionsDataGridProps) {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [internalSelectedIds, setInternalSelectedIds] = useState<Set<number>>(new Set());
@@ -212,6 +216,8 @@ export default function QuestionsDataGrid({
         <QuestionModal
           question={selectedQuestion}
           onClose={() => setSelectedQuestion(null)}
+          currentUserId={currentUserId}
+          isAdmin={isAdmin}
         />
       )}
 

@@ -32,13 +32,13 @@ interface QuestionsManagerProps {
   isAdmin?: boolean;
 }
 
-export default function QuestionsManager({ 
-  questions, 
-  documents, 
-  activeDocId, 
-  lessons, 
-  pagination, 
-  docPagination, 
+export default function QuestionsManager({
+  questions,
+  documents,
+  activeDocId,
+  lessons,
+  pagination,
+  docPagination,
   currentUserId,
   difficulties = [],
   isAdmin = false
@@ -282,6 +282,8 @@ export default function QuestionsManager({
           onSelectionChange={handleSelectionChange}
           pagination={pagination}
           difficulties={difficultiesList}
+          currentUserId={currentUserId}
+          isAdmin={isAdmin}
         />
       </div>
     </div>

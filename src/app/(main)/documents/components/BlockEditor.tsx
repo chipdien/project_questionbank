@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Block } from './DocumentBuilder';
-import { GripVertical, X, Edit2, Check } from 'lucide-react';
+import { GripVertical, X, Edit2, Check, Eye } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -20,9 +20,23 @@ interface BlockEditorProps {
   setActiveFieldId?: (id: string | null) => void;
   qNumber?: number;
   onEditQuestion?: (block: Block) => void;
+  currentUserId?: number | null;
+  isAdmin?: boolean;
+  isReadOnly?: boolean;
 }
 
-export default function BlockEditor({ block, onChange, onRemove, activeFieldId, setActiveFieldId, qNumber, onEditQuestion }: BlockEditorProps) {
+export default function BlockEditor({ 
+  block, 
+  onChange, 
+  onRemove, 
+  activeFieldId, 
+  setActiveFieldId, 
+  qNumber, 
+  onEditQuestion,
+  currentUserId,
+  isAdmin = false,
+  isReadOnly = false
+}: BlockEditorProps) {
   // Local state for primitive text (headline/textbox)
   const [localText, setLocalText] = useState<string>(
     typeof block.content === 'string' ? block.content : ''
@@ -40,6 +54,11 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
       setLocalQuestion(block.content);
     }
   }, [block.content]);
+
+  // Determine if current user is owner of the question
+  const isOwner = !isReadOnly && (isAdmin || 
+    (localQuestion?.teacher_owned_by_id !== undefined && Number(localQuestion.teacher_owned_by_id) === currentUserId) ||
+    (localQuestion?.created_by_id !== undefined && Number(localQuestion.created_by_id) === currentUserId));
 
   // Render a field that can be clicked to trigger global editor
   const renderEditableField = (fieldId: string, content: string, className: string, placeholder: string = "Nhập nội dung...") => {
@@ -158,8 +177,12 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
             if (onEditQuestion) onEditQuestion(block);
           }}
         >
-          <div className="absolute right-2 top-2 opacity-0 group-hover/qblock:opacity-40 p-1 bg-surface-container rounded-sm shadow-sm transition-opacity no-print">
-            <Edit2 className="w-4 h-4" />
+          <div className="absolute right-2 top-2 opacity-0 group-hover/qblock:opacity-40 p-1 bg-surface-container rounded-sm shadow-sm transition-opacity no-print" title={isOwner ? "Chỉnh sửa câu hỏi" : "Xem chi tiết câu hỏi"}>
+            {isOwner ? (
+              <Edit2 className="w-4 h-4 text-primary" />
+            ) : (
+              <Eye className="w-4 h-4 text-on-surface-variant/60" />
+            )}
           </div>
 
           {/* Main Statement */}
@@ -180,17 +203,19 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 mt-1 ml-4 pointer-events-none">
               {q.options.map((opt: any, idx: number) => {
                 const optContent = opt.content || opt.statement || '';
+                const isCorrect = Number(opt.weight) === 1;
                 return (
                   <div key={opt.id || idx} className="flex gap-2 text-sm text-on-surface-variant items-start">
-                    <span className="font-bold shrink-0 text-primary-fixed pt-0.5">{String.fromCharCode(65 + idx)}.</span>
-                    <div className="flex-1 min-w-0 prose prose-sm prose-slate max-w-none pointer-events-none">
+                    <span className={`font-bold shrink-0 pt-0.5 ${isCorrect ? 'text-green-600' : 'text-primary-fixed'}`}>
+                      {String.fromCharCode(65 + idx)}.{isCorrect && ' ✓'}
+                    </span>
+                    <div className={`flex-1 min-w-0 prose prose-sm prose-slate max-w-none pointer-events-none ${isCorrect ? 'font-medium text-green-950' : ''}`}>
                       <ReactMarkdown
                         remarkPlugins={[remarkMath, remarkGfm]}
                         rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
                       >
                         {cleanMathpixData(optContent)}
                       </ReactMarkdown>
-
                     </div>
                   </div>
                 );
@@ -226,4 +251,3 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
     </div>
   );
 }
-

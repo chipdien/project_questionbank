@@ -18,6 +18,8 @@ export interface Question {
   lesson_name?: string;
   containerId?: string;
   document_id?: number;
+  hint?: string | null;
+  teacher_owned_by_id?: number | null;
 }
 
 export interface Document {
