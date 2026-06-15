@@ -9,7 +9,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 
-import { cleanMathpixData } from '@/lib/utils/math-utils';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
 import VditorEditor from '@/components/ui/VditorEditor';
 
 interface BlockEditorProps {
@@ -147,7 +147,7 @@ export default function BlockEditor({ block, onChange, onRemove, activeFieldId, 
         return <div className="text-sm text-error">Dữ liệu câu hỏi không hợp lệ</div>;
       }
 
-      const rawStatement = q.statement || q.content || '';
+      const rawStatement = getQuestionDisplayContent(q.statement, q.content);
       const displayNum = (q.manualNumber !== undefined && q.manualNumber !== '') ? q.manualNumber : qNumber;
 
       return (
