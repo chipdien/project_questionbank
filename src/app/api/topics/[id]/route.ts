@@ -22,7 +22,13 @@ export async function PATCH(
     const { id } = await params;
     const topicId = BigInt(id);
     const body = await request.json();
-    const { title, parentId, type, content, subjectId, syllabusId, code, orderIndex } = body;
+    const { title, type, content, code } = body;
+
+    // Hỗ trợ cả camelCase và snake_case từ payload
+    const parentId = body.parentId !== undefined ? body.parentId : body.parent_id;
+    const subjectId = body.subjectId !== undefined ? body.subjectId : body.subject_id;
+    const syllabusId = body.syllabusId !== undefined ? body.syllabusId : body.syllabus_id;
+    const orderIndex = body.orderIndex !== undefined ? body.orderIndex : body.order_index;
 
     // Lấy thông tin node hiện tại trước khi cập nhật
     const currentTopic = await prisma.lms_topics.findUnique({
@@ -40,7 +46,7 @@ export async function PATCH(
     if (code !== undefined) updateData.code = code;
     if (subjectId !== undefined) updateData.subject_id = subjectId ? BigInt(subjectId) : null;
     if (syllabusId !== undefined) updateData.syllabus_id = syllabusId ? BigInt(syllabusId) : null;
-    if (orderIndex !== undefined) updateData.order_index = orderIndex ? BigInt(orderIndex) : null;
+    if (orderIndex !== undefined) updateData.order_index = orderIndex !== null && orderIndex !== undefined ? BigInt(orderIndex) : null;
 
     // Xử lý di chuyển node cha (parent_id thay đổi)
     if (parentId !== undefined) {
@@ -108,18 +114,28 @@ export async function DELETE(
       return Response.json({ error: 'Topic not found' }, { status: 404 });
     }
 
-    // 1. Phá vỡ liên kết bằng cách set parent_id = null cho tất cả các con trực tiếp
-    await prisma.lms_topics.updateMany({
-      where: { parent_id: topicId },
-      data: { parent_id: null }
+    // Kiểm tra xem có chủ đề con hay không
+    const subtopicsCount = await prisma.lms_topics.count({
+      where: { parent_id: topicId }
     });
 
-    // 2. Xóa các mối liên kết câu hỏi liên quan đến topic này
-    await prisma.lms_topics_questions.deleteMany({
+    // Kiểm tra xem có câu hỏi liên kết hay không
+    const questionsCount = await prisma.lms_topics_questions.count({
       where: { topic_id: topicId }
     });
 
-    // 3. Xóa chính node đó
+    if (subtopicsCount > 0 || questionsCount > 0) {
+      return Response.json({
+        error: 'Cannot delete topic. It contains subtopics or has linked questions.',
+        code: 'RESTRICT_DELETE',
+        details: {
+          subtopics_count: subtopicsCount,
+          questions_count: questionsCount
+        }
+      }, { status: 400 });
+    }
+
+    // Xóa chính node đó (do không có con hay câu hỏi liên kết)
     const deleted = await prisma.lms_topics.delete({
       where: { id: topicId }
     });

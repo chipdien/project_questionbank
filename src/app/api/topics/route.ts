@@ -29,6 +29,11 @@ export async function GET(request: NextRequest) {
             startsWith: rootPath
           }
         },
+        include: {
+          _count: {
+            select: { questions: true }
+          }
+        },
         orderBy: [
           { path: 'asc' },
           { order_index: 'asc' }
@@ -37,6 +42,11 @@ export async function GET(request: NextRequest) {
     } else {
       // Lấy toàn bộ cây
       topics = await prisma.lms_topics.findMany({
+        include: {
+          _count: {
+            select: { questions: true }
+          }
+        },
         orderBy: [
           { path: 'asc' },
           { order_index: 'asc' }
@@ -58,7 +68,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, parentId, type, content, subjectId, syllabusId, code, orderIndex } = body;
+    const { title, type, content, code } = body;
+
+    // Hỗ trợ cả camelCase và snake_case từ payload
+    const parentId = body.parentId !== undefined ? body.parentId : body.parent_id;
+    const subjectId = body.subjectId !== undefined ? body.subjectId : body.subject_id;
+    const syllabusId = body.syllabusId !== undefined ? body.syllabusId : body.syllabus_id;
+    const orderIndex = body.orderIndex !== undefined ? body.orderIndex : body.order_index;
 
     if (!title) {
       return Response.json({ error: 'Title is required' }, { status: 400 });
@@ -67,7 +83,7 @@ export async function POST(request: NextRequest) {
     const parentIdParsed = parentId ? BigInt(parentId) : null;
     const subjectIdParsed = subjectId ? BigInt(subjectId) : null;
     const syllabusIdParsed = syllabusId ? BigInt(syllabusId) : null;
-    const orderIndexParsed = orderIndex ? BigInt(orderIndex) : null;
+    const orderIndexParsed = orderIndex !== null && orderIndex !== undefined ? BigInt(orderIndex) : null;
 
     // 1. Tạo node mới (tạm thời chưa có path do chưa có id)
     const newTopic = await prisma.lms_topics.create({

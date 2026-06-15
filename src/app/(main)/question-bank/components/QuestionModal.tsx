@@ -10,7 +10,7 @@ import rehypeRaw from 'rehype-raw';
 import { useRouter } from 'next/navigation';
 
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
-import QuestionEditModal from '@/app/(main)/documents/components/QuestionEditModal';
+import QuestionEditModal from '@/components/common/QuestionEditModal';
 
 interface Option {
   id: number;
