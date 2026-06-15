@@ -72,7 +72,7 @@ export default function TagManagementModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Nhập tên tag (ví dụ: Toán tư duy, Nâng cao)"
-              className="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
+              className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
             />
           </div>
 
@@ -81,7 +81,7 @@ export default function TagManagementModal({
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
+              className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
             >
               <option value="SKILL">Kỹ năng tư duy (SKILL)</option>
               <option value="SOURCE">Nguồn gốc đề thi (SOURCE)</option>
