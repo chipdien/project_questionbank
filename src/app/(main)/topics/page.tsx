@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, RefreshCw, FolderPlus, ArrowRightLeft, CheckSquare, Square } from 'lucide-react';
+import { Plus, Search, RefreshCw, FolderPlus, ArrowRightLeft, CheckSquare, Square, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { topicsService, Topic, RelatedData } from '@/services/topics';
@@ -107,6 +107,29 @@ export default function TopicsPage() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    
+    const confirmDelete = window.confirm(
+      `Bạn có chắc chắn muốn xóa ${selectedIds.size} chủ đề đã chọn? Hành động này không thể hoàn tác.`
+    );
+    if (!confirmDelete) return;
+
+    const toastId = toast.loading('Đang thực hiện xóa hàng loạt...');
+    try {
+      await topicsService.bulkDeleteTopics(Array.from(selectedIds));
+      toast.success('Đã xóa các chủ đề thành công', { id: toastId });
+      setSelectedIds(new Set());
+      setIsMultiSelectMode(false);
+      await loadTopics();
+      setSelectedTopic(null);
+    } catch (err: any) {
+      console.error(err);
+      const errMsg = err.response?.data?.error || err.message || 'Lỗi khi xóa hàng loạt';
+      toast.error(errMsg, { id: toastId, duration: 5000 });
+    }
+  };
+
   const handleSave = async (formData: Partial<Topic>) => {
     try {
       if (isNew) {
@@ -172,13 +195,23 @@ export default function TopicsPage() {
           </button>
           
           {isMultiSelectMode && selectedIds.size > 0 && (
-            <button
-              onClick={() => setBulkMoveModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl bg-warning text-on-warning hover:bg-warning-dark active:opacity-90 transition-all text-sm font-semibold flex items-center gap-2"
-            >
-              <ArrowRightLeft className="w-4 h-4" />
-              <span>Di chuyển ({selectedIds.size})</span>
-            </button>
+            <>
+              <button
+                onClick={() => setBulkMoveModalOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-warning text-on-warning hover:bg-warning-dark active:opacity-90 transition-all text-sm font-semibold flex items-center gap-2"
+              >
+                <ArrowRightLeft className="w-4 h-4" />
+                <span>Di chuyển ({selectedIds.size})</span>
+              </button>
+
+              <button
+                onClick={handleBulkDelete}
+                className="px-4 py-2.5 rounded-xl bg-error text-on-error hover:bg-error/90 active:bg-error/80 transition-all text-sm font-semibold flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Xóa ({selectedIds.size})</span>
+              </button>
+            </>
           )}
 
           <button
@@ -254,8 +287,13 @@ export default function TopicsPage() {
                           className="w-4 h-4 rounded text-primary focus:ring-primary/20 shrink-0"
                         />
                       )}
-                      <span className="text-sm font-medium truncate">
-                        {topic.code ? `[${topic.code}] ` : ''}{topic.title}
+                      <span className="text-sm font-medium truncate flex items-center gap-1.5">
+                        <span>{topic.code ? `[${topic.code}] ` : ''}{topic.title}</span>
+                        {topic._count && topic._count.questions > 0 && (
+                          <span className="text-xs text-on-surface-variant/60 font-normal shrink-0 bg-surface-container-high px-1.5 py-0.5 rounded-full">
+                            {topic._count.questions} câu
+                          </span>
+                        )}
                       </span>
                     </div>
                     <span className="text-[10px] uppercase tracking-wider font-semibold text-outline-variant bg-outline-variant/15 px-2 py-0.5 rounded">

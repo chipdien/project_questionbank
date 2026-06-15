@@ -13,6 +13,9 @@ export interface Topic {
   type: string | null;
   created_at?: string;
   updated_at?: string;
+  _count?: {
+    questions: number;
+  };
 }
 
 export interface RelatedData {
@@ -69,6 +72,13 @@ export const topicsService = {
     const response = await axios.post('/api/topics/bulk-move', {
       topic_ids: topicIds,
       target_parent_id: targetParentId
+    });
+    return response.data;
+  },
+
+  async bulkDeleteTopics(topicIds: string[]): Promise<any> {
+    const response = await axios.post('/api/topics/bulk-delete', {
+      topic_ids: topicIds
     });
     return response.data;
   }

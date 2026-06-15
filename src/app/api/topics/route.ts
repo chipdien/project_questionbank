@@ -29,6 +29,11 @@ export async function GET(request: NextRequest) {
             startsWith: rootPath
           }
         },
+        include: {
+          _count: {
+            select: { questions: true }
+          }
+        },
         orderBy: [
           { path: 'asc' },
           { order_index: 'asc' }
@@ -37,6 +42,11 @@ export async function GET(request: NextRequest) {
     } else {
       // Lấy toàn bộ cây
       topics = await prisma.lms_topics.findMany({
+        include: {
+          _count: {
+            select: { questions: true }
+          }
+        },
         orderBy: [
           { path: 'asc' },
           { order_index: 'asc' }
