@@ -159,11 +159,14 @@ export default function TopicDetailsPanel({
               className="w-full h-[46px] px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
             >
               <option value="">-- Chọn chủ đề gốc --</option>
-              {getEligibleParents().map(t => (
-                <option key={t.id} value={t.id}>
-                  {t.title ? `${t.title} (${t.code || t.id})` : t.id}
-                </option>
-              ))}
+              {getEligibleParents().map(t => {
+                const qCount = t._count?.questions ? ` (${t._count.questions} câu)` : '';
+                return (
+                  <option key={t.id} value={t.id}>
+                    {t.title ? `${t.title} (${t.code || t.id})${qCount}` : t.id}
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>

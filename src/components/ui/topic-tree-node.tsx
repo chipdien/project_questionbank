@@ -76,8 +76,13 @@ export default function TopicTreeNode({
             <File className="w-4 h-4 text-on-surface-variant/50 shrink-0" />
           )}
 
-          <span className="truncate font-body text-sm font-medium">
-            {topic.code ? `[${topic.code}] ` : ''}{topic.title || 'Không tên'}
+          <span className="truncate font-body text-sm font-medium flex items-center gap-1.5">
+            <span>{topic.code ? `[${topic.code}] ` : ''}{topic.title || 'Không tên'}</span>
+            {topic._count && topic._count.questions > 0 && (
+              <span className="text-xs text-on-surface-variant/60 font-normal shrink-0 bg-surface-container-high px-1.5 py-0.5 rounded-full">
+                {topic._count.questions} câu
+              </span>
+            )}
           </span>
         </div>
 
