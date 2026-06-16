@@ -61,15 +61,10 @@ export default async function ManualCreatePage() {
 
   return (
     <div className="p-6 min-h-full flex flex-col bg-surface-container-lowest text-on-surface">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-on-surface font-headline flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-3xl">edit_note</span>
-          Tạo câu hỏi thủ công
-        </h1>
-        <p className="text-sm text-on-surface-variant mt-1">
-          Biên soạn nội dung câu hỏi chi tiết, thiết lập các phương án trả lời và gắn nhãn phân loại học thuật.
-        </p>
-      </div>
+      <h1 className="text-2xl font-bold text-on-surface font-headline flex items-center gap-2 mb-5">
+        <span className="material-symbols-outlined text-primary text-3xl">edit_note</span>
+        Tạo câu hỏi thủ công
+      </h1>
 
       <QuestionCreator
         difficulties={difficulties}

@@ -15,6 +15,8 @@ export async function createManualQuestionAction(
     const user = await getCurrentUser();
     const userId = user?.id ? Number(user.id) : null;
 
+    console.log("=== createManualQuestionAction Input ===", JSON.stringify(input, null, 2));
+
     const result = await QuestionManualService.createQuestion({
       ...input,
       userId,
