@@ -41,7 +41,7 @@ export default function RecentDocuments({ documents }: RecentDocumentsProps) {
           <p className="text-xs text-on-surface-variant font-body">Danh sách 5 tài liệu mới nhất được thêm vào hệ thống</p>
         </div>
         <Link
-          href="/"
+          href="/documents"
           className="text-sm font-medium text-primary hover:text-primary-hover flex items-center gap-1 group font-body transition-colors duration-200"
         >
           Xem tất cả tài liệu
@@ -97,7 +97,7 @@ export default function RecentDocuments({ documents }: RecentDocumentsProps) {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <Link
-                      href={`/?docId=${doc.id}`}
+                      href={`/question-bank`}
                       className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg border border-primary/20 text-xs font-medium text-primary bg-primary/5 hover:bg-primary hover:text-white transition-all duration-200 font-body"
                     >
                       Xử lý nhanh

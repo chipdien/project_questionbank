@@ -77,14 +77,14 @@ export default function FileUploader({
   });
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto py-4">
+    <div className="flex flex-col gap-6 w-full mx-auto py-4">
       {/* Header Toolbar */}
       <div className="flex justify-between items-center bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/20 shadow-sm">
         <div>
           <h2 className="text-xl font-bold text-on-surface font-headline text-vietelite-primary">Import tài liệu mới</h2>
           <p className="text-on-surface-variant text-xs mt-0.5">Tải lên file PDF, Word hoặc ảnh chụp đề bài để bắt đầu trích xuất câu hỏi.</p>
         </div>
-        
+
         {files.length > 0 && (
           <div className="flex items-center gap-3">
             <button
@@ -109,15 +109,14 @@ export default function FileUploader({
         <div className="md:col-span-2 flex flex-col gap-4">
           <div
             {...getRootProps()}
-            className={`bg-surface-container-lowest rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-8 text-center transition-all cursor-pointer min-h-[300px] ${
-              isDragActive ? 'border-primary bg-primary/5' : 'border-outline-variant/40 hover:border-primary/50'
-            } ${isDragReject ? 'border-error bg-error/5' : ''}`}
+            className={`bg-surface-container-lowest rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-8 text-center transition-all cursor-pointer min-h-[300px] ${isDragActive ? 'border-primary bg-primary/5' : 'border-outline-variant/40 hover:border-primary/50'
+              } ${isDragReject ? 'border-error bg-error/5' : ''}`}
           >
             <input {...getInputProps()} />
             <div className="w-16 h-16 rounded-full bg-surface-container-low text-outline-variant flex items-center justify-center mb-4 transition-colors">
               <Upload className="w-8 h-8 text-primary" />
             </div>
-            
+
             <h3 className="text-md font-bold text-on-surface mb-1">
               Kéo thả file vào đây, hoặc <span className="text-primary hover:underline">Nhấp để chọn</span>
             </h3>
@@ -130,7 +129,7 @@ export default function FileUploader({
           {files.length > 0 && (
             <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col gap-3">
               <h4 className="font-bold text-sm text-on-surface">Tập tin đã chọn ({files.length})</h4>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[200px] overflow-y-auto pr-1">
                 {files.map((file, idx) => {
                   const isImage = file.type.startsWith('image/');
@@ -152,7 +151,7 @@ export default function FileUploader({
                           </p>
                         </div>
                       </div>
-                      
+
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -173,13 +172,13 @@ export default function FileUploader({
         {/* Right Column: Recent Uploads */}
         <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col min-h-[350px]">
           <h4 className="font-bold text-md text-on-surface mb-4 font-headline">Tệp đã tải gần đây</h4>
-          
+
           <div className="space-y-3 overflow-y-auto max-h-[320px] pr-1 flex-1">
             {recentDocuments.map((doc) => {
               const docTitle = doc.title || `Tài liệu #${doc.id}`;
               const isPdf = docTitle.toLowerCase().endsWith('.pdf');
               const isDocx = docTitle.toLowerCase().endsWith('.docx');
-              
+
               return (
                 <div
                   key={doc.id}
@@ -187,9 +186,8 @@ export default function FileUploader({
                   className="flex items-center justify-between p-2.5 rounded-lg border border-outline-variant/10 hover:bg-surface-container-low hover:border-primary/30 transition-all cursor-pointer group"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
-                      isPdf ? 'bg-error-container/30 text-error' : isDocx ? 'bg-primary-fixed/30 text-primary' : 'bg-teal-500/10 text-teal-600'
-                    }`}>
+                    <div className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${isPdf ? 'bg-error-container/30 text-error' : isDocx ? 'bg-primary-fixed/30 text-primary' : 'bg-teal-500/10 text-teal-600'
+                      }`}>
                       {isPdf ? (
                         <FileText className="w-4 h-4" />
                       ) : isDocx ? (
@@ -198,7 +196,7 @@ export default function FileUploader({
                         <ImageIcon className="w-4 h-4" />
                       )}
                     </div>
-                    
+
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold truncate text-on-surface group-hover:text-primary" title={docTitle}>
                         {docTitle}
