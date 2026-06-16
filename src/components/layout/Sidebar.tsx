@@ -26,16 +26,29 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
   const pathname = usePathname();
 
   const [isPending, startTransition] = useTransition();
-  const [isDocMenuOpen, setIsDocMenuOpen] = useState(true);
+  const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({
+    'Xử lý tài liệu': true,
+    'Cấu hình': true,
+  });
 
   const isAdmin = typeof user?.level_rank === 'number' && (user.level_rank === 0 || user.level_rank >= 5);
 
-  // Tự động mở rộng khi ở trang con của tài liệu
+  // Tự động mở rộng khi ở trang con của tài liệu hoặc cấu hình
   useEffect(() => {
     if (pathname === '/manual-create' || pathname === '/import') {
-      setIsDocMenuOpen(true);
+      setOpenSubmenus(prev => ({ ...prev, 'Xử lý tài liệu': true }));
+    }
+    if (pathname === '/topics' || pathname === '/tags' || pathname === '/difficulty') {
+      setOpenSubmenus(prev => ({ ...prev, 'Cấu hình': true }));
     }
   }, [pathname]);
+
+  const toggleSubmenu = (label: string) => {
+    setOpenSubmenus(prev => ({
+      ...prev,
+      [label]: !prev[label]
+    }));
+  };
 
   const handleLogout = () => {
     if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
@@ -59,9 +72,15 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
     { icon: LibraryBig, label: 'Collections', href: '/collection' },
     { icon: FileText, label: 'Documents', href: '/documents' },
     ...(isAdmin ? [
-      { icon: BookOpen, label: 'Chủ đề học thuật', href: '/topics' },
-      { icon: Tag, label: 'Quản lý Thẻ Tag', href: '/tags' },
-      { icon: Settings, label: 'Cấu hình độ khó', href: '/difficulty' }
+      {
+        icon: Settings,
+        label: 'Cấu hình',
+        children: [
+          { icon: BookOpen, label: 'Chủ đề', href: '/topics' },
+          { icon: Tag, label: 'Thẻ tags', href: '/tags' },
+          { icon: Settings, label: 'Độ khó', href: '/difficulty' }
+        ]
+      }
     ] : []),
   ];
 
@@ -76,11 +95,12 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
           {navItems.map((item) => {
             if ('children' in item && item.children) {
               const isChildActive = item.children.some(child => pathname === child.href);
+              const isOpen = openSubmenus[item.label] ?? false;
               return (
                 <div key={item.label} className="flex flex-col gap-1 w-full">
                   <button
                     type="button"
-                    onClick={() => !isCollapsed && setIsDocMenuOpen(!isDocMenuOpen)}
+                    onClick={() => !isCollapsed && toggleSubmenu(item.label)}
                     className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ease-in-out group ${isChildActive
                       ? 'bg-secondary-container text-on-secondary-container font-semibold'
                       : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-high'
@@ -90,7 +110,7 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
                     {!isCollapsed && (
                       <>
                         <span className="nav-label text-[0.875rem] font-body truncate flex-1 text-left">{item.label}</span>
-                        {isDocMenuOpen ? (
+                        {isOpen ? (
                           <ChevronDown className="w-4 h-4 text-outline" />
                         ) : (
                           <ChevronRight className="w-4 h-4 text-outline" />
@@ -98,7 +118,7 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
                       </>
                     )}
                   </button>
-                  {isDocMenuOpen && !isCollapsed && (
+                  {isOpen && !isCollapsed && (
                     <div className="flex flex-col gap-1 pl-4 ml-6 border-l border-outline-variant/20">
                       {item.children.map((child) => {
                         const isChildItemActive = pathname === child.href;
