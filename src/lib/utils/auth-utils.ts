@@ -15,9 +15,6 @@ export interface User {
  * Works only in Server Components, Server Actions, and Route Handlers.
  */
 export async function getCurrentUser(): Promise<User | null> {
-  if (process.env.BYPASS_AUTH === 'true') {
-    return { id: 1, email: 'admin@test.com', username: 'admin', nickname: 'Admin Test', level_rank: 5 };
-  }
   const cookieStore = await cookies();
   const headersList = await headers();
   const isPrefetch = headersList.get('x-nextjs-prefetch') === '1' || headersList.get('purpose') === 'prefetch';
@@ -65,9 +62,6 @@ export async function getCurrentUser(): Promise<User | null> {
  * Optimized to strictly read the cookie first without hitting DB if only ID is needed.
  */
 export async function getCurrentUserId(): Promise<number | null> {
-  if (process.env.BYPASS_AUTH === 'true') {
-    return 1;
-  }
   const cookieStore = await cookies();
   const userIdCookie = cookieStore.get('userId')?.value;
 
@@ -87,9 +81,6 @@ export async function getCurrentUserId(): Promise<number | null> {
  * Checks if the current user is an admin (level_rank >= 5).
  */
 export async function isUserAdmin(): Promise<boolean> {
-  if (process.env.BYPASS_AUTH === 'true') {
-    return true;
-  }
   const user = await getCurrentUser();
   return (user?.level_rank || 0) >= 5;
 }
