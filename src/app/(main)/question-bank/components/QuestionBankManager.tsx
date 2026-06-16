@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils/cn';
 import AppBadge from '@/components/ui/AppBadge';
 import AppSelect from '@/components/ui/AppSelect';
 import AppButton from '@/components/ui/AppButton';
+import QuestionFilterPanel from './QuestionFilterPanel';
 
 const unselectableMarkdownClass = "text-xs text-on-surface line-clamp-6 prose prose-sm max-w-none [&_p]:my-1 pointer-events-none select-none";
 
@@ -177,6 +178,8 @@ interface QuestionBankManagerProps {
   initialDocuments: Document[];
   lessons: Lesson[];
   initialDifficulties?: Difficulty[];
+  initialTags?: { id: number; name: string; category: string }[];
+  initialTopics?: { id: number; title: string; parent_id: number | null; path: string | null }[];
   isAdmin?: boolean;
 }
 
@@ -184,31 +187,51 @@ export default function QuestionBankManager({
   initialDocuments, 
   lessons,
   initialDifficulties = [],
+  initialTags = [],
+  initialTopics = [],
   isAdmin = false
 }: QuestionBankManagerProps) {
   const { state, actions } = useQuestionBank();
 
-  const [difficulties, setDifficulties] = React.useState<Difficulty[]>(initialDifficulties);
+  const [difficultiesList, setDifficultiesList] = React.useState<Difficulty[]>(initialDifficulties);
 
   const {
-    activeDocId, grade, lessonId, difficulty, sourceQuestions,
-    selectedQuestions, isLoading, isModalOpen, selectedSourceIds,
+    activeDocId, grades, difficulties, questionTypes, topicIds, tagIds, keyword,
+    sourceQuestions, selectedQuestions, isLoading, isModalOpen, selectedSourceIds,
     page, totalPages, isFiltering
   } = state;
 
   const {
-    setGrade, setLessonId, setDifficulty, setPage, setIsModalOpen, setSelectedQuestions,
-    handleDocClick, handleFilterChange, handleSaveCollection, handleToggleSelect,
+    setGrades, setDifficulties, setQuestionTypes, setTopicIds, setTagIds, setKeyword,
+    setPage, setIsModalOpen, setSelectedQuestions, handleDocClick,
+    handleAdvancedFilterChange, handleSaveCollection, handleToggleSelect,
     handleSelectAllSource, handleAddQuestion, handleAddSelectedList, handleRemoveQuestion
   } = actions;
 
   const handleRefreshDifficulties = async () => {
     const { getDifficulties } = await import('@/actions/difficulty');
     const fresh = await getDifficulties();
-    setDifficulties(fresh);
+    setDifficultiesList(fresh);
   };
 
-
+  const tagsByCategory = React.useMemo(() => {
+    const grouped: Record<string, any[]> = {
+      SOURCE: [],
+      METHOD: [],
+      SKILL: [],
+      TYPE: [],
+      EXAM: [],
+      YEAR: []
+    };
+    for (const t of initialTags) {
+      const cat = t.category.toUpperCase();
+      if (!grouped[cat]) {
+        grouped[cat] = [];
+      }
+      grouped[cat].push(t);
+    }
+    return grouped;
+  }, [initialTags]);
 
   return (
     <div className="flex-1 grid grid-cols-12 gap-4 min-h-0 overflow-hidden">
@@ -221,54 +244,42 @@ export default function QuestionBankManager({
               <span className="material-symbols-outlined text-[18px]">filter_alt</span>
               BỘ LỌC CÂU HỎI
             </h3>
-            {isFiltering && (
-              <AppButton
-                variant="danger"
-                size="sm"
-                onClick={() => { setGrade(''); setLessonId(''); setDifficulty(''); }}
-                leftIcon="close"
-              >
-                Xóa lọc
-              </AppButton>
-            )}
           </div>
-          <div className="p-5 space-y-5 bg-linear-to-b from-transparent to-surface-container-low/20">
-            <div className="grid grid-cols-2 gap-4">
-              <AppSelect
-                label="Khối lớp"
-                leftIcon="school"
-                value={grade}
-                onChange={(e) => handleFilterChange('grade', e.target.value)}
-              >
-                <option value="">Chọn khối lớp</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(g => (
-                  <option key={g} value={g.toString()}>Khối {g}</option>
-                ))}
-              </AppSelect>
-              <AppSelect
-                label="Độ khó"
-                leftIcon="leaderboard"
-                value={difficulty}
-                onChange={(e) => handleFilterChange('difficulty', e.target.value)}
-              >
-                <option value="">Chọn độ khó</option>
-                {difficulties.map(d => (
-                  <option key={d.id} value={d.name}>{d.name}</option>
-                ))}
-              </AppSelect>
-            </div>
-            <AppSelect
-              label="Bài học"
-              leftIcon="menu_book"
-              value={lessonId}
-              onChange={(e) => handleFilterChange('lessonId', e.target.value)}
-              disabled={!grade}
-            >
-              <option value="">{!grade ? "Chưa chọn khối lớp" : "Chọn bài học"}</option>
-              {lessons.filter(l => !grade || l.grade === grade).map(lesson => (
-                <option key={lesson.id} value={lesson.id.toString()}>{lesson.name}</option>
-              ))}
-            </AppSelect>
+          <div className="p-4 bg-linear-to-b from-transparent to-surface-container-low/20">
+            <QuestionFilterPanel
+              grades={grades}
+              onGradesChange={(val) => handleAdvancedFilterChange('grades', val)}
+              difficulties={difficulties}
+              onDifficultiesChange={(val) => handleAdvancedFilterChange('difficulties', val)}
+              questionTypes={questionTypes}
+              onQuestionTypesChange={(val) => handleAdvancedFilterChange('questionTypes', val)}
+              topicIds={topicIds}
+              onTopicIdsChange={(val) => handleAdvancedFilterChange('topicIds', val)}
+              tagIds={tagIds}
+              onTagIdsChange={(val) => handleAdvancedFilterChange('tagIds', val)}
+              keyword={keyword}
+              onKeywordChange={(val) => handleAdvancedFilterChange('keyword', val)}
+              difficultiesList={difficultiesList}
+              tagsByCategory={tagsByCategory}
+              topicsList={initialTopics || []}
+              onReset={() => {
+                setGrades([]);
+                setDifficulties([]);
+                setQuestionTypes([]);
+                setTopicIds([]);
+                setTagIds([]);
+                setKeyword('');
+                const params = new URLSearchParams(window.location.search);
+                params.delete('grades');
+                params.delete('difficulties');
+                params.delete('questionTypes');
+                params.delete('topicIds');
+                params.delete('tagIds');
+                params.delete('keyword');
+                params.delete('page');
+                window.history.pushState(null, '', `${window.location.pathname}?${params.toString()}`);
+              }}
+            />
           </div>
         </div>
 
@@ -319,7 +330,7 @@ export default function QuestionBankManager({
                     question={question}
                     mode="source"
                     isSelected={selectedSourceIds.has(question.id)}
-                    difficulties={difficulties}
+                    difficulties={difficultiesList}
                     onToggleSelect={handleToggleSelect}
                     onAddQuestion={handleAddQuestion}
                   />
@@ -426,7 +437,7 @@ export default function QuestionBankManager({
                   key={question.id}
                   question={question}
                   mode="selected"
-                  difficulties={difficulties}
+                  difficulties={difficultiesList}
                   onRemoveQuestion={handleRemoveQuestion}
                 />
               ))}

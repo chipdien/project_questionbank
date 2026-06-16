@@ -86,7 +86,9 @@ export default function TagManagementModal({
               <option value="SKILL">Kỹ năng tư duy (SKILL)</option>
               <option value="SOURCE">Nguồn gốc đề thi (SOURCE)</option>
               <option value="METHOD">Phương pháp giải (METHOD)</option>
-              <option value="TOPIC">Chủ đề bổ trợ (TOPIC)</option>
+              <option value="TYPE">Lý thuyết / Vận dụng (TYPE)</option>
+              <option value="EXAM">Kỳ thi nhắm tới (EXAM)</option>
+              <option value="YEAR">Năm thi (YEAR)</option>
             </select>
           </div>
 

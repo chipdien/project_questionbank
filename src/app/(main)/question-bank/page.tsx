@@ -90,22 +90,60 @@ export default async function QuestionBankPage() {
       color_code: d.color_code ?? '#888888',
       display_order: d.display_order ?? 0,
     }));
+
+    const tagsRaw = await prisma.lms_tags.findMany({
+      orderBy: { name: 'asc' },
+    });
+    const tags = tagsRaw.map(t => ({
+      id: Number(t.id),
+      name: t.name,
+      category: t.category,
+    }));
+
+    const topicsRaw = await prisma.lms_topics.findMany({
+      orderBy: [
+        { path: 'asc' },
+        { order_index: 'asc' },
+      ],
+      select: {
+        id: true,
+        title: true,
+        parent_id: true,
+        path: true,
+      },
+    });
+    const topics = topicsRaw.map(t => ({
+      id: Number(t.id),
+      title: t.title ?? '',
+      parent_id: t.parent_id ? Number(t.parent_id) : null,
+      path: t.path ?? '',
+    }));
+
+    return (
+      <div className="p-6 h-full flex flex-col overflow-hidden pb-4">
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-on-surface font-headline">Ngân hàng câu hỏi</h1>
+        </div>
+
+        <QuestionBankManager 
+          initialDocuments={documents} 
+          lessons={lessons} 
+          initialDifficulties={difficulties}
+          initialTags={tags}
+          initialTopics={topics}
+          isAdmin={isAdmin}
+        />
+      </div>
+    );
   } catch (error) {
     console.error("Failed to load data:", error);
-  }
-
-  return (
-    <div className="p-6 h-full flex flex-col overflow-hidden pb-4">
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold text-on-surface font-headline">Ngân hàng câu hỏi</h1>
+    return (
+      <div className="p-6 h-full flex flex-col overflow-hidden pb-4">
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-on-surface font-headline">Ngân hàng câu hỏi</h1>
+        </div>
+        <div>Có lỗi xảy ra khi tải dữ liệu.</div>
       </div>
-
-      <QuestionBankManager 
-        initialDocuments={documents} 
-        lessons={lessons} 
-        initialDifficulties={difficulties}
-        isAdmin={isAdmin}
-      />
-    </div>
-  );
+    );
+  }
 }

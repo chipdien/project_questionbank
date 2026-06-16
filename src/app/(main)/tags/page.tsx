@@ -70,7 +70,7 @@ export default function TagsPage() {
     }
   };
 
-  const categories = ['ALL', 'SKILL', 'SOURCE', 'METHOD', 'TOPIC'];
+  const categories = ['ALL', 'SOURCE', 'METHOD', 'SKILL', 'TYPE', 'EXAM', 'YEAR'];
 
   const getCategoryBadgeClass = (category: string) => {
     switch (category.toUpperCase()) {
@@ -80,8 +80,12 @@ export default function TagsPage() {
         return 'bg-purple-500/10 text-purple-600 border-purple-500/30';
       case 'METHOD':
         return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30';
-      case 'TOPIC':
+      case 'TYPE':
         return 'bg-amber-500/10 text-amber-600 border-amber-500/30';
+      case 'EXAM':
+        return 'bg-rose-500/10 text-rose-600 border-rose-500/30';
+      case 'YEAR':
+        return 'bg-cyan-500/10 text-cyan-600 border-cyan-500/30';
       default:
         return 'bg-slate-500/10 text-slate-500 border-slate-500/30';
     }
@@ -95,8 +99,12 @@ export default function TagsPage() {
         return 'border-l-purple-500/90';
       case 'METHOD':
         return 'border-l-emerald-500/90';
-      case 'TOPIC':
+      case 'TYPE':
         return 'border-l-amber-500/90';
+      case 'EXAM':
+        return 'border-l-rose-500/90';
+      case 'YEAR':
+        return 'border-l-cyan-500/90';
       default:
         return 'border-l-slate-400/90';
     }

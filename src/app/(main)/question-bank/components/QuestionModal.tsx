@@ -30,6 +30,8 @@ interface Question {
   options?: Option[];
   teacher_owned_by_id?: number | null;
   hint?: string | null;
+  lesson_name?: string | null;
+  tags?: { id: number; name: string; category: string }[];
 }
 
 interface QuestionModalProps {
@@ -90,6 +92,21 @@ export default function QuestionModal({ question, onClose, currentUserId, isAdmi
                       {question.question_difficulty}
                     </span>
                   </div>
+                  {question.lesson_name && (
+                    <div className="flex items-center gap-1.5 mt-1.5 text-xs text-outline font-semibold">
+                      <span className="material-symbols-outlined text-[14px] text-primary">topic</span>
+                      <span>Chủ đề: {question.lesson_name}</span>
+                    </div>
+                  )}
+                  {question.tags && question.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {question.tags.map(tag => (
+                        <span key={tag.id} className="px-1.5 py-0.5 rounded bg-surface-container-high border border-outline-variant/30 text-[9px] font-bold text-on-surface-variant uppercase">
+                          #{tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
               <button
