@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import CollectionSaveModal from '@/app/(main)/collection/components/CollectionSaveModal';
 import { Difficulty } from '@/actions/difficulty';
 import { Loader2, Plus, Trash2, ChevronLeft, ChevronRight, Search, Bookmark } from 'lucide-react';
@@ -16,6 +17,7 @@ import AppBadge from '@/components/ui/AppBadge';
 import AppSelect from '@/components/ui/AppSelect';
 import AppButton from '@/components/ui/AppButton';
 import QuestionFilterPanel from './QuestionFilterPanel';
+import QuestionModal from './QuestionModal';
 
 const unselectableMarkdownClass = "text-xs text-on-surface line-clamp-6 prose prose-sm max-w-none [&_p]:my-1 pointer-events-none select-none";
 
@@ -94,7 +96,8 @@ const QuestionItem = React.memo(({
   difficulties = [],
   onToggleSelect,
   onAddQuestion,
-  onRemoveQuestion
+  onRemoveQuestion,
+  onDoubleClick
 }: {
   question: Question;
   isSelected?: boolean;
@@ -103,6 +106,7 @@ const QuestionItem = React.memo(({
   onToggleSelect?: (id: number) => void;
   onAddQuestion?: (q: Question, e?: React.MouseEvent) => void;
   onRemoveQuestion?: (q: Question, e?: React.MouseEvent) => void;
+  onDoubleClick?: (q: Question) => void;
 }) => {
   const statementMarkdown = (
     <div className={unselectableMarkdownClass}>
@@ -119,7 +123,7 @@ const QuestionItem = React.memo(({
     return (
       <div
         onClick={() => onToggleSelect?.(question.id)}
-        onDoubleClick={() => onAddQuestion?.(question)}
+        onDoubleClick={() => onDoubleClick?.(question)}
         className={`relative bg-surface-container-lowest rounded-xl border p-4 transition-all cursor-pointer group ${isSelected
             ? 'border-primary ring-1 ring-primary/30 bg-primary/5 shadow-md'
             : 'border-outline-variant/40 hover:border-primary/40 hover:shadow-md'
@@ -194,6 +198,7 @@ export default function QuestionBankManager({
   const { state, actions } = useQuestionBank();
 
   const [difficultiesList, setDifficultiesList] = React.useState<Difficulty[]>(initialDifficulties);
+  const [previewQuestion, setPreviewQuestion] = React.useState<Question | null>(null);
 
   const {
     activeDocId, grades, difficulties, questionTypes, topicIds, tagIds, keyword,
@@ -233,77 +238,147 @@ export default function QuestionBankManager({
     return grouped;
   }, [initialTags]);
 
+  const [activeTab, setActiveTab] = React.useState<'filter' | 'files'>(
+    activeDocId ? 'files' : 'filter'
+  );
+
+  const activeFilterCount = React.useMemo(() => {
+    let count = 0;
+    if (grades && grades.length > 0) count++;
+    if (difficulties && difficulties.length > 0) count++;
+    if (questionTypes && questionTypes.length > 0) count++;
+    if (topicIds && topicIds.length > 0) count++;
+    if (tagIds && tagIds.length > 0) count++;
+    if (keyword) count++;
+    return count;
+  }, [grades, difficulties, questionTypes, topicIds, tagIds, keyword]);
+
   return (
     <div className="flex-1 grid grid-cols-12 gap-4 min-h-0 overflow-hidden">
-      {/* Cột 1: Bộ lọc & Danh sách tệp */}
-      <div className="col-span-12 lg:col-span-4 flex flex-col gap-4 overflow-hidden">
-        {/* Section: BỘ LỌC CÂU HỎI */}
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 flex flex-col overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-outline-variant/10 bg-surface-container-low/50 flex items-center justify-between">
-            <h3 className="font-bold text-sm tracking-tight flex items-center gap-2 text-primary">
+      {/* Cột 1: Bộ lọc & Danh sách tệp (Gộp thành 1 component sử dụng Tabs) */}
+      <div className="col-span-12 lg:col-span-4 flex flex-col bg-surface-container-lowest border border-outline-variant/20 rounded-xl shadow-sm overflow-hidden h-full">
+        {/* Tab Selector Header */}
+        <div className="p-2 border-b border-outline-variant/10 bg-surface-container-low/40 flex items-center justify-between gap-2">
+          <div className="flex-1 flex bg-surface-container-high/40 p-1 rounded-xl relative">
+            <button
+              onClick={() => setActiveTab('filter')}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-colors duration-200 relative z-10 select-none cursor-pointer",
+                activeTab === 'filter' ? "text-primary font-black" : "text-outline hover:text-on-surface"
+              )}
+            >
               <span className="material-symbols-outlined text-[18px]">filter_alt</span>
               BỘ LỌC CÂU HỎI
-            </h3>
-          </div>
-          <div className="p-4 bg-linear-to-b from-transparent to-surface-container-low/20">
-            <QuestionFilterPanel
-              grades={grades}
-              onGradesChange={(val) => handleAdvancedFilterChange('grades', val)}
-              difficulties={difficulties}
-              onDifficultiesChange={(val) => handleAdvancedFilterChange('difficulties', val)}
-              questionTypes={questionTypes}
-              onQuestionTypesChange={(val) => handleAdvancedFilterChange('questionTypes', val)}
-              topicIds={topicIds}
-              onTopicIdsChange={(val) => handleAdvancedFilterChange('topicIds', val)}
-              tagIds={tagIds}
-              onTagIdsChange={(val) => handleAdvancedFilterChange('tagIds', val)}
-              keyword={keyword}
-              onKeywordChange={(val) => handleAdvancedFilterChange('keyword', val)}
-              difficultiesList={difficultiesList}
-              tagsByCategory={tagsByCategory}
-              topicsList={initialTopics || []}
-              onReset={() => {
-                setGrades([]);
-                setDifficulties([]);
-                setQuestionTypes([]);
-                setTopicIds([]);
-                setTagIds([]);
-                setKeyword('');
-                const params = new URLSearchParams(window.location.search);
-                params.delete('grades');
-                params.delete('difficulties');
-                params.delete('questionTypes');
-                params.delete('topicIds');
-                params.delete('tagIds');
-                params.delete('keyword');
-                params.delete('page');
-                window.history.pushState(null, '', `${window.location.pathname}?${params.toString()}`);
-              }}
-            />
+              {activeFilterCount > 0 && (
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-black text-on-primary">
+                  {activeFilterCount}
+                </span>
+              )}
+              {activeTab === 'filter' && (
+                <motion.div
+                  layoutId="activeTabIndicator"
+                  className="absolute inset-0 bg-surface-container-lowest rounded-lg shadow-xs border border-outline-variant/10 z-[-1]"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('files')}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-colors duration-200 relative z-10 select-none cursor-pointer",
+                activeTab === 'files' ? "text-primary font-black" : "text-outline hover:text-on-surface"
+              )}
+            >
+              <span className="material-symbols-outlined text-[18px]">layers</span>
+              DANH SÁCH TỆP
+              <span className={cn(
+                "px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase",
+                activeTab === 'files' ? "bg-primary/10 text-primary" : "bg-outline/10 text-outline"
+              )}>
+                {initialDocuments.length}
+              </span>
+              {activeTab === 'files' && (
+                <motion.div
+                  layoutId="activeTabIndicator"
+                  className="absolute inset-0 bg-surface-container-lowest rounded-lg shadow-xs border border-outline-variant/10 z-[-1]"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Section: DANH SÁCH TỆP */}
-        <div className="flex-1 bg-surface-container-lowest rounded-xl border border-outline-variant/20 flex flex-col overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-outline-variant/10 bg-surface-container-low/50 flex items-center justify-between">
-            <h3 className="font-bold text-sm tracking-tight flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-primary">layers</span>
-              DANH SÁCH TỆP
-            </h3>
-            <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-xl uppercase">
-              {initialDocuments.length} tệp
-            </span>
-          </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
-            {initialDocuments.map((doc) => (
-              <DocumentItem
-                key={doc.id}
-                doc={doc}
-                isActive={activeDocId === doc.id}
-                onClick={handleDocClick}
-              />
-            ))}
-          </div>
+        {/* Tab Content */}
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+          <AnimatePresence mode="wait">
+            {activeTab === 'filter' ? (
+              <motion.div
+                key="filter-tab"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.15 }}
+                className="flex-1 flex flex-col overflow-hidden"
+              >
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-linear-to-b from-transparent to-surface-container-low/10">
+                  <QuestionFilterPanel
+                    grades={grades}
+                    onGradesChange={(val) => handleAdvancedFilterChange('grades', val)}
+                    difficulties={difficulties}
+                    onDifficultiesChange={(val) => handleAdvancedFilterChange('difficulties', val)}
+                    questionTypes={questionTypes}
+                    onQuestionTypesChange={(val) => handleAdvancedFilterChange('questionTypes', val)}
+                    topicIds={topicIds}
+                    onTopicIdsChange={(val) => handleAdvancedFilterChange('topicIds', val)}
+                    tagIds={tagIds}
+                    onTagIdsChange={(val) => handleAdvancedFilterChange('tagIds', val)}
+                    keyword={keyword}
+                    onKeywordChange={(val) => handleAdvancedFilterChange('keyword', val)}
+                    difficultiesList={difficultiesList}
+                    tagsByCategory={tagsByCategory}
+                    topicsList={initialTopics || []}
+                    onReset={() => {
+                      setGrades([]);
+                      setDifficulties([]);
+                      setQuestionTypes([]);
+                      setTopicIds([]);
+                      setTagIds([]);
+                      setKeyword('');
+                      const params = new URLSearchParams(window.location.search);
+                      params.delete('grades');
+                      params.delete('difficulties');
+                      params.delete('questionTypes');
+                      params.delete('topicIds');
+                      params.delete('tagIds');
+                      params.delete('keyword');
+                      params.delete('page');
+                      window.history.pushState(null, '', `${window.location.pathname}?${params.toString()}`);
+                    }}
+                  />
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="files-tab"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.15 }}
+                className="flex-1 flex flex-col overflow-hidden"
+              >
+                <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-linear-to-b from-transparent to-surface-container-low/10">
+                  {initialDocuments.map((doc) => (
+                    <DocumentItem
+                      key={doc.id}
+                      doc={doc}
+                      isActive={activeDocId === doc.id}
+                      onClick={handleDocClick}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -333,6 +408,7 @@ export default function QuestionBankManager({
                     difficulties={difficultiesList}
                     onToggleSelect={handleToggleSelect}
                     onAddQuestion={handleAddQuestion}
+                    onDoubleClick={(q) => setPreviewQuestion(q)}
                   />
                 ))}
               </div>
@@ -460,6 +536,14 @@ export default function QuestionBankManager({
         onSave={handleSaveCollection}
         onReset={() => setSelectedQuestions([])}
       />
+
+      {previewQuestion && (
+        <QuestionModal
+          question={previewQuestion as any}
+          onClose={() => setPreviewQuestion(null)}
+          isAdmin={isAdmin}
+        />
+      )}
     </div>
   );
 }

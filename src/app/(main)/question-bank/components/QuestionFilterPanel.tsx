@@ -143,7 +143,7 @@ export default function QuestionFilterPanel({
   };
 
   return (
-    <div className="flex flex-col gap-4 overflow-y-auto max-h-[80vh] pr-1 scrollbar-thin">
+    <div className="flex flex-col gap-4 w-full">
       {/* Tìm kiếm từ khóa */}
       <div className="flex flex-col gap-1.5 px-1">
         <label className="text-xs font-black uppercase tracking-wider text-outline">Tìm từ khóa</label>

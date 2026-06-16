@@ -39,9 +39,16 @@ interface QuestionModalProps {
   onClose: () => void;
   currentUserId?: number | null;
   isAdmin?: boolean;
+  showEditButton?: boolean;
 }
 
-export default function QuestionModal({ question, onClose, currentUserId, isAdmin = false }: QuestionModalProps) {
+export default function QuestionModal({
+  question,
+  onClose,
+  currentUserId,
+  isAdmin = false,
+  showEditButton = false
+}: QuestionModalProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -203,7 +210,7 @@ export default function QuestionModal({ question, onClose, currentUserId, isAdmi
 
             <div className="p-4 border-t border-outline-variant/20 bg-surface-container-lowest flex justify-end gap-3">
               <button onClick={onClose} className="px-5 py-2.5 rounded-lg text-sm font-bold text-on-surface hover:bg-surface-container-low transition-colors">Đóng</button>
-              {isOwner && (
+              {showEditButton && isOwner && (
                 <button
                   onClick={() => setIsEditing(true)}
                   className="px-5 py-2.5 rounded-lg text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2"
@@ -216,7 +223,7 @@ export default function QuestionModal({ question, onClose, currentUserId, isAdmi
         </div>
       </AnimatePresence>
 
-      {isEditing && (
+      {showEditButton && isEditing && (
         <QuestionEditModal
           question={question}
           isOpen={true}
