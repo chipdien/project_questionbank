@@ -35,8 +35,11 @@ export default function TopicsPage() {
     setLoading(true);
     try {
       const data = await topicsService.fetchTopics();
+      // Chỉ giữ lại các record có TYPE thuộc nhóm SUBJECT, SYLLABUS, DOMAIN, TOPIC, LESSON, SUB_LESSON
+      const allowedTypes = ['SUBJECT', 'SYLLABUS', 'DOMAIN', 'TOPIC', 'LESSON', 'SUB_LESSON'];
+      const filteredData = data.filter(t => t.type && allowedTypes.includes(t.type.toUpperCase()));
       // Sắp xếp các topics theo thứ tự hiển thị (order_index) từ thấp đến cao
-      const sortedData = [...data].sort((a, b) => {
+      const sortedData = [...filteredData].sort((a, b) => {
         const orderA = parseInt(a.order_index || '0', 10);
         const orderB = parseInt(b.order_index || '0', 10);
         return orderA - orderB;
