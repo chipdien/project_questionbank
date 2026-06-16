@@ -25,7 +25,7 @@ export default async function ImportPage() {
 
   return (
     <div className="p-6 min-h-full flex flex-col gap-4">
-      <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">Import tài liệu</h1>
+      <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">Phân loại câu hỏi</h1>
 
       {/* 4-Step Wizard */}
       <ImportWizard

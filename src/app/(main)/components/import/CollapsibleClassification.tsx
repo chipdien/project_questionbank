@@ -1,14 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronRight, ChevronDown, Check, Tag, FolderTree, GraduationCap, BarChart, ChevronLeft } from 'lucide-react';
-
-interface Topic {
-  id: number;
-  title: string;
-  parent_id: number | null;
-  path: string;
-}
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Tag, FolderTree, ChevronDown, RotateCcw, X, Check } from 'lucide-react';
+import TopicTreeSelect from '@/components/ui/topic-tree-select';
+import AppSelect from '@/components/ui/AppSelect';
 
 interface TagItem {
   id: number;
@@ -17,74 +12,101 @@ interface TagItem {
 }
 
 interface CollapsibleClassificationProps {
-  isCollapsed: boolean;
-  onToggleCollapse: () => void;
   selectedIds: Set<number>;
   activeQuestion: any | null;
-  lessons: any[];
   difficulties: any[];
-  topics: Topic[];
   tagsByCategory: Record<string, TagItem[]>;
   onApply: (classification: {
     grade?: string | null;
-    lessonId?: string | null;
     difficulty?: string | null;
-    topicIds?: number[] | null;
+    topicIds?: string[] | null;
     tagIds?: number[] | null;
   }) => Promise<void>;
+  className?: string;
 }
 
-interface TreeNode {
-  id: number;
-  title: string;
-  parent_id: number | null;
-  children: TreeNode[];
-}
+// Hàm lấy màu cho tag dựa trên category
+const getTagColorClass = (category: string, isSelected: boolean) => {
+  const cat = category.toUpperCase();
+  if (isSelected) {
+    switch (cat) {
+      case 'SOURCE': return 'bg-orange-500 border-orange-500 text-white';
+      case 'METHOD': return 'bg-blue-500 border-blue-500 text-white';
+      case 'SKILL': return 'bg-purple-500 border-purple-500 text-white';
+      case 'TYPE': return 'bg-emerald-500 border-emerald-500 text-white';
+      case 'EXAM': return 'bg-rose-500 border-rose-500 text-white';
+      default: return 'bg-slate-600 border-slate-600 text-white';
+    }
+  } else {
+    switch (cat) {
+      case 'SOURCE': return 'bg-orange-500/8 border-orange-500/20 text-orange-600 hover:border-orange-500/40';
+      case 'METHOD': return 'bg-blue-500/8 border-blue-500/20 text-blue-600 hover:border-blue-500/40';
+      case 'SKILL': return 'bg-purple-500/8 border-purple-500/20 text-purple-600 hover:border-purple-500/40';
+      case 'TYPE': return 'bg-emerald-500/8 border-emerald-500/20 text-emerald-600 hover:border-emerald-500/40';
+      case 'EXAM': return 'bg-rose-500/8 border-rose-500/20 text-rose-600 hover:border-rose-500/40';
+      default: return 'bg-slate-500/8 border-slate-500/20 text-slate-600 hover:border-slate-500/40';
+    }
+  }
+};
 
 export default function CollapsibleClassification({
-  isCollapsed,
-  onToggleCollapse,
   selectedIds,
   activeQuestion,
-  lessons,
   difficulties,
-  topics,
   tagsByCategory,
   onApply,
+  className = '',
 }: CollapsibleClassificationProps) {
   // Form State
   const [grade, setGrade] = useState<string>('');
-  const [lessonId, setLessonId] = useState<string>('');
   const [difficulty, setDifficulty] = useState<string>('');
-  const [selectedTopicIds, setSelectedTopicIds] = useState<Set<number>>(new Set());
+  const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<Set<number>>(new Set());
-  const [expandedTopicNodes, setExpandedTopicNodes] = useState<Set<number>>(new Set());
+  const [isTagsOpen, setIsTagsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const tagsRef = useRef<HTMLDivElement>(null);
 
-  const isBulkMode = selectedIds.size > 0;
+  const hasSelection = selectedIds.size > 0;
+  const isBulkMode = selectedIds.size > 1; // Thực sự là bulk mode khi chọn từ 2 câu trở lên
 
-  // Lọc lessons theo grade
-  const filteredLessons = useMemo(() => {
-    if (!grade) return [];
-    return lessons.filter((l) => String(l.grade) === String(grade));
-  }, [lessons, grade]);
+  // Lấy danh sách tag detail tương ứng với selectedTagIds
+  const selectedTagsList = useMemo(() => {
+    const list: TagItem[] = [];
+    Object.values(tagsByCategory).forEach(categoryTags => {
+      categoryTags.forEach(tag => {
+        if (selectedTagIds.has(tag.id)) {
+          list.push(tag);
+        }
+      });
+    });
+    return list;
+  }, [tagsByCategory, selectedTagIds]);
+
+  // Đóng tags dropdown khi click ra ngoài
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (tagsRef.current && !tagsRef.current.contains(event.target as Node)) {
+        setIsTagsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Load classification khi activeQuestion thay đổi (nếu không ở chế độ bulk)
   useEffect(() => {
-    if (isBulkMode) return; // Giữ nguyên form nếu đang chọn nhiều để bulk classify
+    if (isBulkMode) return;
     
     if (activeQuestion) {
       setGrade(activeQuestion.grade ? String(activeQuestion.grade) : '');
       setDifficulty(activeQuestion.question_difficulty || '');
       
-      // Load selected topics
-      const topicIds = new Set<number>();
+      const topicIds: string[] = [];
       if (activeQuestion.topics) {
-        activeQuestion.topics.forEach((t: any) => topicIds.add(Number(t.topic_id)));
+        activeQuestion.topics.forEach((t: any) => topicIds.push(String(t.topic_id)));
       }
       setSelectedTopicIds(topicIds);
 
-      // Load selected tags
       const tagIds = new Set<number>();
       if (activeQuestion.tags) {
         activeQuestion.tags.forEach((t: any) => tagIds.add(Number(t.tag_id || t.id)));
@@ -92,57 +114,15 @@ export default function CollapsibleClassification({
       setSelectedTagIds(tagIds);
     } else {
       setGrade('');
-      setLessonId('');
       setDifficulty('');
-      setSelectedTopicIds(new Set());
+      setSelectedTopicIds([]);
       setSelectedTagIds(new Set());
     }
   }, [activeQuestion, isBulkMode]);
 
-  // Build Topic Tree
-  const topicTree = useMemo(() => {
-    const map = new Map<number, TreeNode>();
-    const roots: TreeNode[] = [];
-
-    // Khởi tạo map
-    topics.forEach((t) => {
-      map.set(t.id, { id: t.id, title: t.title, parent_id: t.parent_id, children: [] });
-    });
-
-    // Tạo mối quan hệ cha con
-    topics.forEach((t) => {
-      const node = map.get(t.id)!;
-      if (t.parent_id && map.has(t.parent_id)) {
-        map.get(t.parent_id)!.children.push(node);
-      } else {
-        roots.push(node);
-      }
-    });
-
-    return roots;
-  }, [topics]);
-
-  const toggleTopicExpand = (id: number) => {
-    const next = new Set(expandedTopicNodes);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    setExpandedTopicNodes(next);
-  };
-
-  const toggleTopicSelect = (id: number) => {
-    const next = new Set(selectedTopicIds);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    setSelectedTopicIds(next);
-  };
-
+  // Toggle tag nội bộ (không tự động lưu lên server)
   const toggleTagSelect = (id: number) => {
+    if (!hasSelection) return;
     const next = new Set(selectedTagIds);
     if (next.has(id)) {
       next.delete(id);
@@ -152,220 +132,149 @@ export default function CollapsibleClassification({
     setSelectedTagIds(next);
   };
 
+  // Hàm xoá nhanh một tag cụ thể bằng nút X trên chip
+  const removeSingleTag = (id: number, e: React.MouseEvent) => {
+    e.stopPropagation(); // Ngăn chặn sự kiện click mở dropdown
+    toggleTagSelect(id);
+  };
+
+  // Hàm áp dụng (lưu) phân loại lên server
   const handleApply = async () => {
+    if (!hasSelection) return;
     setSaving(true);
     try {
       await onApply({
         grade: grade || null,
-        lessonId: lessonId || null,
         difficulty: difficulty || null,
-        topicIds: Array.from(selectedTopicIds),
+        topicIds: selectedTopicIds.length > 0 ? selectedTopicIds : null,
         tagIds: Array.from(selectedTagIds),
       });
-      // Nếu là bulk mode, xóa bớt selection tags/topics sau khi lưu thành công
       if (isBulkMode) {
-        setSelectedTopicIds(new Set());
+        setSelectedTopicIds([]);
         setSelectedTagIds(new Set());
       }
     } catch (e) {
-      console.error(e);
+      console.error('Lưu phân loại thất bại:', e);
     } finally {
       setSaving(false);
     }
   };
 
-  // Render Topic Tree Node
-  const renderTopicNode = (node: TreeNode, depth: number = 0) => {
-    const hasChildren = node.children && node.children.length > 0;
-    const isExpanded = expandedTopicNodes.has(node.id);
-    const isSelected = selectedTopicIds.has(node.id);
-
-    return (
-      <div key={node.id} className="flex flex-col">
-        <div
-          className={`flex items-center gap-1.5 py-1 px-1.5 rounded-lg hover:bg-surface-container/60 cursor-pointer select-none text-xs ${
-            isSelected ? 'bg-primary/5 font-semibold text-primary' : 'text-on-surface-variant'
-          }`}
-          style={{ paddingLeft: `${depth * 14 + 6}px` }}
-          onClick={() => toggleTopicSelect(node.id)}
-        >
-          {hasChildren ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleTopicExpand(node.id);
-              }}
-              className="p-0.5 rounded hover:bg-surface-container text-outline"
-            >
-              {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-            </button>
-          ) : (
-            <div className="w-4 h-4" />
-          )}
-
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => {}} // Đã xử lý ở onClick cấp Div
-            className="w-3.5 h-3.5 rounded accent-primary border-outline-variant/60 shrink-0 pointer-events-none"
-          />
-
-          <span className="truncate" title={node.title}>{node.title}</span>
-        </div>
-
-        {hasChildren && isExpanded && (
-          <div className="flex flex-col">
-            {node.children.map((child) => renderTopicNode(child, depth + 1))}
-          </div>
-        )}
-      </div>
-    );
+  // Hàm reset toàn bộ bộ phân loại về trống
+  const handleReset = () => {
+    if (!hasSelection) return;
+    setGrade('');
+    setDifficulty('');
+    setSelectedTopicIds([]);
+    setSelectedTagIds(new Set());
   };
 
-  // Collapsed Sidebar View
-  if (isCollapsed) {
-    return (
-      <div className="h-full bg-surface-container-low border-l border-outline-variant/20 flex flex-col items-center py-4 w-12 shrink-0">
-        <button
-          onClick={onToggleCollapse}
-          className="p-1.5 rounded-full hover:bg-surface-container text-outline transition-all cursor-pointer mb-6"
-          title="Mở bảng phân loại"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        
-        <div className="flex-1 flex flex-col gap-6 text-outline items-center justify-center writing-mode-vertical uppercase tracking-widest text-[10px] font-bold">
-          <FolderTree className="w-4 h-4 mb-2 shrink-0 text-primary" />
-          <span>PHÂN LOẠI</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="h-full flex flex-col bg-surface-container-low border-l border-outline-variant/20 w-80 shrink-0 shadow-sm overflow-hidden">
-      {/* Header Panel */}
-      <div className="flex justify-between items-center px-4 py-3 border-b border-outline-variant/20 shrink-0">
-        <div className="flex items-center gap-2">
-          <FolderTree className="w-4.5 h-4.5 text-primary" />
-          <h4 className="font-bold text-sm text-on-surface font-headline">
-            {isBulkMode ? 'Phân loại hàng loạt' : 'Phân loại câu hỏi'}
-          </h4>
-        </div>
-        
-        <button
-          onClick={onToggleCollapse}
-          className="p-1 rounded-md hover:bg-surface-container text-outline transition-colors cursor-pointer"
+    <div className={`flex items-center gap-2 ${className} ${!hasSelection ? 'opacity-65' : ''}`}>
+      {/* Khối lớp sử dụng AppSelect dùng chung */}
+      <div className="min-w-[150px]">
+        <AppSelect
+          value={grade}
+          disabled={!hasSelection}
+          onChange={(e) => setGrade(e.target.value)}
+          className="text-sm py-1.5 pr-7 h-[34px] rounded-lg border-outline-variant/35 bg-surface-container-lowest"
+          wrapperClassName="space-y-0"
+          id="select-grade"
         >
-          <ChevronRight className="w-4 h-4" />
-        </button>
+          <option value="">Lớp</option>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
+            <option key={g} value={g}>Lớp {g}</option>
+          ))}
+        </AppSelect>
       </div>
 
-      {/* Mode Indicator */}
-      {isBulkMode && (
-        <div className="bg-primary/10 border-b border-primary/20 px-4 py-2 text-primary text-[10px] font-bold uppercase tracking-wider flex items-center justify-between shrink-0">
-          <span>Chế độ: Phân loại hàng loạt</span>
-          <span>{selectedIds.size} câu đang chọn</span>
-        </div>
-      )}
+      {/* Độ khó sử dụng AppSelect dùng chung - Hỗ trợ màu sắc động */}
+      <div className="min-w-[150px]">
+        <AppSelect
+          value={difficulty}
+          disabled={!hasSelection}
+          onChange={(e) => setDifficulty(e.target.value)}
+          className="text-sm py-1.5 pr-7 h-[34px] rounded-lg border-outline-variant/35 bg-surface-container-lowest"
+          wrapperClassName="space-y-0"
+          id="select-difficulty"
+        >
+          <option value="">Độ khó</option>
+          {difficulties.map((d) => (
+            // Truyền mã màu color_code động cho option
+            <option key={d.id} value={d.name} data-color={d.color_code}>{d.name}</option>
+          ))}
+        </AppSelect>
+      </div>
 
-      {/* Main Form content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-5">
-        {/* Khối lớp */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-on-surface-variant flex items-center gap-1.5">
-            <GraduationCap className="w-3.5 h-3.5 text-outline" /> Khối lớp
-          </label>
-          <select
-            value={grade}
-            onChange={(e) => setGrade(e.target.value)}
-            className="w-full text-xs font-semibold px-3 py-2 bg-surface-container-lowest border border-outline-variant/30 rounded-lg focus:outline-none focus:border-primary transition-all"
-          >
-            <option value="">Chọn khối lớp</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
-              <option key={g} value={g}>Lớp {g}</option>
-            ))}
-          </select>
-        </div>
+      {/* Cây chủ đề học thuật */}
+      <div className="w-[200px]">
+        <TopicTreeSelect
+          multiple
+          value={selectedTopicIds}
+          disabled={!hasSelection}
+          onChange={(val) => {
+            const ids = (val as string[]) ?? [];
+            setSelectedTopicIds(ids);
+          }}
+          placeholder="Chủ đề học thuật"
+          className="!min-h-[34px] [&>div]:min-h-[34px] [&>div]:py-0.5 [&>div]:rounded-lg text-sm"
+        />
+      </div>
 
-        {/* Bài học / Lesson */}
-        {grade && (
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-on-surface-variant flex items-center gap-1.5">
-              <FolderTree className="w-3.5 h-3.5 text-outline" /> Bài học
-            </label>
-            <select
-              value={lessonId}
-              onChange={(e) => setLessonId(e.target.value)}
-              className="w-full text-xs font-semibold px-3 py-2 bg-surface-container-lowest border border-outline-variant/30 rounded-lg focus:outline-none focus:border-primary transition-all"
-            >
-              <option value="">Chọn bài học</option>
-              {filteredLessons.map((l) => (
-                <option key={l.id} value={l.id}>{l.name}</option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* Độ khó */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-on-surface-variant flex items-center gap-1.5">
-            <BarChart className="w-3.5 h-3.5 text-outline" /> Độ khó
-          </label>
-          <select
-            value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value)}
-            className="w-full text-xs font-semibold px-3 py-2 bg-surface-container-lowest border border-outline-variant/30 rounded-lg focus:outline-none focus:border-primary transition-all"
-          >
-            <option value="">Chọn độ khó</option>
-            {difficulties.map((d) => (
-              <option key={d.id} value={d.name}>{d.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Cây chủ đề (Recursive Topic Tree) */}
-        <div className="space-y-2 border-t border-outline-variant/20 pt-4">
-          <label className="text-xs font-bold text-on-surface flex items-center gap-1.5">
-            <FolderTree className="w-4 h-4 text-primary" /> Cây chủ đề học thuật
-          </label>
-          
-          <div className="max-h-[220px] overflow-y-auto border border-outline-variant/20 rounded-xl p-2 bg-surface-container-lowest/50 space-y-1">
-            {topicTree.map((node) => renderTopicNode(node))}
-            {topicTree.length === 0 && (
-              <div className="py-6 text-center text-outline text-[10px]">
-                Không có chủ đề nào được nạp.
-              </div>
+      {/* Dropdown Tags bổ trợ dạng co giãn hiển thị tag chips */}
+      <div ref={tagsRef} className="relative flex-1 min-w-[180px] max-w-[320px]">
+        <div
+          onClick={() => hasSelection && setIsTagsOpen((prev) => !prev)}
+          className={`w-full min-h-[34px] flex items-center justify-between gap-1 border border-outline-variant/35 rounded-lg px-2.5 py-1 bg-surface-container-lowest transition-all duration-200 relative cursor-pointer ${
+            !hasSelection ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary/50'
+          } ${isTagsOpen ? 'border-primary ring-2 ring-primary/10 shadow-sm' : ''}`}
+        >
+          {/* List tag chips */}
+          <div className="flex flex-wrap gap-1 flex-1 min-w-0 pr-5 pl-5">
+            {selectedTagsList.length === 0 ? (
+              <span className="text-xs text-outline select-none">Thẻ tags</span>
+            ) : (
+              selectedTagsList.map((tag) => (
+                <span
+                  key={tag.id}
+                  className="inline-flex items-center gap-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold px-1.5 py-0.5 rounded"
+                >
+                  <span className="truncate max-w-[80px]">{tag.name}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => removeSingleTag(tag.id, e)}
+                    className="ml-0.5 p-0.5 rounded hover:bg-on-secondary-container/20 transition-colors cursor-pointer"
+                  >
+                    <X className="w-2.5 h-2.5" />
+                  </button>
+                </span>
+              ))
             )}
           </div>
+          
+          <ChevronDown className="w-3.5 h-3.5 text-outline-variant shrink-0 absolute right-2.5 top-1/2 -translate-y-1/2" />
+          <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-outline pointer-events-none" />
         </div>
 
-        {/* Thẻ tags phân loại bổ trợ */}
-        <div className="space-y-4 border-t border-outline-variant/20 pt-4">
-          <label className="text-xs font-bold text-on-surface flex items-center gap-1.5">
-            <Tag className="w-4 h-4 text-primary" /> Thẻ tags bổ trợ
-          </label>
-
-          <div className="space-y-3">
+        {isTagsOpen && (
+          <div className="absolute right-0 top-full mt-1.5 w-[380px] bg-surface border border-outline-variant/40 rounded-xl shadow-2xl p-3 z-[110] max-h-[260px] overflow-y-auto space-y-3">
             {Object.entries(tagsByCategory).map(([categoryName, tagItems]) => {
               if (tagItems.length === 0) return null;
               return (
-                <div key={categoryName} className="space-y-1.5">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-outline">
+                <div key={categoryName} className="space-y-1">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-outline block border-b border-outline-variant/10 pb-0.5">
                     {categoryName}
                   </span>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1 pt-0.5">
                     {tagItems.map((tag) => {
                       const isSelected = selectedTagIds.has(tag.id);
                       return (
                         <button
                           key={tag.id}
+                          type="button"
+                          disabled={!hasSelection}
                           onClick={() => toggleTagSelect(tag.id)}
-                          className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
-                            isSelected
-                              ? 'bg-primary/10 border-primary text-primary'
-                              : 'bg-surface-container-lowest border-outline-variant/20 text-on-surface-variant hover:border-outline-variant/50'
-                          }`}
+                          className={`px-2.5 py-1 text-xs font-bold rounded-md border transition-all cursor-pointer ${getTagColorClass(tag.category, isSelected)}`}
                         >
                           {tag.name}
                         </button>
@@ -376,27 +285,37 @@ export default function CollapsibleClassification({
               );
             })}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Sticky Action Button at bottom */}
-      <div className="p-3 border-t border-outline-variant/20 bg-surface-container-low shrink-0">
+      {/* Nhóm Nút: Áp dụng & Reset */}
+      <div className="flex items-center gap-1.5 shrink-0">
+        {/* Nút Áp dụng */}
         <button
           onClick={handleApply}
-          disabled={saving || (!isBulkMode && !activeQuestion)}
-          className="w-full py-2 bg-primary hover:bg-primary/95 text-on-primary text-xs font-extrabold uppercase tracking-widest rounded-xl transition-all shadow flex items-center justify-center gap-1.5 disabled:opacity-45 disabled:pointer-events-none cursor-pointer"
+          disabled={saving || !hasSelection}
+          className="px-3.5 py-1.5 bg-primary hover:bg-primary/95 text-on-primary text-xs font-bold uppercase tracking-wider rounded-lg transition-all shadow flex items-center justify-center gap-1 cursor-pointer h-[34px] shrink-0 disabled:opacity-45 disabled:pointer-events-none"
+          title="Áp dụng phân loại lên các câu hỏi đã chọn"
         >
           {saving ? (
-            <>
-              <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-              Đang lưu...
-            </>
+            <span className="w-3.5 h-3.5 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
           ) : (
             <>
               <Check className="w-3.5 h-3.5" />
-              {isBulkMode ? `Áp dụng (${selectedIds.size} câu)` : 'Cập nhật phân loại'}
+              <span>Áp dụng {isBulkMode ? `(${selectedIds.size})` : ''}</span>
             </>
           )}
+        </button>
+
+        {/* Nút Reset bộ phân loại */}
+        <button
+          onClick={handleReset}
+          disabled={!hasSelection || (!grade && !difficulty && selectedTopicIds.length === 0 && selectedTagIds.size === 0)}
+          className="px-2.5 py-1.5 border border-outline-variant/45 hover:border-error/40 hover:bg-error/5 text-on-surface hover:text-error text-xs font-bold uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer h-[34px] shrink-0 disabled:opacity-40 disabled:pointer-events-none"
+          title={!hasSelection ? "Vui lòng tích chọn câu hỏi trước" : "Reset các trường phân loại hiện tại về trống"}
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>Reset</span>
         </button>
       </div>
     </div>

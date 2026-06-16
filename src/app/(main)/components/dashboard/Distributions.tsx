@@ -55,12 +55,12 @@ export default function Distributions({
         </div>
 
         <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
-          {gradesData.map((g) => {
+          {gradesData.map((g, idx) => {
             const percentage = totalQuestions > 0 ? ((g.count / totalQuestions) * 100).toFixed(1) : '0';
             const barWidth = ((g.count / maxGradeCount) * 100).toFixed(1);
 
             return (
-              <div key={g.label} className="space-y-1.5 group">
+              <div key={`${g.label}-${idx}`} className="space-y-1.5 group">
                 <div className="flex justify-between text-sm font-medium">
                   <span className="text-on-surface font-body group-hover:text-primary transition-colors duration-200">
                     {g.label}
@@ -91,13 +91,13 @@ export default function Distributions({
           </div>
 
           <div className="space-y-4">
-            {difficultiesData.map((d) => {
+            {difficultiesData.map((d, idx) => {
               const percentage = totalQuestions > 0 ? ((d.count / totalQuestions) * 100).toFixed(1) : '0';
               const barWidth = ((d.count / maxDiffCount) * 100).toFixed(1);
               const colorClass = getDifficultyColor(d.label);
 
               return (
-                <div key={d.label} className="space-y-1.5">
+                <div key={`${d.label}-${idx}`} className="space-y-1.5">
                   <div className="flex justify-between text-sm font-medium">
                     <span className="text-on-surface font-body">{d.label}</span>
                     <span className="text-on-surface-variant text-xs">
@@ -124,12 +124,12 @@ export default function Distributions({
           </div>
 
           <div className="space-y-4">
-            {typesData.map((t) => {
+            {typesData.map((t, idx) => {
               const percentage = totalQuestions > 0 ? ((t.count / totalQuestions) * 100).toFixed(1) : '0';
               const barWidth = ((t.count / maxTypeCount) * 100).toFixed(1);
 
               return (
-                <div key={t.label} className="space-y-1.5">
+                <div key={`${t.label}-${idx}`} className="space-y-1.5">
                   <div className="flex justify-between text-sm font-medium">
                     <span className="text-on-surface font-body">{t.label}</span>
                     <span className="text-on-surface-variant text-xs">
