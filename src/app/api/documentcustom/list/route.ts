@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import db from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/utils/auth-utils";
+import { serializeBigInt } from "@/lib/utils/serialization";
 
 export async function GET() {
   try {
@@ -8,18 +9,28 @@ export async function GET() {
     const userId = user?.id || null;
     const levelRank = user?.level_rank || 0;
 
-    const [rows] = await db.query(
-      `SELECT id, title, pdf_url, s3_object_key, created_at, created_by_id 
-       FROM lms_documents_custom 
-       WHERE created_by_id = ? OR created_by_id IS NULL OR ? >= 5
-       ORDER BY created_at DESC`,
-      [userId, levelRank]
-    );
+    const docQueryOr: any[] = [
+      { created_by_id: userId },
+      { created_by_id: null },
+    ];
 
-    return NextResponse.json({ 
+    const rows = await prisma.lms_documents_custom.findMany({
+      where: levelRank >= 5 ? {} : { OR: docQueryOr },
+      orderBy: { created_at: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        pdf_url: true,
+        s3_object_key: true,
+        created_at: true,
+        created_by_id: true,
+      },
+    });
+
+    return NextResponse.json(serializeBigInt({ 
       success: true, 
       data: rows 
-    });
+    }));
   } catch (error: any) {
     console.error("Error fetching custom documents:", error);
     return NextResponse.json({ error: error.message || "Lỗi server" }, { status: 500 });

@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TopicTaxonomyAndTaggingAPI",
+  "description": "API contract specifications for managing recursive topics with materialized paths and tags in VietElite.",
+  "type": "object",
+  "properties": {
+    "endpoints": {
+      "type": "object",
+      "properties": {
+        "GET /api/topics": {
+          "description": "Lấy cây chủ đề đệ quy (hoặc lọc theo prefix path)",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "rootPath": {
+                "type": "string",
+                "description": "Prefix path để lọc một nhánh cây (ví dụ: '1/3/')"
+              }
+            }
+          },
+          "response": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "title": { "type": "string" },
+                "parentId": { "type": ["string", "null"] },
+                "path": { "type": "string" },
+                "orderIndex": { "type": "integer" }
+              }
+            }
+          }
+        },
+        "POST /api/topics": {
+          "description": "Tạo một chủ đề mới trong cây",
+          "requestBody": {
+            "type": "object",
+            "required": ["title"],
+            "properties": {
+              "title": { "type": "string" },
+              "parentId": { "type": ["string", "null"] },
+              "orderIndex": { "type": "integer" }
+            }
+          },
+          "response": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "parentId": { "type": ["string", "null"] },
+              "path": { "type": "string" }
+            }
+          }
+        },
+        "GET /api/tags": {
+          "description": "Lấy danh sách các thẻ tag theo category",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "category": { "type": "string" }
+            }
+          },
+          "response": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "category": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

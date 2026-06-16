@@ -32,13 +32,13 @@ interface QuestionsManagerProps {
   isAdmin?: boolean;
 }
 
-export default function QuestionsManager({ 
-  questions, 
-  documents, 
-  activeDocId, 
-  lessons, 
-  pagination, 
-  docPagination, 
+export default function QuestionsManager({
+  questions,
+  documents,
+  activeDocId,
+  lessons,
+  pagination,
+  docPagination,
   currentUserId,
   difficulties = [],
   isAdmin = false
@@ -184,27 +184,43 @@ export default function QuestionsManager({
                         </div>
                       </div>
                     </div>
-                    {doc.link_s3 ? (
-                      <span
-                        className={`cursor-pointer shrink-0 ml-4 text-xs font-bold text-primary flex items-center gap-1 transition-opacity hover:underline ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          if (doc.link_s3) {
-                            window.open(doc.link_s3, '_blank');
-                          }
-                        }}
-                      >
-                        Xem <span className="material-symbols-outlined text-sm">open_in_new</span>
-                      </span>
-                    ) : (
-                      <span
-                        className={`shrink-0 ml-4 text-xs font-bold text-on-surface-variant/40 flex items-center gap-1 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                        title="Tài liệu cũ không có link hiển thị"
-                      >
-                        Xem <span className="material-symbols-outlined text-sm">open_in_new</span>
-                      </span>
-                    )}
+                    <div className={`shrink-0 ml-4 flex items-center gap-3 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                      {doc.link_s3 ? (
+                        <span
+                          className="cursor-pointer text-xs font-bold text-primary flex items-center gap-1 hover:underline"
+                          title="Xem đề gốc"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (doc.link_s3) {
+                              window.open(doc.link_s3, '_blank');
+                            }
+                          }}
+                        >
+                          Xem đề <span className="material-symbols-outlined text-sm">open_in_new</span>
+                        </span>
+                      ) : (
+                        <span
+                          className="text-xs font-bold text-on-surface-variant/40 flex items-center gap-1"
+                          title="Tài liệu cũ không có link hiển thị"
+                        >
+                          Xem đề <span className="material-symbols-outlined text-sm">open_in_new</span>
+                        </span>
+                      )}
+                      {doc.link_s3_answer && (
+                        <span
+                          className="cursor-pointer text-xs font-bold text-secondary flex items-center gap-1 hover:underline"
+                          title="Xem đáp án gốc"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.open(doc.link_s3_answer!, '_blank');
+                          }}
+                        >
+                          Đáp án <span className="material-symbols-outlined text-sm">fact_check</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </Link>
               );
@@ -266,6 +282,8 @@ export default function QuestionsManager({
           onSelectionChange={handleSelectionChange}
           pagination={pagination}
           difficulties={difficultiesList}
+          currentUserId={currentUserId}
+          isAdmin={isAdmin}
         />
       </div>
     </div>

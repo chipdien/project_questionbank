@@ -1,5 +1,4 @@
-import pool from '../db';
-import { ResultSetHeader } from 'mysql2';
+import { prisma } from '../db';
 import { QuestionParserService } from './ai';
 
 export class IngestService {
@@ -7,111 +6,179 @@ export class IngestService {
    * Khởi tạo task xử lý mới.
    */
   static async createTask(fileName: string, fileHash: string) {
-    const [result] = await pool.query<ResultSetHeader>(
-      'INSERT INTO lms_processing_tasks (file_hash, file_name, status) VALUES (?, ?, ?)',
-      [fileHash, fileName, 'PENDING']
-    );
-    return result.insertId;
+    const task = await prisma.lms_processing_tasks.create({
+      data: {
+        file_hash: fileHash,
+        file_name: fileName,
+        status: 'PENDING',
+      },
+    });
+    return task.id;
   }
 
   static async checkDuplicatesByHash(fileHash: string): Promise<any[]> {
-    const [rows] = await pool.query<any[]>(
-      `SELECT t.document_id, d.content, d.link_s3, d.public, d.created_by_id, u.username as uploader_name 
-       FROM lms_processing_tasks t
-       JOIN lms_documents d ON t.document_id = d.id
-       LEFT JOIN lms_users u ON d.created_by_id = u.id
-       WHERE t.file_hash = ? AND t.status = "COMPLETED" AND t.document_id IS NOT NULL`,
-      [fileHash]
-    );
-    return rows;
+    const tasks = await prisma.lms_processing_tasks.findMany({
+      where: {
+        file_hash: fileHash,
+        status: 'COMPLETED',
+        document_id: { not: null },
+      },
+    });
+
+    if (tasks.length === 0) return [];
+
+    const docIds = tasks.map(t => BigInt(t.document_id!));
+
+    const documents = await prisma.lms_documents.findMany({
+      where: {
+        id: { in: docIds },
+      },
+    });
+
+    const userIds = documents
+      .map(d => d.created_by_id)
+      .filter((id): id is bigint => id !== null);
+
+    const users = await prisma.lms_users.findMany({
+      where: {
+        id: { in: userIds.map(id => Number(id)) },
+      },
+    });
+
+    const userMap = new Map(users.map(u => [u.id, u.username]));
+
+    const results = [];
+    for (const t of tasks) {
+      const doc = documents.find(d => d.id === BigInt(t.document_id!));
+      if (!doc) continue;
+
+      results.push({
+        document_id: t.document_id,
+        content: doc.content,
+        link_s3: doc.link_s3,
+        public: doc.public,
+        created_by_id: doc.created_by_id,
+        uploader_name: doc.created_by_id ? userMap.get(Number(doc.created_by_id)) || null : null,
+      });
+    }
+
+    return results;
   }
 
   /**
    * Cập nhật trạng thái của task.
    */
   static async updateTaskStatus(taskId: number, status: string, rawText?: string, documentId?: number) {
-    let query = 'UPDATE lms_processing_tasks SET status = ?';
-    const params: any[] = [status];
+    const data: any = { status };
 
     if (rawText !== undefined) {
-      query += ', raw_text = ?';
-      params.push(rawText);
+      data.raw_text = rawText;
     }
     if (documentId !== undefined) {
-      query += ', document_id = ?';
-      params.push(documentId);
+      data.document_id = documentId;
     }
 
-    query += ' WHERE id = ?';
-    params.push(taskId);
-
-    await pool.query(query, params);
+    await prisma.lms_processing_tasks.update({
+      where: { id: taskId },
+      data,
+    });
   }
 
   /**
    * Phân tích văn bản thô bằng Gemini.
    */
-  static async processAi(rawText: string) {
-    return await QuestionParserService.parseQuestions(rawText);
+  static async processAi(rawText: string, rawAnswerText?: string) {
+    return await QuestionParserService.parseQuestions(rawText, rawAnswerText);
   }
 
   /**
    * Lưu dữ liệu đã có cấu trúc vào CSDL.
    */
-  static async saveToDatabase(taskId: number, fileName: string, rawText: string, structuredData: any, isPublic: boolean = false, linkS3: string | null = null, userId: number | null = null) {
-    const connection = await pool.getConnection();
-
+  static async saveToDatabase(
+    taskId: number,
+    fileName: string,
+    rawText: string,
+    structuredData: any,
+    isPublic: boolean = false,
+    linkS3: string | null = null,
+    userId: number | null = null,
+    linkS3Answer: string | null = null
+  ) {
     try {
-      await connection.beginTransaction();
-
       const publicVal = isPublic ? '1' : '0';
+      const userIdBigInt = userId !== null ? BigInt(userId) : null;
 
-      // 1. Insert into lms_documents
-      const [docResult] = await connection.execute<ResultSetHeader>(
-        'INSERT INTO lms_documents (title, content, `public`, link_s3, created_at, updated_at, created_by_id, updated_by_id, teacher_owned) VALUES (?, ?, ?, ?, NOW(), NOW(), ?, ?, ?)',
-        [fileName, rawText, publicVal, linkS3, userId, userId, userId]
-      );
-      const documentId = docResult.insertId;
+      const result = await prisma.$transaction(async (tx) => {
+        // 1. Insert into lms_documents
+        const doc = await tx.lms_documents.create({
+          data: {
+            title: fileName,
+            content: rawText,
+            public: publicVal,
+            link_s3: linkS3,
+            link_s3_answer: linkS3Answer,
+            created_at: new Date(),
+            updated_at: new Date(),
+            created_by_id: userIdBigInt,
+            updated_by_id: userIdBigInt,
+            teacher_owned: userIdBigInt,
+          },
+        });
+        const documentId = Number(doc.id);
 
-      const questions = structuredData.questions || [];
+        const questions = structuredData.questions || [];
 
-      for (const q of questions) {
-        // 2. Insert into lms_questions
-        const [questionResult] = await connection.execute<ResultSetHeader>(
-          'INSERT INTO lms_questions (content, statement, hint, question_type, created_at, updated_at, owned_by_id, teacher_owned_by_id) VALUES (?, ?, ?, ?, NOW(), NOW(), NULL, NULL)',
-          [q.statement, q.statement, q.hint || null, q.question_type || 'SINGLE_CHOICE']
-        );
-        const questionId = questionResult.insertId;
+        for (const q of questions) {
+          // 2. Insert into lms_questions
+          const question = await tx.lms_questions.create({
+            data: {
+              content: q.statement,
+              statement: q.statement,
+              hint: q.hint || null,
+              question_type: q.question_type || 'SINGLE_CHOICE',
+              created_at: new Date(),
+              updated_at: new Date(),
+              owned_by_id: null,
+              teacher_owned_by_id: null,
+            },
+          });
+          const questionId = question.id;
 
-        // 3. Link question to document
-        await connection.execute(
-          'INSERT INTO lms_questions_documents (document_id, question_id, created_at, updated_at) VALUES (?, ?, NOW(), NOW())',
-          [documentId, questionId]
-        );
+          // 3. Link question to document
+          await tx.lms_questions_documents.create({
+            data: {
+              document_id: doc.id,
+              question_id: questionId,
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+          });
 
-        // 4. Insert options if any
-        if (q.options && Array.isArray(q.options)) {
-          for (const opt of q.options) {
-            await connection.execute(
-              'INSERT INTO lms_options (question_id, content, `order`, weight, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())',
-              [questionId, opt.content, opt.order, opt.weight]
-            );
+          // 4. Insert options if any
+          if (q.options && Array.isArray(q.options)) {
+            for (const opt of q.options) {
+              await tx.lms_options.create({
+                data: {
+                  question_id: questionId,
+                  content: opt.content,
+                  order: opt.order !== undefined ? BigInt(opt.order) : null,
+                  weight: opt.weight !== undefined ? Number(opt.weight) : 0,
+                  created_at: new Date(),
+                  updated_at: new Date(),
+                },
+              });
+            }
           }
         }
-      }
 
-      await connection.commit();
-      connection.release(); // Giải phóng trước khi update task
+        return { documentId, questionsCount: questions.length };
+      });
 
       // Update task
-      await this.updateTaskStatus(taskId, 'COMPLETED', undefined, documentId);
+      await this.updateTaskStatus(taskId, 'COMPLETED', undefined, result.documentId);
 
-      return { success: true, documentId, questionsCount: questions.length };
+      return { success: true, documentId: result.documentId, questionsCount: result.questionsCount };
     } catch (error: any) {
-      if (connection) {
-        await connection.rollback();
-        connection.release();
-      }
       await this.updateTaskStatus(taskId, 'FAILED');
       console.error('Save to Database error:', error);
       throw new Error(`Lỗi khi lưu vào CSDL: ${error.message}`);
@@ -119,57 +186,61 @@ export class IngestService {
   }
 
   static async reuseDocument(taskId: number, fileName: string, existingData: any, isPublic: boolean, userId: number | null) {
-    const connection = await pool.getConnection();
-
     try {
       console.log(`[ReuseDocument] Start cloning document ID: ${existingData.document_id} for User ID: ${userId}`);
-      await connection.beginTransaction();
-
       const publicVal = isPublic ? '1' : '0';
+      const userIdBigInt = userId !== null ? BigInt(userId) : null;
 
-      // 1. Insert bản ghi document mới cho user hiện tại
-      console.log(`[ReuseDocument] Inserting new document record`);
-      const [docResult] = await connection.execute<ResultSetHeader>(
-        'INSERT INTO lms_documents (title, content, `public`, link_s3, created_at, updated_at, created_by_id, updated_by_id, teacher_owned) VALUES (?, ?, ?, ?, NOW(), NOW(), ?, ?, ?)',
-        [fileName, existingData.content, publicVal, existingData.link_s3, userId, userId, userId]
-      );
-      const newDocumentId = docResult.insertId;
+      const result = await prisma.$transaction(async (tx) => {
+        // 1. Insert bản ghi document mới cho user hiện tại
+        console.log(`[ReuseDocument] Inserting new document record`);
+        const doc = await tx.lms_documents.create({
+          data: {
+            title: fileName,
+            content: existingData.content,
+            public: publicVal,
+            link_s3: existingData.link_s3,
+            created_at: new Date(),
+            updated_at: new Date(),
+            created_by_id: userIdBigInt,
+            updated_by_id: userIdBigInt,
+            teacher_owned: userIdBigInt,
+          },
+        });
+        const newDocumentId = Number(doc.id);
 
-      // 2. Lấy các câu hỏi từ document cũ và link sang document mới
-      console.log(`[ReuseDocument] Fetching linked questions`);
-      const [questions] = await connection.execute<any[]>(
-        'SELECT question_id FROM lms_questions_documents WHERE document_id = ?',
-        [existingData.document_id]
-      );
+        // 2. Lấy các câu hỏi từ document cũ và link sang document mới
+        console.log(`[ReuseDocument] Fetching linked questions`);
+        const questions = await tx.lms_questions_documents.findMany({
+          where: {
+            document_id: BigInt(existingData.document_id),
+          },
+          select: {
+            question_id: true,
+          },
+        });
 
-      if (questions.length > 0) {
-        console.log(`[ReuseDocument] Linking ${questions.length} questions to new document`);
-        const values = questions.map(q => [newDocumentId, q.question_id]);
-        const placeholders = values.map(() => '(?, ?, NOW(), NOW())').join(', ');
-        const flatValues = values.map(v => [...v]).flat();
+        if (questions.length > 0) {
+          console.log(`[ReuseDocument] Linking ${questions.length} questions to new document`);
+          await tx.lms_questions_documents.createMany({
+            data: questions.map(q => ({
+              document_id: doc.id,
+              question_id: q.question_id,
+              created_at: new Date(),
+              updated_at: new Date(),
+            })),
+          });
+        }
 
-        // CHÚ Ý: Dùng query thay cho execute để hỗ trợ string SQL động rất dài không gián đoạn Pool!
-        await connection.query(
-          `INSERT INTO lms_questions_documents (document_id, question_id, created_at, updated_at) VALUES ${placeholders}`,
-          flatValues
-        );
-      }
+        return { newDocumentId, questionsCount: questions.length };
+      });
 
-      await connection.commit();
-      console.log(`[ReuseDocument] Transaction committed successfully`);
-      connection.release(); // Giải phóng connection để tránh deadlock
-
-      // Update task (Hàm này lại gọi pool.query, nếu pool bị giới hạn mà chưa release ở trên sẽ treo)
       console.log(`[ReuseDocument] Updating task status`);
-      await this.updateTaskStatus(taskId, 'COMPLETED', undefined, newDocumentId);
+      await this.updateTaskStatus(taskId, 'COMPLETED', undefined, result.newDocumentId);
 
       console.log(`[ReuseDocument] Finished`);
-      return { success: true, documentId: newDocumentId, questionsCount: questions.length };
+      return { success: true, documentId: result.newDocumentId, questionsCount: result.questionsCount };
     } catch (error: any) {
-      if (connection) {
-        await connection.rollback();
-        connection.release();
-      }
       console.error('[ReuseDocument] Reuse Document error:', error);
       throw new Error(`Lỗi khi tái sử dụng tài liệu: ${error.message}`);
     }
