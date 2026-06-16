@@ -9,7 +9,8 @@ import {
   LogOut,
   LibraryBig,
   BookOpen,
-  Tag
+  Tag,
+  FolderSync
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -33,7 +34,8 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
   };
 
   const navItems = [
-    { icon: LayoutDashboard, label: 'Xử lý tài liệu', href: '/' },
+    { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+    { icon: FolderSync, label: 'Xử lý tài liệu', href: '/' },
     { icon: Database, label: 'Question Bank', href: '/question-bank' },
     { icon: LibraryBig, label: 'Collections', href: '/collection' },
     { icon: FileText, label: 'Documents', href: '/documents' },
