@@ -42,14 +42,16 @@ jobs:
             
             # 4. Kéo mã nguồn mới nhất
             git pull origin main
-            
-            # 5. Cài đặt dependencies
-            npm install --frozen-lockfile || npm install
-            
-            # 6. Build dự án Next.js
-            npm run build
-            
-            # 7. Khởi động lại hoặc chạy mới PM2 với cổng 5002
-            # PORT=5002 pm2 reload vietelite-questionbank || PORT=5002 pm2 restart vietelite-questionbank || PORT=5002 pm2 start npm --name "vietelite-questionbank" -- run start -- -p 5002
-            pm2 reload vietelite-questionbank || pm2 start npm --name "vietelite-questionbank" -- run start -- -p 5002
 
+            # 5. ÉP QUYỀN TOÀN BỘ SANG USER WWW TRƯỚC KHI BUILD/INSTALL
+            # Bước này cực kỳ quan trọng để tránh tạo ra file thuộc quyền root
+            chown -R www:www /www/wwwroot/qb.vietelite.edu.vn
+
+            # 6. Cài đặt dependencies bằng user www và đúng Node của aaPanel
+            sudo -u www /www/server/nodejs/v24.16.0/bin/npm install
+
+            # 7. Build dự án Next.js bằng user www
+            sudo -u www /www/server/nodejs/v24.16.0/bin/npm run build
+
+            # 8. Khởi động lại PM2 của aaPanel (User www)
+            sudo -u www /www/server/nodejs/v24.16.0/bin/pm2 reload vietelite-questionbank || sudo -u www /www/server/nodejs/v24.16.0/bin/pm2 start npm --name "vietelite-questionbank" -- run start -- -p 5002
