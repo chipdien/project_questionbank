@@ -138,8 +138,10 @@ export class IngestService {
               question_type: q.question_type || 'SINGLE_CHOICE',
               created_at: new Date(),
               updated_at: new Date(),
+              created_by_id: userIdBigInt,
+              updated_by_id: userIdBigInt,
+              teacher_owned_by_id: userIdBigInt,
               owned_by_id: null,
-              teacher_owned_by_id: null,
             },
           });
           const questionId = question.id;
