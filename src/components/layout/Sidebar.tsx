@@ -32,7 +32,7 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
 
   // Tự động mở rộng khi ở trang con của tài liệu
   useEffect(() => {
-    if (pathname === '/' || pathname === '/manual-create' || pathname === '/import') {
+    if (pathname === '/manual-create' || pathname === '/import') {
       setIsDocMenuOpen(true);
     }
   }, [pathname]);
@@ -46,7 +46,7 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
   };
 
   const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+    { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
     {
       icon: FolderSync,
       label: 'Xử lý tài liệu',

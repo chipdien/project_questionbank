@@ -20,6 +20,19 @@ export interface Question {
   document_id?: number;
   hint?: string | null;
   teacher_owned_by_id?: number | null;
+  topics?: {
+    topic_id: number;
+    topic: {
+      id: number;
+      title: string;
+      code: string | null;
+    };
+  }[];
+  tags?: {
+    id: number;
+    name: string;
+    category: string;
+  }[];
 }
 
 export interface Document {

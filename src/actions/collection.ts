@@ -203,13 +203,38 @@ export async function getCollectionQuestions(collectionId: number, page = 1, pag
       };
     });
 
-    // Lấy options cho từng câu hỏi
+    // Lấy options, tags, topics cho từng câu hỏi
     for (const q of questionsWithLessons) {
       const options = await prisma.lms_options.findMany({
         where: { question_id: q.id },
         orderBy: { order: 'asc' },
       });
       q.options = options;
+
+      // Lấy tags liên kết
+      const qTagsRelations = await prisma.lms_questions_tags.findMany({
+        where: { question_id: q.id },
+        include: { tag: true }
+      });
+      q.tags = qTagsRelations.map(r => ({
+        id: Number(r.tag.id),
+        name: r.tag.name,
+        category: r.tag.category
+      }));
+
+      // Lấy topics liên kết
+      const qTopicsRelations = await prisma.lms_topics_questions.findMany({
+        where: { question_id: q.id },
+        include: { topic: true }
+      });
+      q.topics = qTopicsRelations.map(r => ({
+        topic_id: Number(r.topic.id),
+        topic: {
+          id: Number(r.topic.id),
+          title: r.topic.title,
+          code: r.topic.code,
+        }
+      }));
     }
 
     return serializeBigInt({

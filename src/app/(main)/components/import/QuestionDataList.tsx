@@ -53,6 +53,12 @@ export default function QuestionDataList({
 
   const handleCardClick = (id: number) => {
     onActiveChange(id);
+    // Tự động tích chọn checkbox của câu hỏi này khi click
+    const next = new Set(selectedIds);
+    if (!next.has(id)) {
+      next.add(id);
+      onSelectionChange(next);
+    }
   };
 
   const handleCardDoubleClick = (q: any) => {
@@ -192,11 +198,14 @@ export default function QuestionDataList({
                       {topicRel.topic?.title || `Topic ID: ${topicRel.topic_id}`}
                     </span>
                   ))}
-                  {q.tags?.map((tagRel: any, tgIdx: number) => (
-                    <span key={tgIdx} className="px-2 py-0.5 text-[9px] font-bold rounded bg-surface-container-highest text-on-surface-variant border border-outline-variant/30">
-                      #{tagRel.tag?.name || `Tag ID: ${tagRel.tag_id}`}
-                    </span>
-                  ))}
+                  {q.tags?.map((tagRel: any, tgIdx: number) => {
+                    const tagName = tagRel.tag?.name || tagRel.name;
+                    return (
+                      <span key={tgIdx} className="px-2 py-0.5 text-[9px] font-bold rounded bg-surface-container-highest text-on-surface-variant border border-outline-variant/30">
+                        #{tagName || `Tag ID: ${tagRel.tag_id || tagRel.id}`}
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </div>

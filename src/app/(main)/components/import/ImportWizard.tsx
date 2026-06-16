@@ -27,41 +27,6 @@ interface ImportWizardProps {
   isAdmin?: boolean;
 }
 
-// ─── Step Indicator ────────────────────────────────────────────────────────────
-const STEPS: { id: WizardStep; label: string; icon: React.ReactNode }[] = [
-  { id: 'upload',     label: 'Chọn tệp',        icon: <Upload className="w-3.5 h-3.5" /> },
-  { id: 'processing', label: 'Xử lý',            icon: <Cpu className="w-3.5 h-3.5" /> },
-  { id: 'classify',   label: 'Phân loại',        icon: <Tags className="w-3.5 h-3.5" /> },
-  { id: 'complete',   label: 'Chia sẻ',          icon: <Share2 className="w-3.5 h-3.5" /> },
-];
-
-function StepIndicator({ currentStep }: { currentStep: WizardStep }) {
-  const currentIndex = STEPS.findIndex(s => s.id === currentStep);
-  return (
-    <div className="flex items-center gap-0 select-none">
-      {STEPS.map((step, idx) => {
-        const isDone    = idx < currentIndex;
-        const isActive  = idx === currentIndex;
-        return (
-          <React.Fragment key={step.id}>
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
-              isDone   ? 'text-[#00A651] bg-[#00A651]/10' :
-              isActive ? 'text-primary bg-primary/10 shadow-sm' :
-                         'text-outline-variant bg-transparent'
-            }`}>
-              {isDone ? <Check className="w-3.5 h-3.5" /> : step.icon}
-              <span>{step.label}</span>
-            </div>
-            {idx < STEPS.length - 1 && (
-              <div className={`w-6 h-px mx-0.5 ${idx < currentIndex ? 'bg-[#00A651]/40' : 'bg-outline-variant/30'}`} />
-            )}
-          </React.Fragment>
-        );
-      })}
-    </div>
-  );
-}
-
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function ImportWizard({
   recentDocuments,
@@ -238,22 +203,6 @@ export default function ImportWizard({
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-full min-h-[600px] gap-4">
-      {/* Top Bar: Step Indicator */}
-      <div className="flex justify-between items-center bg-surface-container-lowest px-5 py-3 rounded-xl border border-outline-variant/20 shadow-sm shrink-0">
-        <StepIndicator currentStep={currentStep} />
-
-        {currentStep === 'classify' && (
-          <button
-            onClick={() => setShowCompletionModal(true)}
-            disabled={questions.length === 0}
-            className="px-4 py-1.5 text-xs font-extrabold uppercase tracking-wider bg-[#00A651] text-white hover:bg-[#00A651]/90 rounded-lg shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            Hoàn tất &amp; Chia sẻ
-          </button>
-        )}
-      </div>
-
       {/* ── Step 1: File Upload ── */}
       {currentStep === 'upload' && (
         <FileUploader
@@ -280,9 +229,7 @@ export default function ImportWizard({
           documentTitle={documentTitle}
           questions={questions}
           onQuestionUpdate={handleQuestionUpdate}
-          lessons={lessons}
           difficulties={difficulties}
-          topics={topics}
           tagsByCategory={tagsByCategory}
           onApplyClassification={handleApplyClassification}
           currentUserId={currentUserId}

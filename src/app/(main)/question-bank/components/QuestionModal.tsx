@@ -32,6 +32,14 @@ interface Question {
   hint?: string | null;
   lesson_name?: string | null;
   tags?: { id: number; name: string; category: string }[];
+  topics?: {
+    topic_id: number;
+    topic: {
+      id: number;
+      title: string;
+      code: string | null;
+    };
+  }[];
 }
 
 interface QuestionModalProps {
@@ -99,19 +107,35 @@ export default function QuestionModal({
                       {question.question_difficulty}
                     </span>
                   </div>
-                  {question.lesson_name && (
+                  {question.topics && question.topics.length > 0 ? (
+                    <div className="flex items-center gap-1.5 mt-1.5 text-xs text-outline font-semibold flex-wrap">
+                      <span className="material-symbols-outlined text-[14px] text-primary shrink-0">topic</span>
+                      <span className="shrink-0">Chủ đề:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {question.topics.map(t => (
+                          <span key={t.topic_id} className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold">
+                            {t.topic?.title || ''}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : question.lesson_name ? (
                     <div className="flex items-center gap-1.5 mt-1.5 text-xs text-outline font-semibold">
                       <span className="material-symbols-outlined text-[14px] text-primary">topic</span>
                       <span>Chủ đề: {question.lesson_name}</span>
                     </div>
-                  )}
+                  ) : null}
                   {question.tags && question.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {question.tags.map(tag => (
-                        <span key={tag.id} className="px-1.5 py-0.5 rounded bg-surface-container-high border border-outline-variant/30 text-[9px] font-bold text-on-surface-variant uppercase">
-                          #{tag.name}
-                        </span>
-                      ))}
+                    <div className="flex items-center gap-1.5 mt-2 text-xs text-outline font-semibold flex-wrap">
+                      <span className="material-symbols-outlined text-[14px] text-primary shrink-0">tag</span>
+                      <span className="shrink-0">Tags:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {question.tags.map(tag => (
+                          <span key={tag.id} className="px-1.5 py-0.5 rounded bg-surface-container-high border border-outline-variant/30 text-[9px] font-bold text-on-surface-variant uppercase">
+                            #{tag.name}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

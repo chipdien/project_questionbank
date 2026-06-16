@@ -25,17 +25,7 @@ export default async function ImportPage() {
 
   return (
     <div className="p-6 min-h-full flex flex-col gap-4">
-      {/* Page Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">
-            Import tài liệu
-          </h1>
-          <p className="text-on-surface-variant text-sm mt-0.5 font-body">
-            Tải lên tài liệu, trích xuất và phân loại câu hỏi tự động bằng AI.
-          </p>
-        </div>
-      </div>
+      <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">Phân loại câu hỏi</h1>
 
       {/* 4-Step Wizard */}
       <ImportWizard

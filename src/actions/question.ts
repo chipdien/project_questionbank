@@ -218,24 +218,53 @@ export async function getQuestionsByDocId(
 
     const lessonNameMap = new Map(lessonsMap.map(l => [l.id, l.name]));
 
-    const questions: any[] = questionsRaw.map((q) => {
+    const questions: any[] = [];
+    for (const q of questionsRaw) {
       const linkedLessonIds = questionLessons
         .filter(ql => ql.question_id === q.id)
         .map(ql => ql.lesson_id);
       const names = linkedLessonIds.map(id => lessonNameMap.get(id)).filter(n => n) as string[];
 
-      return {
-        ...q,
-        lesson_name: names.join(', ') || null,
-      };
-    });
-
-    for (const q of questions) {
       const options = await prisma.lms_options.findMany({
         where: { question_id: q.id },
         orderBy: { order: 'asc' },
       });
-      q.options = options;
+
+      // Lấy danh sách tags liên kết với câu hỏi
+      const qTagsRelations = await prisma.lms_questions_tags.findMany({
+        where: { question_id: q.id },
+        include: { tag: true }
+      });
+      const tags = qTagsRelations.map(r => ({
+        tag_id: Number(r.tag_id),
+        tag: {
+          id: Number(r.tag.id),
+          name: r.tag.name,
+          category: r.tag.category
+        }
+      }));
+
+      // Lấy danh sách topics liên kết với câu hỏi
+      const qTopicsRelations = await prisma.lms_topics_questions.findMany({
+        where: { question_id: q.id },
+        include: { topic: true }
+      });
+      const topics = qTopicsRelations.map(r => ({
+        topic_id: Number(r.topic.id),
+        topic: {
+          id: Number(r.topic.id),
+          title: r.topic.title,
+          code: r.topic.code,
+        }
+      }));
+
+      questions.push({
+        ...q,
+        lesson_name: names.join(', ') || null,
+        options,
+        tags,
+        topics
+      });
     }
 
     return serializeBigInt({

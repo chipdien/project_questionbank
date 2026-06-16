@@ -155,10 +155,24 @@ export default function QuestionsDataGrid({
 
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-on-surface-variant max-w-[150px]">
-                    <div className="truncate" title={q.lesson_name}>
-                      {q.lesson_name || '---'}
-                    </div>
+                  <td className="px-6 py-4 text-sm text-on-surface-variant max-w-[200px]">
+                    {q.topics && q.topics.length > 0 ? (
+                      <div className="flex flex-wrap gap-1 max-w-full">
+                        {q.topics.map((t) => (
+                          <span
+                            key={t.topic_id}
+                            className="inline-block bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded truncate max-w-[150px]"
+                            title={t.topic?.title || ''}
+                          >
+                            {t.topic?.title || ''}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="truncate" title={q.lesson_name}>
+                        {q.lesson_name || '---'}
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm text-on-surface-variant">
                     {q.grade ? `Lớp ${q.grade}` : '---'}
