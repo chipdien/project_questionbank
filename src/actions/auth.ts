@@ -44,7 +44,7 @@ export async function loginAction(prevState: any, formData: FormData) {
     // 2. Set Cookie đồng nhất
     const cookieOptions = {
       httpOnly: true,
-      secure: false, // Vì bạn đang chạy local, để false là an toàn nhất
+      secure: process.env.NODE_ENV === 'production',
       maxAge: 30 * 24 * 60 * 60,
       path: '/',
       sameSite: 'lax' as const, // Ép kiểu để tránh lỗi TypeScript
