@@ -15,7 +15,8 @@ import {
   ChevronRight,
   FilePlus,
   FileUp,
-  ListChecks
+  ListChecks,
+  Inbox
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -36,7 +37,7 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
 
   // Tự động mở rộng khi ở trang con của tài liệu hoặc cấu hình
   useEffect(() => {
-    if (pathname === '/manual-create' || pathname === '/import' || pathname === '/question-list') {
+    if (pathname === '/manual-create' || pathname === '/import' || pathname === '/question-list' || pathname === '/requests') {
       setOpenSubmenus(prev => ({ ...prev, 'Xử lý tài liệu': true }));
     }
     if (pathname === '/topics' || pathname === '/tags' || pathname === '/difficulty') {
@@ -67,7 +68,8 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
       children: [
         { icon: FilePlus, label: 'Tạo thủ công', href: '/manual-create' },
         { icon: FileUp, label: 'Import tài liệu', href: '/import' },
-        { icon: ListChecks, label: 'Danh sách câu hỏi', href: '/question-list' }
+        { icon: ListChecks, label: 'Danh sách câu hỏi', href: '/question-list' },
+        { icon: Inbox, label: 'Yêu cầu', href: '/requests' }
       ]
     },
     { icon: Database, label: 'Question Bank', href: '/question-bank' },

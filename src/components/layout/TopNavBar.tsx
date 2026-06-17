@@ -1,7 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Menu, Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { User } from '@/lib/utils/auth-utils';
+import { getPendingRequestCount } from '@/actions/question-request';
 
 interface TopNavBarProps {
   toggleSidebar: () => void;
@@ -9,6 +12,13 @@ interface TopNavBarProps {
 }
 
 export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
+  const router = useRouter();
+  const [pending, setPending] = useState(0);
+  useEffect(() => {
+    let active = true;
+    getPendingRequestCount().then(n => { if (active) setPending(n); });
+    return () => { active = false; };
+  }, []);
 
   return (
     <>
@@ -30,9 +40,13 @@ export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <button onClick={() => window.alert('Chức năng đang cập nhật!')} className="p-2 rounded-full cursor-pointer hover:bg-surface-container-high transition-colors text-on-surface-variant relative">
+          <button onClick={() => router.push('/requests')} className="p-2 rounded-full cursor-pointer hover:bg-surface-container-high transition-colors text-on-surface-variant relative" title="Yêu cầu">
             <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+            {pending > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[10px] font-bold flex items-center justify-center">
+                {pending > 99 ? '99+' : pending}
+              </span>
+            )}
           </button>
 
           <div className="flex items-center gap-3 pl-2 border-l border-outline-variant/20">
