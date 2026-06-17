@@ -21,7 +21,8 @@ export interface QuestionListFilters {
 export async function getAllQuestions(
   page: number = 1,
   pageSize: number = 50,
-  filters: QuestionListFilters = {}
+  filters: QuestionListFilters = {},
+  options: { prioritizeRequests?: boolean } = {}
 ) {
   const {
     grades = [],
@@ -100,12 +101,63 @@ export async function getAllQuestions(
     // 6. Đếm + phân trang
     const total = await prisma.lms_questions.count({ where: whereClause });
 
-    const questionsRaw = await prisma.lms_questions.findMany({
-      where: whereClause,
-      orderBy: { id: 'desc' },
-      skip: offset,
-      take: safePageSize,
-    });
+    // Map question_id -> pending request count (only when prioritizing)
+    const pendingCountMap = new Map<string, number>();
+    let requestedOrdered: bigint[] = [];
+
+    if (options.prioritizeRequests) {
+      const grouped = await prisma.lms_requests.groupBy({
+        by: ['question_id'],
+        where: { status: 'PENDING', question_id: { not: null } },
+        _count: { _all: true },
+      });
+      const reqIds: bigint[] = [];
+      for (const g of grouped) {
+        if (g.question_id != null) {
+          pendingCountMap.set(g.question_id.toString(), g._count._all);
+          reqIds.push(g.question_id);
+        }
+      }
+      if (reqIds.length > 0) {
+        const requestedRows = await prisma.lms_questions.findMany({
+          where: { AND: [whereClause, { id: { in: reqIds } }] },
+          select: { id: true },
+          orderBy: { id: 'desc' },
+        });
+        requestedOrdered = requestedRows.map(r => r.id);
+      }
+    }
+
+    let questionsRaw: any[];
+    if (options.prioritizeRequests && requestedOrdered.length > 0) {
+      const rCount = requestedOrdered.length;
+      const seg1Ids = requestedOrdered.slice(offset, offset + safePageSize);
+      let seg1Rows: any[] = [];
+      if (seg1Ids.length > 0) {
+        const fetched = await prisma.lms_questions.findMany({ where: { id: { in: seg1Ids } } });
+        const byId = new Map(fetched.map(q => [q.id.toString(), q]));
+        seg1Rows = seg1Ids.map(id => byId.get(id.toString())).filter(Boolean) as any[];
+      }
+      const remainingTake = safePageSize - seg1Rows.length;
+      let seg2Rows: any[] = [];
+      if (remainingTake > 0) {
+        const seg2Skip = Math.max(0, offset - rCount);
+        seg2Rows = await prisma.lms_questions.findMany({
+          where: { AND: [whereClause, { id: { notIn: requestedOrdered } }] },
+          orderBy: { id: 'desc' },
+          skip: seg2Skip,
+          take: remainingTake,
+        });
+      }
+      questionsRaw = [...seg1Rows, ...seg2Rows];
+    } else {
+      questionsRaw = await prisma.lms_questions.findMany({
+        where: whereClause,
+        orderBy: { id: 'desc' },
+        skip: offset,
+        take: safePageSize,
+      });
+    }
 
     // 7. Người tạo (lms_users theo created_by_id)
     const creatorIds = Array.from(
@@ -162,6 +214,7 @@ export async function getAllQuestions(
         topics,
         created_by_name: q.created_by_id ? creatorMap.get(Number(q.created_by_id)) ?? null : null,
         isClassified: topics.length > 0 && tags.length > 0,
+        pendingRequestCount: pendingCountMap.get(q.id.toString()) ?? 0,
       };
 
       // Câu chùm cha 'main' → gắn câu con 'sub'
@@ -195,5 +248,49 @@ export async function getAllQuestions(
   } catch (error: any) {
     console.error('Error in getAllQuestions:', error?.message);
     return { data: [], total: 0, page: 1, pageSize: 50, totalPages: 0, difficulties: [] };
+  }
+}
+
+/**
+ * Lấy 1 câu hỏi đầy đủ (options, tags, topics) để mở trong QuestionEditModal.
+ * Dùng khi admin muốn sửa trực tiếp câu hỏi từ modal xử lý yêu cầu.
+ */
+export async function getQuestionById(id: number) {
+  try {
+    const q = await prisma.lms_questions.findUnique({ where: { id: BigInt(id) } });
+    if (!q) return null;
+
+    const options = await prisma.lms_options.findMany({
+      where: { question_id: q.id },
+      orderBy: { order: 'asc' },
+    });
+
+    const tagRels = await prisma.lms_questions_tags.findMany({
+      where: { question_id: q.id },
+      include: { tag: true },
+    });
+    const tags = tagRels.map(r => ({
+      id: Number(r.tag.id),
+      name: r.tag.name,
+      category: r.tag.category,
+    }));
+
+    const topicRels = await prisma.lms_topics_questions.findMany({
+      where: { question_id: q.id },
+      include: { topic: true },
+    });
+    const topics = topicRels.map(r => ({
+      topic_id: Number(r.topic_id),
+      topic: {
+        id: Number(r.topic.id),
+        title: r.topic.title ?? '',
+        code: r.topic.code ?? null,
+      },
+    }));
+
+    return serializeBigInt({ ...q, options, tags, topics });
+  } catch (error: any) {
+    console.error('Error in getQuestionById:', error?.message);
+    return null;
   }
 }

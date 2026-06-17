@@ -8,6 +8,11 @@
 
 **Input**: User description: "Làm chức năng hiển thị danh sách toàn bộ câu hỏi trong database (trừ câu private), có phân trang 50 câu/trang, lọc theo khối lớp, chủ đề, loại bài, tags, câu chưa phân loại. Bộ lọc dạng header ở đầu trang, bảng câu hỏi + phân trang bên dưới. Là một màn mới, tab con của nhóm 'Xử lý tài liệu'."
 
+> **Cập nhật bởi `011-question-requests`:** Tính năng request chỉnh sửa một số phần của trang này:
+> - `getAllQuestions` được mở rộng thêm `options.prioritizeRequests` + `pendingRequestCount` (đẩy câu có request `PENDING` lên đầu cho admin).
+> - Modal "Xem chi tiết" (vốn dùng `QuestionModal`) được thay bằng `QuestionDetailModal` mới (role-aware, kèm nút gửi đề xuất / khu vực duyệt).
+> Xem `specs/011-question-requests/` để biết chi tiết.
+
 ## Tổng quan
 
 Một trang mới **"Danh sách câu hỏi"** (`/question-list`), là mục con thứ ba trong submenu **"Xử lý tài liệu"** của sidebar (cạnh "Tạo thủ công" và "Import tài liệu"). Trang hiển thị **toàn bộ câu hỏi trong database** (loại trừ câu private theo quy tắc phân quyền), có bộ lọc dạng **header ngang ở đầu trang** và một **bảng câu hỏi read-only có phân trang 50 câu/trang** bên dưới.

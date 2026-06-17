@@ -39,3 +39,7 @@ Quy ước: `[P]` = có thể làm song song (file độc lập). Thứ tự ưu
 - T004 phụ thuộc T002.
 - T005 phụ thuộc T004; T006, T007 phụ thuộc T005 (nhận props).
 - T009–T011 sau khi T003–T008 xong.
+
+## Cập nhật bởi 011-question-requests
+- T7 (`QuestionListTable`): dùng `QuestionDetailModal` thay `QuestionModal`; thêm badge "N yêu cầu".
+- `getAllQuestions`: mở rộng `prioritizeRequests` + `pendingRequestCount`.

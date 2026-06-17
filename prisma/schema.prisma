@@ -270,8 +270,15 @@ model lms_requests {
   type            String?   @db.VarChar(255)
   content_suggest String?   @db.LongText
 
+  // 011-question-requests
+  question_id     BigInt?
+  status          String    @default("PENDING") @db.VarChar(50)
+  admin_note      String?   @db.LongText
+
   @@index([created_by_id], map: "lms_requests_created_by_id")
   @@index([updated_by_id], map: "lms_requests_updated_by_id")
+  @@index([question_id], map: "idx_lms_requests_question_id")
+  @@index([status], map: "idx_lms_requests_status")
 }
 
 model lms_syllabus {

@@ -135,3 +135,7 @@ resolveTopicQuestionIds(topicIds: number[]): Promise<bigint[]>
 filterByTags(questionIds: bigint[], tagIds: number[]): Promise<bigint[]>
 ```
 Logic trích từ `getLibraryQuestions` hiện có (không sửa bản gốc).
+
+## Cập nhật bởi 011-question-requests
+- `getAllQuestions` thêm tham số `options.prioritizeRequests` và trả `pendingRequestCount` mỗi item (đẩy câu có request PENDING lên đầu cho admin). Chi tiết: `specs/011-question-requests/data-model.md` mục 5.
+- Modal "Xem chi tiết" đổi từ `QuestionModal` sang `QuestionDetailModal` (role-aware).

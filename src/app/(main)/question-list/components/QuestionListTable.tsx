@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Eye, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
-import QuestionModal from '@/app/(main)/question-bank/components/QuestionModal';
+import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
+import QuestionDetailModal from './QuestionDetailModal';
 import AppBadge from '@/components/ui/AppBadge';
 import { getQuestionDisplayContent, cleanMathpixData } from '@/lib/utils/math-utils';
 
@@ -19,6 +19,7 @@ interface Props {
   onReset: () => void;
   isAdmin: boolean;
   currentUserId: number | null;
+  tagsByCategory: Record<string, { id: number; name: string; category: string }[]>;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -37,7 +38,7 @@ function snippet(q: any): string {
 }
 
 export default function QuestionListTable({
-  questions, difficulties, isLoading, total, page, totalPages, onPageChange, onReset, isAdmin, currentUserId,
+  questions, difficulties, isLoading, total, page, totalPages, onPageChange, onReset, isAdmin, currentUserId, tagsByCategory,
 }: Props) {
   const [selected, setSelected] = useState<any | null>(null);
 
@@ -69,7 +70,6 @@ export default function QuestionListTable({
               <th className="px-3 py-3 font-extrabold">Người tạo</th>
               <th className="px-3 py-3 font-extrabold">Ngày tạo</th>
               <th className="px-3 py-3 font-extrabold">Phân loại</th>
-              <th className="px-3 py-3 font-extrabold text-right">Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -106,11 +106,9 @@ export default function QuestionListTable({
                   {q.isClassified
                     ? <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold whitespace-nowrap">Đã phân loại</span>
                     : <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold whitespace-nowrap">Chưa phân loại</span>}
-                </td>
-                <td className="px-3 py-3 text-right">
-                  <button className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-bold hover:border-primary/40 hover:text-primary">
-                    <Eye onClick={() => setSelected(q)} className="w-3.5 h-3.5" />
-                  </button>
+                  {q.pendingRequestCount > 0 && (
+                    <span className="ml-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold whitespace-nowrap">{q.pendingRequestCount} yêu cầu</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -136,12 +134,12 @@ export default function QuestionListTable({
       </div>
 
       {selected && (
-        <QuestionModal
+        <QuestionDetailModal
           question={selected}
-          onClose={() => setSelected(null)}
-          currentUserId={currentUserId}
           isAdmin={isAdmin}
-          showEditButton={false}
+          currentUserId={currentUserId}
+          tagsByCategory={tagsByCategory}
+          onClose={() => setSelected(null)}
         />
       )}
     </div>

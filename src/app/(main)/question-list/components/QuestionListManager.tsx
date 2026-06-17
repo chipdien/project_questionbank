@@ -96,7 +96,7 @@ export default function QuestionListManager({ difficulties, tagsByCategory, isAd
     setIsLoading(true);
     getAllQuestions(page, PAGE_SIZE, {
       grades, questionTypes, topicIds, tagIds, keyword: debouncedKeyword, unclassified,
-    }).then(res => {
+    }, { prioritizeRequests: isAdmin }).then(res => {
       if (myReq !== reqId.current) return; // ignore stale
       setQuestions(res.data || []);
       setTotal(res.total || 0);
@@ -129,6 +129,7 @@ export default function QuestionListManager({ difficulties, tagsByCategory, isAd
         onReset={onReset}
         isAdmin={isAdmin}
         currentUserId={currentUserId}
+        tagsByCategory={tagsByCategory}
       />
     </div>
   );
