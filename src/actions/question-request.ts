@@ -56,11 +56,13 @@ export async function createQuestionRequest(input: {
 }
 
 async function enrichRequests(rows: any[]) {
-  const creatorIds = Array.from(new Set(rows.map(r => r.created_by_id).filter((v: any): v is bigint => v !== null))).map(Number);
-  const creators = creatorIds.length
-    ? await prisma.lms_users.findMany({ where: { id: { in: creatorIds } }, select: { id: true, username: true, nickname: true } })
+  const userIds = Array.from(new Set(
+    rows.flatMap(r => [r.created_by_id, r.updated_by_id]).filter((v: any): v is bigint => v !== null),
+  )).map(Number);
+  const users = userIds.length
+    ? await prisma.lms_users.findMany({ where: { id: { in: userIds } }, select: { id: true, username: true, nickname: true } })
     : [];
-  const creatorMap = new Map(creators.map(u => [u.id, u.nickname || u.username]));
+  const userMap = new Map(users.map(u => [u.id, u.nickname || u.username]));
 
   const qIds = Array.from(new Set(rows.map(r => r.question_id).filter((v: any): v is bigint => v !== null)));
   const questions = qIds.length
@@ -70,7 +72,8 @@ async function enrichRequests(rows: any[]) {
 
   return rows.map(r => ({
     ...r,
-    created_by_name: r.created_by_id ? creatorMap.get(Number(r.created_by_id)) ?? null : null,
+    created_by_name: r.created_by_id ? userMap.get(Number(r.created_by_id)) ?? null : null,
+    updated_by_name: r.updated_by_id ? userMap.get(Number(r.updated_by_id)) ?? null : null,
     question_statement: r.question_id ? qMap.get(r.question_id.toString()) ?? null : null,
   }));
 }

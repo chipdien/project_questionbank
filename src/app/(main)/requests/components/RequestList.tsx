@@ -1,5 +1,7 @@
 'use client';
 
+import { typeMeta, statusMeta } from '@/lib/constants/requests';
+
 interface Props {
   rows: any[];
   loading: boolean;
@@ -8,14 +10,6 @@ interface Props {
   onReview: (r: any) => void;
   onCancel: (id: number) => void;
 }
-
-const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
-  PENDING: { text: 'Chờ duyệt', cls: 'bg-amber-100 text-amber-700' },
-  APPROVED: { text: 'Đã duyệt', cls: 'bg-emerald-100 text-emerald-700' },
-  REJECTED: { text: 'Từ chối', cls: 'bg-rose-100 text-rose-700' },
-  CANCELLED: { text: 'Đã hủy', cls: 'bg-slate-100 text-slate-600' },
-};
-const TYPE_LABEL: Record<string, string> = { EDIT: 'Đề xuất sửa', CLASSIFY: 'Phân loại', REPORT: 'Báo lỗi' };
 
 export default function RequestList({ rows, loading, isAdmin, currentUserId, onReview, onCancel }: Props) {
   if (loading) return <div className="py-10 text-center text-on-surface-variant">Đang tải...</div>;
@@ -36,11 +30,13 @@ export default function RequestList({ rows, loading, isAdmin, currentUserId, onR
         </thead>
         <tbody>
           {rows.map(r => {
-            const st = STATUS_LABEL[r.status] || STATUS_LABEL.PENDING;
+            const st = statusMeta(r.status);
+            const tm = typeMeta(r.type);
+            const TIcon = tm.icon;
             return (
               <tr key={r.id} className="border-t border-outline-variant/10 align-top hover:bg-surface-container-low/40">
-                <td className="px-3 py-3"><span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold">{TYPE_LABEL[r.type] || r.type}</span></td>
-                <td className="px-3 py-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${st.cls}`}>{st.text}</span></td>
+                <td className="px-3 py-3"><span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap ${tm.badge}`}><TIcon className="w-3 h-3" />{tm.short}</span></td>
+                <td className="px-3 py-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${st.badge}`}>{st.label}</span></td>
                 <td className="px-3 py-3 text-on-surface">{r.question_statement ? `Q-${r.question_id}: ${String(r.question_statement).slice(0, 90)}` : <span className="text-outline italic">Câu hỏi không tồn tại</span>}</td>
                 <td className="px-3 py-3 text-on-surface-variant">{(r.content || '').slice(0, 80)}</td>
                 {isAdmin && <td className="px-3 py-3 whitespace-nowrap text-xs">{r.created_by_name || '—'}</td>}

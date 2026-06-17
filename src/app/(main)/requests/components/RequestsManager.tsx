@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { getQuestionRequests, cancelQuestionRequest, RequestType, RequestStatus } from '@/actions/question-request';
 import RequestList from './RequestList';
 import RequestReviewModal from './RequestReviewModal';
+import { typeMeta, statusMeta } from '@/lib/constants/requests';
 
 interface Props { isAdmin: boolean; currentUserId: number | null }
 
@@ -44,15 +45,24 @@ export default function RequestsManager({ isAdmin, currentUserId }: Props) {
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">
       <div className="flex flex-wrap gap-2 items-center">
-        {TYPES.map(t => (
-          <button key={t} onClick={() => toggleType(t)}
-            className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${types.includes(t) ? 'bg-primary/10 border-primary/40 text-primary' : 'border-outline-variant/30'}`}>{t}</button>
-        ))}
+        {TYPES.map(t => {
+          const tm = typeMeta(t);
+          const TIcon = tm.icon;
+          return (
+            <button key={t} onClick={() => toggleType(t)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold ${types.includes(t) ? `${tm.badge} border-transparent` : `border-outline-variant/30 ${tm.text}`}`}>
+              <TIcon className="w-3.5 h-3.5" />{tm.short}
+            </button>
+          );
+        })}
         <span className="mx-2 text-outline">|</span>
-        {STATUSES.map(s => (
-          <button key={s} onClick={() => toggleStatus(s)}
-            className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${statuses.includes(s) ? 'bg-primary/10 border-primary/40 text-primary' : 'border-outline-variant/30'}`}>{s}</button>
-        ))}
+        {STATUSES.map(s => {
+          const sm = statusMeta(s);
+          return (
+            <button key={s} onClick={() => toggleStatus(s)}
+              className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${statuses.includes(s) ? `${sm.badge} border-transparent` : 'border-outline-variant/30'}`}>{sm.label}</button>
+          );
+        })}
       </div>
 
       <RequestList
@@ -72,7 +82,7 @@ export default function RequestsManager({ isAdmin, currentUserId }: Props) {
         </div>
       </div>
 
-      {reviewing && <RequestReviewModal request={reviewing} onClose={() => setReviewing(null)} onDone={load} />}
+      {reviewing && <RequestReviewModal request={reviewing} currentUserId={currentUserId} onClose={() => setReviewing(null)} onDone={load} />}
     </div>
   );
 }

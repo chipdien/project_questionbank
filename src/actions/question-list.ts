@@ -250,3 +250,47 @@ export async function getAllQuestions(
     return { data: [], total: 0, page: 1, pageSize: 50, totalPages: 0, difficulties: [] };
   }
 }
+
+/**
+ * Lấy 1 câu hỏi đầy đủ (options, tags, topics) để mở trong QuestionEditModal.
+ * Dùng khi admin muốn sửa trực tiếp câu hỏi từ modal xử lý yêu cầu.
+ */
+export async function getQuestionById(id: number) {
+  try {
+    const q = await prisma.lms_questions.findUnique({ where: { id: BigInt(id) } });
+    if (!q) return null;
+
+    const options = await prisma.lms_options.findMany({
+      where: { question_id: q.id },
+      orderBy: { order: 'asc' },
+    });
+
+    const tagRels = await prisma.lms_questions_tags.findMany({
+      where: { question_id: q.id },
+      include: { tag: true },
+    });
+    const tags = tagRels.map(r => ({
+      id: Number(r.tag.id),
+      name: r.tag.name,
+      category: r.tag.category,
+    }));
+
+    const topicRels = await prisma.lms_topics_questions.findMany({
+      where: { question_id: q.id },
+      include: { topic: true },
+    });
+    const topics = topicRels.map(r => ({
+      topic_id: Number(r.topic_id),
+      topic: {
+        id: Number(r.topic.id),
+        title: r.topic.title ?? '',
+        code: r.topic.code ?? null,
+      },
+    }));
+
+    return serializeBigInt({ ...q, options, tags, topics });
+  } catch (error: any) {
+    console.error('Error in getQuestionById:', error?.message);
+    return null;
+  }
+}

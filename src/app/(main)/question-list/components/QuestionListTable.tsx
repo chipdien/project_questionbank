@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Eye, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 import QuestionDetailModal from './QuestionDetailModal';
 import AppBadge from '@/components/ui/AppBadge';
 import { getQuestionDisplayContent, cleanMathpixData } from '@/lib/utils/math-utils';
@@ -70,7 +70,6 @@ export default function QuestionListTable({
               <th className="px-3 py-3 font-extrabold">Người tạo</th>
               <th className="px-3 py-3 font-extrabold">Ngày tạo</th>
               <th className="px-3 py-3 font-extrabold">Phân loại</th>
-              <th className="px-3 py-3 font-extrabold text-right">Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -110,11 +109,6 @@ export default function QuestionListTable({
                   {q.pendingRequestCount > 0 && (
                     <span className="ml-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold whitespace-nowrap">{q.pendingRequestCount} yêu cầu</span>
                   )}
-                </td>
-                <td className="px-3 py-3 text-right">
-                  <button className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-bold hover:border-primary/40 hover:text-primary">
-                    <Eye onClick={() => setSelected(q)} className="w-3.5 h-3.5" />
-                  </button>
                 </td>
               </tr>
             ))}

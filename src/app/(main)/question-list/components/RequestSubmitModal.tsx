@@ -5,7 +5,10 @@ import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AppSelect from '@/components/ui/AppSelect';
 import TopicTreeSelect from '@/components/ui/topic-tree-select';
+import VditorEditor from '@/components/ui/VditorEditor';
+import { cleanMathDelimiters } from '@/components/common/hooks/useQuestionEditModal';
 import { createQuestionRequest, RequestType, ClassifySuggest } from '@/actions/question-request';
+import { typeMeta } from '@/lib/constants/requests';
 
 interface Tag { id: number; name: string; category: string }
 
@@ -18,15 +21,10 @@ interface Props {
 }
 
 const GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-const TITLES: Record<RequestType, string> = {
-  EDIT: 'Đề xuất sửa nội dung',
-  CLASSIFY: 'Đề xuất phân loại',
-  REPORT: 'Báo lỗi câu hỏi',
-};
 
 export default function RequestSubmitModal({ question, mode, tagsByCategory, onClose, onSubmitted }: Props) {
   const [reason, setReason] = useState('');
-  const [editContent, setEditContent] = useState(question?.statement || '');
+  const [editContent, setEditContent] = useState(cleanMathDelimiters(question?.statement || ''));
   const [reportDesc, setReportDesc] = useState('');
   const [reportSuggest, setReportSuggest] = useState('');
   const [grade, setGrade] = useState<number | null>(question?.grade ? Number(question.grade) : null);
@@ -60,18 +58,22 @@ export default function RequestSubmitModal({ question, mode, tagsByCategory, onC
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-2xl bg-surface-container-lowest rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-7xl bg-surface-container-lowest rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-5 border-b border-outline-variant/20">
-          <h2 className="text-lg font-bold text-on-surface font-headline">{TITLES[mode]} (Q-{question.id})</h2>
+          <h2 className="flex items-center gap-2 text-lg font-bold text-on-surface font-headline">
+            {(() => { const tm = typeMeta(mode); const TIcon = tm.icon; return <span className={`inline-flex items-center justify-center w-7 h-7 rounded-lg ${tm.badge}`}><TIcon className="w-4 h-4" /></span>; })()}
+            {typeMeta(mode).label} (Q-{question.id})
+          </h2>
           <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-surface-container-low"><X className="w-5 h-5" /></button>
         </div>
 
         <div className="p-5 overflow-y-auto flex-1 flex flex-col gap-4">
           {mode === 'EDIT' && (
             <>
-              <label className="text-xs font-bold uppercase text-outline">Nội dung đề xuất mới</label>
-              <textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows={6}
-                className="w-full p-3 rounded-xl border border-outline-variant/30 bg-surface text-sm" />
+              <label className="text-xs font-bold uppercase text-outline">Nội dung đề xuất mới (soạn thảo, hỗ trợ công thức toán)</label>
+              <div className="rounded-xl border border-outline-variant/30 overflow-hidden">
+                <VditorEditor value={editContent} onChange={setEditContent} mode="ir" isStickyToolbar={false} placeholder="Nhập nội dung đề xuất..." />
+              </div>
               <label className="text-xs font-bold uppercase text-outline">Lý do</label>
               <textarea value={reason} onChange={e => setReason(e.target.value)} rows={2}
                 className="w-full p-3 rounded-xl border border-outline-variant/30 bg-surface text-sm" />

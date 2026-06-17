@@ -95,6 +95,94 @@ export async function getCollections() {
   }
 }
 
+/**
+ * Lấy danh sách bộ sưu tập DO CHÍNH user hiện tại tạo (kể cả admin),
+ * dùng cho chức năng "thêm câu hỏi vào bộ sưu tập có sẵn".
+ */
+export async function getMyCollections() {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const collections = await prisma.lms_collections.findMany({
+      where: { created_by_id: BigInt(userId) },
+      orderBy: { updated_at: 'desc' },
+    });
+
+    const counts = await prisma.lms_questions_collections.groupBy({
+      by: ['collection_id'],
+      _count: { question_id: true },
+      where: { collection_id: { in: collections.map(c => c.id) } },
+    });
+    const countMap = new Map(counts.map(item => [item.collection_id, item._count.question_id]));
+
+    return serializeBigInt(collections.map(c => ({
+      ...c,
+      question_count: countMap.get(c.id) || 0,
+    })));
+  } catch (error) {
+    console.error('Error fetching my collections:', error);
+    return [];
+  }
+}
+
+/**
+ * Thêm các câu hỏi vào một bộ sưu tập có sẵn (bỏ qua câu đã tồn tại).
+ * Chỉ chủ sở hữu (hoặc admin) mới được thêm.
+ */
+export async function addQuestionsToCollection(collectionId: number, questionIds: number[]) {
+  if (!questionIds || questionIds.length === 0) {
+    return { success: false, error: 'Chưa chọn câu hỏi nào để thêm.' };
+  }
+
+  try {
+    const user = await getCurrentUser();
+    const userId = user?.id || null;
+    const levelRank = user?.level_rank || 0;
+    if (!userId) {
+      return { success: false, error: 'Bạn cần đăng nhập để thực hiện chức năng này.' };
+    }
+
+    const collection = await prisma.lms_collections.findFirst({
+      where: levelRank >= 5
+        ? { id: BigInt(collectionId) }
+        : { id: BigInt(collectionId), created_by_id: BigInt(userId) },
+    });
+    if (!collection) {
+      return { success: false, error: 'Không tìm thấy bộ sưu tập hoặc bạn không có quyền.' };
+    }
+
+    const qBigIds = questionIds.map(q => BigInt(q));
+    const existing = await prisma.lms_questions_collections.findMany({
+      where: { collection_id: BigInt(collectionId), question_id: { in: qBigIds } },
+      select: { question_id: true },
+    });
+    const existingSet = new Set(existing.map(e => e.question_id.toString()));
+    const toAdd = qBigIds.filter(q => !existingSet.has(q.toString()));
+
+    if (toAdd.length > 0) {
+      await prisma.lms_questions_collections.createMany({
+        data: toAdd.map(qId => ({
+          collection_id: BigInt(collectionId),
+          question_id: qId,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })),
+      });
+      await prisma.lms_collections.update({
+        where: { id: BigInt(collectionId) },
+        data: { updated_at: new Date(), updated_by_id: BigInt(userId) },
+      });
+    }
+
+    revalidatePath('/collection');
+    return { success: true, added: toAdd.length, skipped: questionIds.length - toAdd.length };
+  } catch (error: any) {
+    console.error('Error adding questions to collection:', error);
+    return { success: false, error: error.message || 'Có lỗi xảy ra khi thêm vào bộ sưu tập.' };
+  }
+}
+
 export const getCollectionByIdAction = getCollectionById;
 
 export async function getCollectionById(id: number) {
