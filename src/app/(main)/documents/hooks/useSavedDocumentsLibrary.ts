@@ -7,6 +7,7 @@ export interface SavedDocument {
   title: string;
   created_at: string;
   pdf_url: string;
+  created_by_name?: string | null;
 }
 
 export interface UseSavedDocumentsLibraryReturn {
@@ -16,12 +17,32 @@ export interface UseSavedDocumentsLibraryReturn {
   filteredDocs: SavedDocument[];
   setSearchTerm: (v: string) => void;
   refetch: () => void;
+  isAdmin: boolean;
 }
 
 export function useSavedDocumentsLibrary(): UseSavedDocumentsLibraryReturn {
   const [documents, setDocuments] = useState<SavedDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Lấy vai trò của user hiện tại
+  useEffect(() => {
+    async function checkRole() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.user) {
+            setIsAdmin(data.user.level_rank !== null && data.user.level_rank >= 5);
+          }
+        }
+      } catch (err) {
+        console.error('[useSavedDocumentsLibrary] Error fetching user role:', err);
+      }
+    }
+    checkRole();
+  }, []);
 
   const fetchDocuments = useCallback(async () => {
     setIsLoading(true);
@@ -53,5 +74,6 @@ export function useSavedDocumentsLibrary(): UseSavedDocumentsLibraryReturn {
     filteredDocs,
     setSearchTerm,
     refetch: fetchDocuments,
+    isAdmin,
   };
 }

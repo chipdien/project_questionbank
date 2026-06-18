@@ -19,6 +19,7 @@ export interface DocumentMetadata {
   teacher: string;
   topic: string;
   dateRange: string;
+  docType?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -97,6 +98,7 @@ export function useDocumentBuilder(): UseDocumentBuilderReturn {
     teacher: 'Thầy ABC',
     topic: 'Chuyên đề 1',
     dateRange: new Date().toISOString().split('T')[0],
+    docType: 'TÀI LIỆU HỌC TẬP',
   });
   const containerRef = useRef<HTMLDivElement>(null);
 

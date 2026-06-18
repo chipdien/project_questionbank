@@ -9,7 +9,7 @@ interface SavedDocumentsLibraryProps {
 }
 
 export default function SavedDocumentsLibrary({ onLoadDocument }: SavedDocumentsLibraryProps) {
-  const { isLoading, filteredDocs, searchTerm, setSearchTerm } = useSavedDocumentsLibrary();
+  const { isLoading, filteredDocs, searchTerm, setSearchTerm, isAdmin } = useSavedDocumentsLibrary();
 
   return (
     <div className="flex flex-col h-full bg-surface-container-lowest border-l border-outline-variant/30 no-print overflow-hidden">
@@ -59,9 +59,16 @@ export default function SavedDocumentsLibrary({ onLoadDocument }: SavedDocuments
                     <h3 className="text-sm font-bold text-on-surface truncate pr-2" title={doc.title}>
                       {doc.title}
                     </h3>
-                    <p className="text-[10px] text-outline mt-1 font-medium tracking-wide uppercase">
-                      {new Date(doc.created_at).toLocaleString('vi-VN')}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <p className="text-[10px] text-outline font-medium tracking-wide uppercase">
+                        {new Date(doc.created_at).toLocaleString('vi-VN')}
+                      </p>
+                      {isAdmin && doc.created_by_name && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container truncate max-w-[150px]" title={`Export bởi: ${doc.created_by_name}`}>
+                          Bởi: {doc.created_by_name}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 

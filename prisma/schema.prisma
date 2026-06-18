@@ -204,6 +204,7 @@ model lms_questions {
   owned_by_id         BigInt?
   teacher_owned_by_id BigInt?
   code                String?   @db.VarChar(6)
+  export_count        Int       @default(0)
 
   topics              lms_topics_questions[]
   tags                lms_questions_tags[]
