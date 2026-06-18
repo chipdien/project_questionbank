@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
+    "dev:light": "NODE_OPTIONS=--max-old-space-size=2048 next dev",
     "build": "next build",
     "start": "next start -p 5002",
     "lint": "next lint",
