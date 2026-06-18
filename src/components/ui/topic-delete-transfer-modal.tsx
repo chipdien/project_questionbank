@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { X, AlertTriangle, ArrowRightLeft, Trash2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Topic, RelatedData, topicsService } from '@/services/topics';
+import { Topic, RelatedData } from '@/app/(main)/topics/queries/useTopicsQuery';
+import { useUpdateTopicMutation, useDeleteTopicMutation, useTransferQuestionsMutation } from '@/app/(main)/topics/queries/useTopicMutation';
 
 interface TopicDeleteTransferModalProps {
   isOpen: boolean;
@@ -24,6 +25,10 @@ export default function TopicDeleteTransferModal({
   const [filterText, setFilterText] = useState('');
   const [includeSubtopics, setIncludeSubtopics] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const updateMutation = useUpdateTopicMutation();
+  const deleteMutation = useDeleteTopicMutation();
+  const transferMutation = useTransferQuestionsMutation();
 
   if (!isOpen) return null;
 
@@ -55,9 +60,12 @@ export default function TopicDeleteTransferModal({
     try {
       // 1. Chuyển câu hỏi (nếu có câu hỏi cần chuyển)
       if (relatedData.questions_count > 0) {
-        await topicsService.transferQuestions(topic.id, {
-          target_topic_id: targetTopicId,
-          include_subtopics: includeSubtopics
+        await transferMutation.mutateAsync({
+          id: topic.id,
+          data: {
+            target_topic_id: targetTopicId,
+            include_subtopics: includeSubtopics
+          }
         });
         toast.success(`Đã chuyển ${relatedData.questions_count} câu hỏi sang chủ đề mới.`);
       }
@@ -67,17 +75,20 @@ export default function TopicDeleteTransferModal({
       const directChildren = allTopics.filter(t => t.parent_id === topic.id);
       for (const child of directChildren) {
         // Gán lại parent_id của các con trực tiếp sang targetTopicId hoặc null (chọn targetTopicId làm cha mới)
-        await topicsService.updateTopic(child.id, {
-          parent_id: targetTopicId
+        await updateMutation.mutateAsync({
+          id: child.id,
+          data: {
+            parent_id: targetTopicId
+          }
         });
       }
 
       // 3. Tiến hành xóa chủ đề cũ
-      await topicsService.deleteTopic(topic.id);
+      await deleteMutation.mutateAsync(topic.id);
       toast.success('Xóa chủ đề cũ thành công');
       onSuccess();
     } catch (err: any) {
-      toast.error('Có lỗi xảy ra: ' + (err.response?.data?.error || err.message));
+      toast.error('Có lỗi xảy ra: ' + (err.message || 'Lỗi xử lý.'));
     } finally {
       setIsProcessing(false);
     }

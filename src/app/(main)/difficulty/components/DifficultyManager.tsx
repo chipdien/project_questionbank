@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit3, Check, AlertTriangle, Loader2, Palette, ArrowUpDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { Difficulty } from '@/actions/difficulty.action';
+import { useDifficultiesQuery } from '../queries/useDifficultiesQuery';
 import {
-  addDifficulty,
-  updateDifficulty,
-  deleteDifficulty,
-  getDifficulties,
-  Difficulty
-} from '@/actions/difficulty';
+  useAddDifficultyMutation,
+  useUpdateDifficultyMutation,
+  useDeleteDifficultyMutation,
+} from '../queries/useDifficultyMutation';
 
 interface DifficultyManagerProps {
   initialDifficulties: Difficulty[];
@@ -27,7 +27,11 @@ const PRESET_COLORS = [
 ];
 
 export default function DifficultyManager({ initialDifficulties }: DifficultyManagerProps) {
-  const [difficulties, setDifficulties] = useState<Difficulty[]>(initialDifficulties);
+  const { data: difficulties = [] } = useDifficultiesQuery(initialDifficulties);
+  const addMutation = useAddDifficultyMutation();
+  const updateMutation = useUpdateDifficultyMutation();
+  const deleteMutation = useDeleteDifficultyMutation();
+
   const [mode, setMode] = useState<'add' | 'edit' | 'delete'>('add');
   const [selectedDiff, setSelectedDiff] = useState<Difficulty | null>(null);
 
@@ -64,15 +68,6 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
     }
   }, [mode, selectedDiff, difficulties]);
 
-  const handleRefresh = async () => {
-    try {
-      const data = await getDifficulties();
-      setDifficulties(data);
-    } catch (err) {
-      console.error('Failed to refresh difficulties:', err);
-    }
-  };
-
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -84,16 +79,11 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
     setError(null);
 
     try {
-      const res = await addDifficulty(name, colorCode, displayOrder);
-      if (res.success) {
-        toast.success(`Đã thêm độ khó "${name}" thành công!`);
-        await handleRefresh();
-        setName('');
-        const maxOrder = difficulties.reduce((max, d) => d.display_order > max ? d.display_order : max, 0);
-        setDisplayOrder(maxOrder + 1);
-      } else {
-        setError(res.error || 'Đã xảy ra lỗi.');
-      }
+      await addMutation.mutateAsync({ name, colorCode, displayOrder });
+      toast.success(`Đã thêm độ khó "${name}" thành công!`);
+      setName('');
+      const maxOrder = difficulties.reduce((max, d) => d.display_order > max ? d.display_order : max, 0);
+      setDisplayOrder(maxOrder + 1);
     } catch (err: any) {
       setError(err.message || 'Lỗi kết nối Server Action.');
     } finally {
@@ -113,21 +103,16 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
     setError(null);
 
     try {
-      const res = await updateDifficulty(
-        selectedDiff.id,
-        selectedDiff.name,
-        name,
+      await updateMutation.mutateAsync({
+        id: selectedDiff.id,
+        oldName: selectedDiff.name,
+        newName: name,
         colorCode,
-        displayOrder
-      );
-      if (res.success) {
-        toast.success('Cập nhật độ khó thành công!');
-        await handleRefresh();
-        setMode('add');
-        setSelectedDiff(null);
-      } else {
-        setError(res.error || 'Đã xảy ra lỗi.');
-      }
+        displayOrder,
+      });
+      toast.success('Cập nhật độ khó thành công!');
+      setMode('add');
+      setSelectedDiff(null);
     } catch (err: any) {
       setError(err.message || 'Lỗi kết nối Server Action.');
     } finally {
@@ -146,19 +131,14 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
     setError(null);
 
     try {
-      const res = await deleteDifficulty(
-        selectedDiff.id,
-        selectedDiff.name,
-        replacementName
-      );
-      if (res.success) {
-        toast.success(`Đã xóa độ khó "${selectedDiff.name}" thành công!`);
-        await handleRefresh();
-        setMode('add');
-        setSelectedDiff(null);
-      } else {
-        setError(res.error || 'Đã xảy ra lỗi.');
-      }
+      await deleteMutation.mutateAsync({
+        id: selectedDiff.id,
+        name: selectedDiff.name,
+        replacementName,
+      });
+      toast.success(`Đã xóa độ khó "${selectedDiff.name}" thành công!`);
+      setMode('add');
+      setSelectedDiff(null);
     } catch (err: any) {
       setError(err.message || 'Lỗi kết nối Server Action.');
     } finally {

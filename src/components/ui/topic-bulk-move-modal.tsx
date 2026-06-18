@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { X, ArrowRightLeft, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Topic, topicsService } from '@/services/topics';
+import { Topic } from '@/app/(main)/topics/queries/useTopicsQuery';
+import { useBulkMoveTopicsMutation } from '@/app/(main)/topics/queries/useTopicMutation';
 
 interface TopicBulkMoveModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export default function TopicBulkMoveModal({
   const [targetParentId, setTargetParentId] = useState('');
   const [filterText, setFilterText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const bulkMoveMutation = useBulkMoveTopicsMutation();
 
   if (!isOpen) return null;
 
@@ -50,11 +52,14 @@ export default function TopicBulkMoveModal({
     setIsSaving(true);
     try {
       const topicIds = selectedTopics.map(t => t.id);
-      await topicsService.bulkMoveTopics(topicIds, targetParentId || null);
+      await bulkMoveMutation.mutateAsync({
+        topicIds,
+        targetParentId: targetParentId || null
+      });
       toast.success(`Đã di chuyển thành công ${selectedTopics.length} chủ đề.`);
       onSuccess();
     } catch (err: any) {
-      toast.error('Di chuyển hàng loạt thất bại: ' + (err.response?.data?.error || err.message));
+      toast.error('Di chuyển hàng loạt thất bại: ' + (err.message || 'Lỗi xử lý.'));
     } finally {
       setIsSaving(false);
     }

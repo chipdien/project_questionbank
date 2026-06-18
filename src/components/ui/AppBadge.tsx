@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Difficulty } from '@/actions/difficulty';
+import { Difficulty } from '@/actions/difficulty.action';
 import { cn } from '@/lib/utils/cn';
 
 interface AppBadgeProps {

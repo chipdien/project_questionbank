@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getCollectionsAction } from '@/actions/collection';
+import { getCollectionsAction } from '@/actions/collection.action';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +8,8 @@ export default async function CollectionsPage({ searchParams }: { searchParams: 
   const page = parseInt(resolvedSearchParams.page || '1', 10);
   const pageSize = 20;
 
-  const collections = await getCollectionsAction();
+  const response = await getCollectionsAction();
+  const collections = response.success ? response.data || [] : [];
   const totalItems = collections.length;
   const totalPages = Math.ceil(totalItems / pageSize);
 

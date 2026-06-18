@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Difficulty } from '@/actions/difficulty';
+import { Difficulty } from '@/actions/difficulty.action';
 import AppSelect from '@/components/ui/AppSelect';
 import AppButton from '@/components/ui/AppButton';
 

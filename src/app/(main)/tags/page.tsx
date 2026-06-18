@@ -1,120 +1,31 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Plus, Search, RefreshCw, Trash2, Edit } from 'lucide-react';
-import toast from 'react-hot-toast';
 
-import { tagsService, Tag } from '@/services/tags';
 import TagManagementModal from '@/components/ui/tag-management-modal';
+import { useTagsPage } from './hooks/useTagsPage';
 
 export default function TagsPage() {
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string>('ALL');
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingTag, setEditingTag] = useState<Tag | null>(null);
-
-  const loadTags = async () => {
-    setLoading(true);
-    try {
-      const data = await tagsService.fetchTags();
-      setTags(data);
-    } catch (err: any) {
-      toast.error('Không thể tải danh sách thẻ: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadTags();
-  }, []);
-
-  const handleCreateClick = () => {
-    setEditingTag(null);
-    setModalOpen(true);
-  };
-
-  const handleEditClick = (tag: Tag) => {
-    setEditingTag(tag);
-    setModalOpen(true);
-  };
-
-  const handleDeleteClick = async (tag: Tag) => {
-    if (confirm(`Bạn có chắc chắn muốn xóa thẻ "${tag.name}"? Thẻ này sẽ được gỡ khỏi tất cả câu hỏi liên quan.`)) {
-      try {
-        const res = await tagsService.deleteTag(tag.id);
-        toast.success(res.message || 'Xóa thẻ thành công');
-        loadTags();
-      } catch (err: any) {
-        toast.error('Xóa thẻ thất bại: ' + err.message);
-      }
-    }
-  };
-
-  const handleSave = async (formData: { name: string; category: string }) => {
-    try {
-      if (editingTag) {
-        await tagsService.updateTag(editingTag.id, formData);
-        toast.success('Cập nhật thẻ thành công');
-      } else {
-        await tagsService.createTag(formData);
-        toast.success('Tạo thẻ thành công');
-      }
-      setModalOpen(false);
-      loadTags();
-    } catch (err: any) {
-      toast.error('Lưu thẻ thất bại: ' + (err.response?.data?.error || err.message));
-    }
-  };
-
-  const categories = ['ALL', 'SOURCE', 'METHOD', 'SKILL', 'TYPE', 'EXAM', 'YEAR'];
-
-  const getCategoryBadgeClass = (category: string) => {
-    switch (category.toUpperCase()) {
-      case 'SKILL':
-        return 'bg-blue-500/10 text-blue-600 border-blue-500/30';
-      case 'SOURCE':
-        return 'bg-purple-500/10 text-purple-600 border-purple-500/30';
-      case 'METHOD':
-        return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30';
-      case 'TYPE':
-        return 'bg-amber-500/10 text-amber-600 border-amber-500/30';
-      case 'EXAM':
-        return 'bg-rose-500/10 text-rose-600 border-rose-500/30';
-      case 'YEAR':
-        return 'bg-cyan-500/10 text-cyan-600 border-cyan-500/30';
-      default:
-        return 'bg-slate-500/10 text-slate-500 border-slate-500/30';
-    }
-  };
-
-  const getCategoryBorderClass = (category: string) => {
-    switch (category.toUpperCase()) {
-      case 'SKILL':
-        return 'border-l-blue-500/90';
-      case 'SOURCE':
-        return 'border-l-purple-500/90';
-      case 'METHOD':
-        return 'border-l-emerald-500/90';
-      case 'TYPE':
-        return 'border-l-amber-500/90';
-      case 'EXAM':
-        return 'border-l-rose-500/90';
-      case 'YEAR':
-        return 'border-l-cyan-500/90';
-      default:
-        return 'border-l-slate-400/90';
-    }
-  };
-
-  const filteredTags = tags.filter(tag => {
-    const matchesSearch = tag.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = activeCategory === 'ALL' || tag.category === activeCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const {
+    loading,
+    refetch,
+    searchTerm,
+    setSearchTerm,
+    activeCategory,
+    setActiveCategory,
+    modalOpen,
+    setModalOpen,
+    editingTag,
+    filteredTags,
+    categories,
+    handleCreateClick,
+    handleEditClick,
+    handleDeleteClick,
+    handleSave,
+    getCategoryBadgeClass,
+    getCategoryBorderClass,
+  } = useTagsPage();
 
   return (
     <div className="flex flex-col gap-6 p-6 h-[calc(100vh-80px)] overflow-hidden">
@@ -125,7 +36,7 @@ export default function TagsPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={loadTags}
+            onClick={() => refetch()}
             disabled={loading}
             className="p-3 rounded-xl border border-outline-variant hover:bg-outline-variant/15 text-on-surface-variant transition-all"
             title="Làm mới"
@@ -230,7 +141,7 @@ export default function TagsPage() {
       <TagManagementModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        tag={editingTag}
+        tag={editingTag as any}
         onSave={handleSave}
       />
     </div>

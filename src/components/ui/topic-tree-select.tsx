@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ChevronDown, ChevronRight, Search, X, Check, Folder } from 'lucide-react';
-import { topicsService } from '@/services/topics';
+import { getTopicsAction } from '@/actions/topics.action';
 import { buildTopicTree, TopicTreeNode, TopicFlatNode } from '@/lib/utils/topic-tree-helper';
 
 export interface TopicTreeSelectProps {
@@ -65,7 +65,8 @@ export default function TopicTreeSelect({
     const loadData = async () => {
       setLoading(true);
       try {
-        const rawData = await topicsService.fetchTopics();
+        const response = await getTopicsAction();
+        const rawData = response.success ? response.data || [] : [];
         const validTypes = allowedTypes
           ? allowedTypes.map((t) => t.toUpperCase())
           : ALLOWED_TOPIC_TYPES;

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getCollectionByIdAction, getCollectionQuestionsAction } from '@/actions/collection';
+import { getCollectionByIdAction, getCollectionQuestionsAction } from '@/actions/collection.action';
 import QuestionsDataGrid from '@/app/(main)/question-bank/components/QuestionsDataGrid';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +14,8 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
     notFound();
   }
 
-  const collection = await getCollectionByIdAction(collectionId);
+  const collectionResponse = await getCollectionByIdAction(collectionId);
+  const collection = collectionResponse.success ? collectionResponse.data : null;
 
   if (!collection) {
     notFound();
@@ -24,17 +25,20 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
   const pageSize = 10;
   
   const questionsResponse = await getCollectionQuestionsAction(collectionId, page, pageSize);
+  const qData = questionsResponse.success && questionsResponse.data 
+    ? questionsResponse.data 
+    : { data: [], pagination: { totalCount: 0, page: 1, totalPages: 0 } };
 
-  const totalItems = questionsResponse.totalCount;
+  const totalItems = qData.pagination.totalCount;
   
   const pagination = {
-    currentPage: questionsResponse.page,
-    totalPages: questionsResponse.totalPages,
+    currentPage: qData.pagination.page,
+    totalPages: qData.pagination.totalPages,
     totalItems: totalItems,
     pageSize: pageSize,
   };
 
-  const paginatedQuestions = questionsResponse.data;
+  const paginatedQuestions = qData.data;
 
   return (
     <div className="p-8 min-h-full">

@@ -1,12 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { createCollectionAction, getMyCollections, addQuestionsToCollection } from '@/actions/collection';
+import { useAddToCollectionModal, Tab } from '../hooks/useAddToCollectionModal';
 import AppButton from '@/components/ui/AppButton';
 import AppInput from '@/components/ui/AppInput';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
 
 interface AddToCollectionModalProps {
   selectedIds: number[];
@@ -14,82 +12,22 @@ interface AddToCollectionModalProps {
   onSuccess: () => void;
 }
 
-type Tab = 'existing' | 'new';
-
 export default function AddToCollectionModal({ selectedIds, onClose, onSuccess }: AddToCollectionModalProps) {
-  const [tab, setTab] = useState<Tab>('existing');
-  const [title, setTitle] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const router = useRouter();
-
-  // Danh sách bộ sưu tập có sẵn của user
-  const [collections, setCollections] = useState<any[]>([]);
-  const [loadingList, setLoadingList] = useState(true);
-  const [selectedCollectionId, setSelectedCollectionId] = useState<number | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    getMyCollections().then(list => {
-      if (!active) return;
-      setCollections(list || []);
-      // Không có bộ sưu tập nào → mặc định chuyển sang tab tạo mới
-      if (!list || list.length === 0) setTab('new');
-      setLoadingList(false);
-    });
-    return () => { active = false; };
-  }, []);
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || isSubmitting) return;
-
-    setIsSubmitting(true);
-    try {
-      const result = await createCollectionAction(title, selectedIds);
-      if (result.success) {
-        setIsSuccess(true);
-      } else {
-        toast.error(result.error || 'Vui lòng thử lại.');
-        setIsSubmitting(false);
-      }
-    } catch (error) {
-      console.error('Unexpected error:', error);
-      toast.error('Đã có lỗi xảy ra khi tạo bộ sưu tập.');
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleAddExisting = async () => {
-    if (!selectedCollectionId || isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      const result = await addQuestionsToCollection(selectedCollectionId, selectedIds);
-      if (result.success) {
-        const added = result.added ?? 0;
-        const skipped = result.skipped ?? 0;
-        toast.success(
-          skipped > 0
-            ? `Đã thêm ${added} câu hỏi (bỏ qua ${skipped} câu đã có).`
-            : `Đã thêm ${added} câu hỏi vào bộ sưu tập.`,
-        );
-        onSuccess();
-        onClose();
-      } else {
-        toast.error(result.error || 'Vui lòng thử lại.');
-        setIsSubmitting(false);
-      }
-    } catch (error) {
-      console.error('Unexpected error:', error);
-      toast.error('Đã có lỗi xảy ra khi thêm vào bộ sưu tập.');
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleGoToCollections = () => {
-    onSuccess();
-    router.push('/collection');
-  };
+  const {
+    tab,
+    setTab,
+    title,
+    setTitle,
+    collections,
+    loadingList,
+    selectedCollectionId,
+    setSelectedCollectionId,
+    isSubmitting,
+    isSuccess,
+    handleCreate,
+    handleAddExisting,
+    handleGoToCollections,
+  } = useAddToCollectionModal({ selectedIds, onClose, onSuccess });
 
   const tabBtn = (key: Tab, label: string) =>
     `px-4 py-2 text-sm font-bold border-b-2 -mb-px transition-colors ${
@@ -171,11 +109,11 @@ export default function AddToCollectionModal({ selectedIds, onClose, onSuccess }
                           const active = selectedCollectionId === Number(c.id);
                           return (
                             <button
-                              key={c.id}
-                              onClick={() => setSelectedCollectionId(Number(c.id))}
-                              className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border text-left transition-colors ${
-                                active ? 'border-primary bg-primary/5' : 'border-outline-variant/30 hover:bg-surface-container-low'
-                              }`}
+                               key={c.id}
+                               onClick={() => setSelectedCollectionId(Number(c.id))}
+                               className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border text-left transition-colors ${
+                                 active ? 'border-primary bg-primary/5' : 'border-outline-variant/30 hover:bg-surface-container-low'
+                               }`}
                             >
                               <span className="flex items-center gap-2 min-w-0">
                                 <span className={`material-symbols-outlined text-lg ${active ? 'text-primary' : 'text-outline'}`}>

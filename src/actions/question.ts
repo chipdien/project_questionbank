@@ -218,52 +218,75 @@ export async function getQuestionsByDocId(
 
     const lessonNameMap = new Map(lessonsMap.map(l => [l.id, l.name]));
 
-    const questions: any[] = [];
-    for (const q of questionsRaw) {
-      const linkedLessonIds = questionLessons
-        .filter(ql => ql.question_id === q.id)
-        .map(ql => ql.lesson_id);
-      const names = linkedLessonIds.map(id => lessonNameMap.get(id)).filter(n => n) as string[];
-
-      const options = await prisma.lms_options.findMany({
-        where: { question_id: q.id },
+    // Fetch options, tags, topics for all questions in one go (batching)
+    const [allOptions, allTagsRelations, allTopicsRelations] = await Promise.all([
+      prisma.lms_options.findMany({
+        where: { question_id: { in: paginatedQuestionIds } },
         orderBy: { order: 'asc' },
-      });
+      }),
+      prisma.lms_questions_tags.findMany({
+        where: { question_id: { in: paginatedQuestionIds } },
+        include: { tag: true },
+      }),
+      prisma.lms_topics_questions.findMany({
+        where: { question_id: { in: paginatedQuestionIds } },
+        include: { topic: true },
+      }),
+    ]);
 
-      // Lấy danh sách tags liên kết với câu hỏi
-      const qTagsRelations = await prisma.lms_questions_tags.findMany({
-        where: { question_id: q.id },
-        include: { tag: true }
-      });
-      const tags = qTagsRelations.map(r => ({
+    // Group options by question_id
+    const optionsMap = new Map<string, any[]>();
+    for (const opt of allOptions) {
+      if (!opt.question_id) continue;
+      const qIdStr = opt.question_id.toString();
+      if (!optionsMap.has(qIdStr)) optionsMap.set(qIdStr, []);
+      optionsMap.get(qIdStr)!.push(opt);
+    }
+
+    // Group tags by question_id
+    const tagsMap = new Map<string, any[]>();
+    for (const r of allTagsRelations) {
+      const qIdStr = r.question_id.toString();
+      if (!tagsMap.has(qIdStr)) tagsMap.set(qIdStr, []);
+      tagsMap.get(qIdStr)!.push({
         tag_id: Number(r.tag_id),
         tag: {
           id: Number(r.tag.id),
           name: r.tag.name,
-          category: r.tag.category
-        }
-      }));
-
-      // Lấy danh sách topics liên kết với câu hỏi
-      const qTopicsRelations = await prisma.lms_topics_questions.findMany({
-        where: { question_id: q.id },
-        include: { topic: true }
+          category: r.tag.category,
+        },
       });
-      const topics = qTopicsRelations.map(r => ({
+    }
+
+    // Group topics by question_id
+    const topicsMap = new Map<string, any[]>();
+    for (const r of allTopicsRelations) {
+      const qIdStr = r.question_id.toString();
+      if (!topicsMap.has(qIdStr)) topicsMap.set(qIdStr, []);
+      topicsMap.get(qIdStr)!.push({
         topic_id: Number(r.topic.id),
         topic: {
           id: Number(r.topic.id),
           title: r.topic.title,
           code: r.topic.code,
-        }
-      }));
+        },
+      });
+    }
+
+    const questions: any[] = [];
+    for (const q of questionsRaw) {
+      const qIdStr = q.id.toString();
+      const linkedLessonIds = questionLessons
+        .filter(ql => ql.question_id === q.id)
+        .map(ql => ql.lesson_id);
+      const names = linkedLessonIds.map(id => lessonNameMap.get(id)).filter(n => n) as string[];
 
       questions.push({
         ...q,
         lesson_name: names.join(', ') || null,
-        options,
-        tags,
-        topics
+        options: optionsMap.get(qIdStr) || [],
+        tags: tagsMap.get(qIdStr) || [],
+        topics: topicsMap.get(qIdStr) || [],
       });
     }
 
@@ -466,69 +489,89 @@ export async function getLibraryQuestions(
 
     const lessonNameMap = new Map(lessonsMap.map(l => [l.id, l.name]));
 
+    // Lấy danh sách câu hỏi con (sub_questions) cho các câu hỏi chính (main)
+    const mainQuestionIds = questionsRaw.filter(q => q.complex === 'main').map(q => q.id);
+    let subQuestionsRaw: any[] = [];
+    if (mainQuestionIds.length > 0) {
+      subQuestionsRaw = await prisma.lms_questions.findMany({
+        where: {
+          ref_question_id: { in: mainQuestionIds },
+          complex: 'sub'
+        },
+        orderBy: { id: 'asc' }
+      });
+    }
+
+    // Kết hợp tất cả câu hỏi cha và con để fetch gộp options và tags
+    const allQuestionIds = [
+      ...questionsRaw.map(q => q.id),
+      ...subQuestionsRaw.map(sub => sub.id)
+    ];
+
+    const [allOptions, allTagsRelations] = await Promise.all([
+      prisma.lms_options.findMany({
+        where: { question_id: { in: allQuestionIds } },
+        orderBy: { order: 'asc' },
+      }),
+      prisma.lms_questions_tags.findMany({
+        where: { question_id: { in: allQuestionIds } },
+        include: { tag: true }
+      })
+    ]);
+
+    // Group options by question_id
+    const optionsMap = new Map<string, any[]>();
+    for (const opt of allOptions) {
+      if (!opt.question_id) continue;
+      const qIdStr = opt.question_id.toString();
+      if (!optionsMap.has(qIdStr)) optionsMap.set(qIdStr, []);
+      optionsMap.get(qIdStr)!.push(opt);
+    }
+
+    // Group tags by question_id
+    const tagsMap = new Map<string, any[]>();
+    for (const r of allTagsRelations) {
+      const qIdStr = r.question_id.toString();
+      if (!tagsMap.has(qIdStr)) tagsMap.set(qIdStr, []);
+      tagsMap.get(qIdStr)!.push({
+        id: Number(r.tag.id),
+        name: r.tag.name,
+        category: r.tag.category
+      });
+    }
+
+    // Group sub-questions by ref_question_id
+    const subQuestionsMap = new Map<string, any[]>();
+    for (const sub of subQuestionsRaw) {
+      if (!sub.ref_question_id) continue;
+      const refIdStr = sub.ref_question_id.toString();
+      if (!subQuestionsMap.has(refIdStr)) subQuestionsMap.set(refIdStr, []);
+      
+      const subIdStr = sub.id.toString();
+      subQuestionsMap.get(refIdStr)!.push({
+        ...sub,
+        options: optionsMap.get(subIdStr) || [],
+        tags: tagsMap.get(subIdStr) || []
+      });
+    }
+
     const questions: any[] = [];
     for (const q of questionsRaw) {
+      const qIdStr = q.id.toString();
       const linkedLessonIds = questionLessons
         .filter(ql => ql.question_id === q.id)
         .map(ql => ql.lesson_id);
       const names = linkedLessonIds.map(id => lessonNameMap.get(id)).filter(n => n) as string[];
 
-      const options = await prisma.lms_options.findMany({
-        where: { question_id: q.id },
-        orderBy: { order: 'asc' },
-      });
-
-      // Lấy danh sách tags liên kết với câu hỏi
-      const qTagsRelations = await prisma.lms_questions_tags.findMany({
-        where: { question_id: q.id },
-        include: { tag: true }
-      });
-      const tags = qTagsRelations.map(r => ({
-        id: Number(r.tag.id),
-        name: r.tag.name,
-        category: r.tag.category
-      }));
-
       const qObj: any = {
         ...q,
         lesson_name: names.join(', ') || null,
-        options,
-        tags
+        options: optionsMap.get(qIdStr) || [],
+        tags: tagsMap.get(qIdStr) || []
       };
 
-      // Nếu là câu hỏi chùm cha ('main'), lấy thêm các câu hỏi con ('sub')
       if (q.complex === 'main') {
-        const subQuestionsRaw = await prisma.lms_questions.findMany({
-          where: {
-            ref_question_id: q.id,
-            complex: 'sub'
-          },
-          orderBy: { id: 'asc' }
-        });
-
-        const subQuestions: any[] = [];
-        for (const sub of subQuestionsRaw) {
-          const subOptions = await prisma.lms_options.findMany({
-            where: { question_id: sub.id },
-            orderBy: { order: 'asc' }
-          });
-          const subTagsRelations = await prisma.lms_questions_tags.findMany({
-            where: { question_id: sub.id },
-            include: { tag: true }
-          });
-          const subTags = subTagsRelations.map(r => ({
-            id: Number(r.tag.id),
-            name: r.tag.name,
-            category: r.tag.category
-          }));
-
-          subQuestions.push({
-            ...sub,
-            options: subOptions,
-            tags: subTags
-          });
-        }
-        qObj.sub_questions = subQuestions;
+        qObj.sub_questions = subQuestionsMap.get(qIdStr) || [];
       }
 
       questions.push(qObj);

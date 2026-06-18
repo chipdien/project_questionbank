@@ -9,8 +9,8 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import { cleanMathpixData } from '@/lib/utils/math-utils';
-import { classifyQuestions, getTopics, getTagsByCategory } from '@/actions/question';
-import { getQuestionById } from '@/actions/question-list';
+import { classifyQuestionsAction, getTopicsAction, getTagsByCategoryAction } from '@/actions/question.action';
+import { getQuestionByIdAction } from '@/actions/question-list.action';
 import { approveQuestionRequest, rejectQuestionRequest, getRequestsForQuestion } from '@/actions/question-request';
 import QuestionFixModal from '@/components/common/QuestionFixModal';
 import { typeMeta, statusMeta } from '@/lib/constants/requests';
@@ -70,8 +70,10 @@ export default function RequestReviewModal({ request, currentUserId = null, onCl
   useEffect(() => {
     if (request.type !== 'CLASSIFY' || !classify) return;
     let active = true;
-    Promise.all([getTopics(), getTagsByCategory()]).then(([topics, tagsByCat]) => {
+    Promise.all([getTopicsAction(), getTagsByCategoryAction()]).then(([topicsRes, tagsByCatRes]) => {
       if (!active) return;
+      const topics = topicsRes.success ? topicsRes.data || [] : [];
+      const tagsByCat = tagsByCatRes.success ? tagsByCatRes.data || {} : {};
       setTopicMap(new Map((topics || []).map((t: any) => [Number(t.id), t.title])));
       const tags = new Map<number, string>();
       Object.values(tagsByCat || {}).forEach((list: any) => (list || []).forEach((tag: any) => tags.set(Number(tag.id), tag.name)));
@@ -83,7 +85,7 @@ export default function RequestReviewModal({ request, currentUserId = null, onCl
   const applyClassify = async () => {
     if (!classify || !request.question_id) { toast.error('Đề xuất phân loại không hợp lệ.'); return; }
     setBusy(true);
-    const res = await classifyQuestions([Number(request.question_id)], {
+    const res = await classifyQuestionsAction([Number(request.question_id)], {
       grade: classify.grade != null ? String(classify.grade) : null,
       topicIds: classify.topicIds,
       tagIds: classify.tagIds,
@@ -121,10 +123,10 @@ export default function RequestReviewModal({ request, currentUserId = null, onCl
   const openEdit = async () => {
     if (!request.question_id) { toast.error('Câu hỏi không tồn tại.'); return; }
     setLoadingEdit(true);
-    const q = await getQuestionById(Number(request.question_id));
+    const res = await getQuestionByIdAction(Number(request.question_id));
     setLoadingEdit(false);
-    if (!q) { toast.error('Không tải được câu hỏi.'); return; }
-    setEditQuestion(q);
+    if (!res.success || !res.data) { toast.error('Không tải được câu hỏi.'); return; }
+    setEditQuestion(res.data);
   };
 
   const doReject = async () => {

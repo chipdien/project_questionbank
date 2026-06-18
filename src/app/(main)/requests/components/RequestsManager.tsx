@@ -1,46 +1,42 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import toast from 'react-hot-toast';
-import { getQuestionRequests, cancelQuestionRequest, RequestType, RequestStatus } from '@/actions/question-request';
+import React from 'react';
+import { RequestType, RequestStatus } from '@/actions/question-request';
 import RequestList from './RequestList';
 import RequestReviewModal from './RequestReviewModal';
 import { typeMeta, statusMeta } from '@/lib/constants/requests';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRequestsManager } from '../hooks/useRequestsManager';
 
 interface Props { isAdmin: boolean; currentUserId: number | null }
 
 const TYPES: RequestType[] = ['EDIT', 'CLASSIFY', 'REPORT'];
 const STATUSES: RequestStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
-const PAGE_SIZE = 30;
 
 export default function RequestsManager({ isAdmin, currentUserId }: Props) {
-  const [types, setTypes] = useState<RequestType[]>([]);
-  const [statuses, setStatuses] = useState<RequestStatus[]>([]);
-  const [page, setPage] = useState(1);
-  const [data, setData] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [reviewing, setReviewing] = useState<any | null>(null);
+  const queryClient = useQueryClient();
+  const { state, actions } = useRequestsManager({
+    pageSize: 30,
+  });
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const res = await getQuestionRequests({ types, statuses }, page, PAGE_SIZE);
-    setData(res.data || []);
-    setTotal(res.total || 0);
-    setTotalPages(res.totalPages || 0);
-    setLoading(false);
-  }, [types, statuses, page]);
+  const {
+    types,
+    statuses,
+    page,
+    reviewing,
+    data,
+    total,
+    totalPages,
+    loading,
+  } = state;
 
-  useEffect(() => { load(); }, [load]);
-
-  const toggleType = (v: RequestType) => { setTypes(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v]); setPage(1); };
-  const toggleStatus = (v: RequestStatus) => { setStatuses(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v]); setPage(1); };
-
-  const onCancel = async (id: number) => {
-    const r = await cancelQuestionRequest(id);
-    if (r.success) { toast.success('Đã hủy.'); load(); } else toast.error(r.error || 'Thất bại.');
-  };
+  const {
+    setPage,
+    setReviewing,
+    toggleType,
+    toggleStatus,
+    onCancel,
+  } = actions;
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">
@@ -82,7 +78,20 @@ export default function RequestsManager({ isAdmin, currentUserId }: Props) {
         </div>
       </div>
 
-      {reviewing && <RequestReviewModal request={reviewing} currentUserId={currentUserId} onClose={() => setReviewing(null)} onDone={load} />}
+      {reviewing && (
+        <RequestReviewModal
+          request={reviewing}
+          currentUserId={currentUserId}
+          onClose={() => setReviewing(null)}
+          onDone={() => {
+            setReviewing(null);
+            queryClient.invalidateQueries({ queryKey: ['questionRequests'] });
+            // Invalidate other queries like questionList and questions because a request being approved can change question status
+            queryClient.invalidateQueries({ queryKey: ['questionList'] });
+            queryClient.invalidateQueries({ queryKey: ['questions'] });
+          }}
+        />
+      )}
     </div>
   );
 }

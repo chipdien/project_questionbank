@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Save, X, Plus } from 'lucide-react';
-import { Tag } from '@/services/tags';
+import { Tag } from '@/app/(main)/tags/queries/useTagsQuery';
 
 interface TagManagementModalProps {
   isOpen: boolean;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Plus, ArrowLeft, ChevronDown, Eye } from 'lucide-react';
-import { Topic } from '@/services/topics';
+import { Topic } from '@/app/(main)/topics/queries/useTopicsQuery';
 import Link from 'next/link';
 
 interface TopicDetailsPanelProps {

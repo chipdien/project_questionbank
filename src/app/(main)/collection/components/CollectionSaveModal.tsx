@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, FileText, CheckCircle2, AlertCircle, Loader2, ArrowRight, LibraryBig } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { X, Save, FileText, CheckCircle2, LibraryBig } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 
+import { useCollectionSaveModal } from '../hooks/useCollectionSaveModal';
 import { cleanMathpixData } from '@/lib/utils/math-utils';
 import AppButton from '@/components/ui/AppButton';
 import AppInput from '@/components/ui/AppInput';
@@ -34,47 +34,17 @@ export default function CollectionSaveModal({
   onSave,
   onReset,
 }: CollectionSaveModalProps) {
-  const router = useRouter();
-  const [title, setTitle] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSave = async () => {
-    if (!title.trim()) {
-      setError('Vui lòng nhập tiêu Ä‘ề bộ sưu tập.');
-      return;
-    }
-
-    setIsSaving(true);
-    setError(null);
-
-    try {
-      const result = await onSave(title);
-      if (result.success) {
-        setIsSuccess(true);
-      } else {
-        setError(result.error || 'Có lỗi xảy ra khi lưu.');
-      }
-    } catch (err) {
-      setError('Đã xảy ra lỗi không xác định.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleCreateNext = () => {
-    setIsSuccess(false);
-    setTitle('');
-    if (onReset) onReset();
-    onClose();
-  };
-
-  const handleViewCollections = () => {
-    if (onReset) onReset();
-    router.push('/collection');
-    onClose();
-  };
+  const {
+    title,
+    setTitle,
+    isSaving,
+    isSuccess,
+    error,
+    setError,
+    handleSave,
+    handleCreateNext,
+    handleViewCollections,
+  } = useCollectionSaveModal({ onSave, onClose, onReset });
 
   return (
     <AnimatePresence>

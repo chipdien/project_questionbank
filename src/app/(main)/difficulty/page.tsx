@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { getCurrentUser } from '@/lib/utils/auth-utils';
 import { redirect } from 'next/navigation';
-import { getDifficulties } from '@/actions/difficulty';
+import { getDifficultiesAction } from '@/actions/difficulty.action';
 import DifficultyManager from './components/DifficultyManager';
 
 export default async function DifficultyPage() {
@@ -11,7 +11,8 @@ export default async function DifficultyPage() {
     redirect('/');
   }
 
-  const difficulties = await getDifficulties();
+  const response = await getDifficultiesAction();
+  const difficulties = response.success ? response.data || [] : [];
 
   return (
     <div className="p-8 min-h-full">

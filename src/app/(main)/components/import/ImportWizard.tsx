@@ -8,9 +8,7 @@ import FileUploader from './FileUploader';
 import ProcessingOverlay from './ProcessingOverlay';
 import SplitWorkspace from './SplitWorkspace';
 import CompletionModal from './CompletionModal';
-import { prisma } from '@/lib/db';
-
-import { classifyQuestions, getQuestionsByDocId } from '@/actions/question';
+import { classifyQuestionsAction, getQuestionsByDocIdAction } from '@/actions/question.action';
 import { updateDocumentVisibility, getDocumentById } from '@/actions/document-library';
 import { useRouter } from 'next/navigation';
 
@@ -109,8 +107,8 @@ export default function ImportWizard({
       const { documentId: docId, questionsCount } = data.data;
 
       // Fetch questions từ DB để hiển thị ở bước 3
-      const questionsResult = await getQuestionsByDocId(docId, 1, 100);
-      const loadedQuestions = questionsResult.data || [];
+      const questionsResult = await getQuestionsByDocIdAction(docId, 1, 100);
+      const loadedQuestions = questionsResult.success ? questionsResult.data?.data || [] : [];
 
       setTimeout(async () => {
         setDocumentId(docId);
@@ -132,7 +130,7 @@ export default function ImportWizard({
   const handleSelectRecentDocument = useCallback(async (docId: number) => {
     try {
       const [questionsResult, docResult] = await Promise.all([
-        getQuestionsByDocId(docId, 1, 100),
+        getQuestionsByDocIdAction(docId, 1, 100),
         getDocumentById(docId),
       ]);
 
@@ -145,7 +143,7 @@ export default function ImportWizard({
       }
 
       setDocumentId(docId);
-      setQuestions(questionsResult.data || []);
+      setQuestions(questionsResult.success ? questionsResult.data?.data || [] : []);
       setCurrentStep('classify');
     } catch (e) {
       toast.error('Không thể tải tài liệu này.');
@@ -162,14 +160,14 @@ export default function ImportWizard({
   }) => {
     if (!questionIds || questionIds.length === 0) return;
 
-    const result = await classifyQuestions(questionIds, classification);
+    const result = await classifyQuestionsAction(questionIds, classification);
 
     if (result.success) {
       toast.success(`Đã phân loại ${questionIds.length} câu hỏi.`);
-      // Refresh questions list để cập nhật badges phân loại
+      // Refresh questions list
       if (documentId) {
-        const refreshed = await getQuestionsByDocId(documentId, 1, 100);
-        setQuestions(refreshed.data || []);
+        const refreshed = await getQuestionsByDocIdAction(documentId, 1, 100);
+        setQuestions(refreshed.success ? refreshed.data?.data || [] : []);
       }
     } else {
       toast.error(result.error || 'Phân loại thất bại.');

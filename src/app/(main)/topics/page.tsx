@@ -1,269 +1,51 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Plus, Search, RefreshCw, FolderPlus, ArrowRightLeft, CheckSquare, Square, Trash2 } from 'lucide-react';
-import toast from 'react-hot-toast';
 
-import { topicsService, Topic, RelatedData } from '@/services/topics';
 import TopicTreeNode from '@/components/ui/topic-tree-node';
 import TopicDetailsPanel from '@/components/ui/topic-details-panel';
 import TopicDeleteTransferModal from '@/components/ui/topic-delete-transfer-modal';
 import TopicBulkMoveModal from '@/components/ui/topic-bulk-move-modal';
+import { useTopicsPage } from './hooks/useTopicsPage';
 
 export default function TopicsPage() {
-  const [topics, setTopics] = useState<Topic[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
-  const [isNew, setIsNew] = useState(false);
-
-  // Trạng thái mở rộng (Expansion state) của cây chủ đề
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-
-  // States chọn nhiều và di chuyển hàng loạt
-  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkMoveModalOpen, setBulkMoveModalOpen] = useState(false);
-
-  // Modal quản lý xóa và chuyển đổi câu hỏi (US3)
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [topicToDelete, setTopicToDelete] = useState<Topic | null>(null);
-  const [relatedData, setRelatedData] = useState<RelatedData | null>(null);
-
-  const loadTopics = async () => {
-    setLoading(true);
-    try {
-      const data = await topicsService.fetchTopics();
-      // Chỉ giữ lại các record có TYPE thuộc nhóm SUBJECT, SYLLABUS, DOMAIN, TOPIC, LESSON, SUB_LESSON
-      const allowedTypes = ['SUBJECT', 'SYLLABUS', 'DOMAIN', 'TOPIC', 'LESSON', 'SUB_LESSON'];
-      const filteredData = data.filter(t => t.type && allowedTypes.includes(t.type.toUpperCase()));
-      // Sắp xếp các topics theo thứ tự hiển thị (order_index) từ thấp đến cao
-      const sortedData = [...filteredData].sort((a, b) => {
-        const orderA = parseInt(a.order_index || '0', 10);
-        const orderB = parseInt(b.order_index || '0', 10);
-        return orderA - orderB;
-      });
-      setTopics(sortedData);
-    } catch (err: any) {
-      toast.error('Không thể tải danh sách chủ đề: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadTopics();
-  }, []);
-
-  const handleSelect = (topic: Topic) => {
-    if (isMultiSelectMode) {
-      handleToggleSelect(topic);
-    } else {
-      setSelectedTopic(topic);
-      setIsNew(false);
-    }
-  };
-
-  const handleToggleSelect = (topic: Topic) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(topic.id)) {
-        next.delete(topic.id);
-      } else {
-        next.add(topic.id);
-      }
-      return next;
-    });
-  };
-
-  const toggleMultiSelectMode = () => {
-    setIsMultiSelectMode(!isMultiSelectMode);
-    setSelectedIds(new Set());
-  };
-
-  const handleToggleExpand = (topicId: string, isExpanded: boolean) => {
-    setExpandedIds(prev => {
-      const next = new Set(prev);
-      if (isExpanded) {
-        next.add(topicId);
-      } else {
-        next.delete(topicId);
-      }
-      return next;
-    });
-  };
-
-  const getNextTopicType = (parentType: string | null): string => {
-    switch (parentType?.toUpperCase()) {
-      case 'SYLLABUS':
-        return 'DOMAIN';
-      case 'DOMAIN':
-        return 'TOPIC';
-      case 'TOPIC':
-        return 'LESSON';
-      case 'LESSON':
-        return 'SUB_LESSON';
-      case 'SUB_LESSON':
-        return 'SUB_LESSON';
-      default:
-        return 'TOPIC';
-    }
-  };
-
-  const handleCreateRoot = () => {
-    setSelectedTopic({
-      id: '',
-      title: '',
-      code: '',
-      content: '',
-      parent_id: null,
-      path: null,
-      type: 'SYLLABUS',
-      order_index: '0',
-      subject_id: null,
-      syllabus_id: null
-    });
-    setIsNew(true);
-  };
-
-  const handleCreateChild = (parent: Topic) => {
-    setSelectedTopic({
-      id: '',
-      title: '',
-      code: '',
-      content: '',
-      parent_id: parent.id,
-      path: null,
-      type: getNextTopicType(parent.type),
-      order_index: '0',
-      subject_id: null,
-      syllabus_id: null
-    });
-    // Tự động mở rộng node cha khi bấm nút thêm con
-    setExpandedIds(prev => {
-      const next = new Set(prev);
-      next.add(parent.id);
-      return next;
-    });
-    setIsNew(true);
-  };
-
-  const handleDeleteClick = async (topic: Topic) => {
-    setTopicToDelete(topic);
-    try {
-      const related = await topicsService.fetchRelated(topic.id);
-      setRelatedData(related);
-      if (related.subtopics_count > 0 || related.questions_count > 0) {
-        // Có ràng buộc -> Hiển thị Modal chuyển đổi (US3)
-        setDeleteModalOpen(true);
-      } else {
-        // Không có ràng buộc -> Cho phép xóa trực tiếp
-        if (confirm(`Bạn có chắc chắn muốn xóa chủ đề "${topic.title}"?`)) {
-          await topicsService.deleteTopic(topic.id);
-          toast.success('Xóa chủ đề thành công');
-          if (selectedTopic?.id === topic.id) {
-            setSelectedTopic(null);
-          }
-          loadTopics();
-        }
-      }
-    } catch (err: any) {
-      toast.error('Kiểm tra thông tin liên kết thất bại: ' + err.message);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) return;
-    
-    const confirmDelete = window.confirm(
-      `Bạn có chắc chắn muốn xóa ${selectedIds.size} chủ đề đã chọn? Hành động này không thể hoàn tác.`
-    );
-    if (!confirmDelete) return;
-
-    const toastId = toast.loading('Đang thực hiện xóa hàng loạt...');
-    try {
-      await topicsService.bulkDeleteTopics(Array.from(selectedIds));
-      toast.success('Đã xóa các chủ đề thành công', { id: toastId });
-      setSelectedIds(new Set());
-      setIsMultiSelectMode(false);
-      await loadTopics();
-      setSelectedTopic(null);
-    } catch (err: any) {
-      console.error(err);
-      const errMsg = err.response?.data?.error || err.message || 'Lỗi khi xóa hàng loạt';
-      toast.error(errMsg, { id: toastId, duration: 5000 });
-    }
-  };
-
-  const handleSave = async (formData: Partial<Topic> & { createAnother?: boolean }) => {
-    const { createAnother, ...saveData } = formData;
-    try {
-      if (isNew) {
-        const created = await topicsService.createTopic(saveData);
-        toast.success('Tạo chủ đề thành công');
-        
-        // Tự động mở rộng các node cha của node mới tạo
-        if (created.parent_id) {
-          setExpandedIds(prev => {
-            const next = new Set(prev);
-            if (created.path) {
-              created.path.split('/').filter(Boolean).forEach(id => next.add(id));
-            }
-            return next;
-          });
-        }
-
-        if (createAnother) {
-          const nextOrder = (parseInt(formData.order_index || '0', 10) + 1).toString();
-          setSelectedTopic({
-            id: '',
-            title: '',
-            code: '',
-            content: '',
-            parent_id: formData.parent_id || null,
-            path: null,
-            type: formData.type || 'TOPIC',
-            order_index: nextOrder,
-            subject_id: null,
-            syllabus_id: null
-          });
-        } else {
-          setIsNew(false);
-          setSelectedTopic(created);
-        }
-      } else if (selectedTopic) {
-        const updated = await topicsService.updateTopic(selectedTopic.id, saveData);
-        toast.success('Cập nhật chủ đề thành công');
-        setSelectedTopic(updated);
-      }
-      loadTopics();
-    } catch (err: any) {
-      toast.error('Lưu thất bại: ' + (err.response?.data?.error || err.message));
-    }
-  };
-
-  const handleCancel = () => {
-    setIsNew(false);
-    if (topics.length > 0 && selectedTopic) {
-      // Keep selected
-    } else {
-      setSelectedTopic(null);
-    }
-  };
-
-  const rootTopics = topics.filter(t => !t.parent_id);
-
-  // Tìm kiếm và lọc chủ đề theo tên hoặc code
-  const filteredTopics = topics.filter(t => {
-    const term = searchTerm.toLowerCase();
-    return (
-      t.title?.toLowerCase().includes(term) ||
-      t.code?.toLowerCase().includes(term)
-    );
-  });
-
-  const selectedTopicsList = topics.filter(t => selectedIds.has(t.id));
+  const {
+    topics,
+    loading,
+    loadTopics,
+    searchTerm,
+    setSearchTerm,
+    selectedTopic,
+    setSelectedTopic,
+    isNew,
+    expandedIds,
+    isMultiSelectMode,
+    setIsMultiSelectMode,
+    selectedIds,
+    setSelectedIds,
+    bulkMoveModalOpen,
+    setBulkMoveModalOpen,
+    deleteModalOpen,
+    setDeleteModalOpen,
+    topicToDelete,
+    setTopicToDelete,
+    relatedData,
+    setRelatedData,
+    handleSelect,
+    handleToggleSelect,
+    toggleMultiSelectMode,
+    handleToggleExpand,
+    handleCreateRoot,
+    handleCreateChild,
+    handleDeleteClick,
+    handleBulkDelete,
+    handleSave,
+    handleCancel,
+    rootTopics,
+    filteredTopics,
+    selectedTopicsList
+  } = useTopicsPage();
 
   return (
     <div className="flex flex-col gap-6 p-6 h-[calc(100vh-80px)] overflow-hidden">
@@ -306,7 +88,7 @@ export default function TopicsPage() {
           )}
 
           <button
-            onClick={loadTopics}
+            onClick={() => loadTopics()}
             disabled={loading}
             className="p-3 rounded-xl border border-outline-variant hover:bg-outline-variant/15 text-on-surface-variant transition-all"
             title="Làm mới"
@@ -355,7 +137,7 @@ export default function TopicsPage() {
                 </button>
               </div>
             ) : searchTerm ? (
-              // Nếu đang tìm kiếm, hiển thị danh sách phẳng đã lọc
+              // Flat list view for search term
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-on-surface-variant/70 px-2">Kết quả tìm kiếm ({filteredTopics.length}):</p>
                 {filteredTopics.map(topic => (
@@ -394,7 +176,7 @@ export default function TopicsPage() {
                 ))}
               </div>
             ) : (
-              // Render cây đệ quy
+              // Recursively render topic tree nodes
               rootTopics
                 .sort((a, b) => {
                   const orderA = parseInt(a.order_index || '0');
@@ -404,16 +186,16 @@ export default function TopicsPage() {
                 .map(topic => (
                   <TopicTreeNode
                     key={topic.id}
-                    topic={topic}
-                    allTopics={topics}
+                    topic={topic as any}
+                    allTopics={topics as any}
                     level={0}
                     activeId={selectedTopic?.id || null}
-                    onSelect={handleSelect}
-                    onCreateChild={handleCreateChild}
-                    onDelete={handleDeleteClick}
+                    onSelect={handleSelect as any}
+                    onCreateChild={handleCreateChild as any}
+                    onDelete={handleDeleteClick as any}
                     isMultiSelectMode={isMultiSelectMode}
                     selectedIds={selectedIds}
-                    onToggleSelect={handleToggleSelect}
+                    onToggleSelect={handleToggleSelect as any}
                     expandedIds={expandedIds}
                     onToggleExpand={handleToggleExpand}
                   />
@@ -425,8 +207,8 @@ export default function TopicsPage() {
         {/* Details Panel Section */}
         <div className="w-full md:w-1/2 h-full min-h-0">
           <TopicDetailsPanel
-            topic={selectedTopic}
-            allTopics={topics}
+            topic={selectedTopic as any}
+            allTopics={topics as any}
             isNew={isNew}
             onSave={handleSave}
             onCancel={handleCancel}
@@ -443,8 +225,8 @@ export default function TopicsPage() {
             setTopicToDelete(null);
             setRelatedData(null);
           }}
-          topic={topicToDelete}
-          allTopics={topics}
+          topic={topicToDelete as any}
+          allTopics={topics as any}
           relatedData={relatedData}
           onSuccess={() => {
             setDeleteModalOpen(false);
@@ -461,8 +243,8 @@ export default function TopicsPage() {
         <TopicBulkMoveModal
           isOpen={bulkMoveModalOpen}
           onClose={() => setBulkMoveModalOpen(false)}
-          selectedTopics={selectedTopicsList}
-          allTopics={topics}
+          selectedTopics={selectedTopicsList as any}
+          allTopics={topics as any}
           onSuccess={() => {
             setBulkMoveModalOpen(false);
             setIsMultiSelectMode(false);

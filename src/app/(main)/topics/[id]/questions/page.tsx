@@ -10,7 +10,8 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import Link from 'next/link';
 
-import { topicsService, Topic } from '@/services/topics';
+import { getTopicsAction, fetchTopicQuestionsAction, bulkMoveQuestionsAction } from '@/actions/topics.action';
+import { Topic } from '@/app/(main)/topics/queries/useTopicsQuery';
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
 import QuestionEditModal from '@/components/common/QuestionEditModal';
 
@@ -61,13 +62,20 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
   const loadData = async () => {
     setLoading(true);
     try {
-      const all = await topicsService.fetchTopics();
+      const allRes = await getTopicsAction();
+      if (!allRes.success) {
+        throw new Error(allRes.error || 'Không thể lấy danh sách chủ đề.');
+      }
+      const all = allRes.data || [];
       setAllTopics(all);
       const current = all.find(t => t.id === id);
       if (current) setTopic(current);
 
-      const qs = await topicsService.fetchTopicQuestions(id);
-      setQuestions(qs);
+      const qsRes = await fetchTopicQuestionsAction(Number(id));
+      if (!qsRes.success) {
+        throw new Error(qsRes.error || 'Không thể tải danh sách câu hỏi.');
+      }
+      setQuestions(qsRes.data || []);
     } catch (err: any) {
       toast.error('Không thể tải danh sách câu hỏi: ' + err.message);
     } finally {
@@ -107,11 +115,14 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
     setIsMoving(true);
     const toastId = toast.loading(`Đang di chuyển ${selectedIds.size} câu hỏi...`);
     try {
-      await topicsService.bulkMoveQuestions(
-        Array.from(selectedIds),
-        id,
-        targetTopicId
+      const res = await bulkMoveQuestionsAction(
+        Array.from(selectedIds).map(Number),
+        Number(id),
+        Number(targetTopicId)
       );
+      if (!res.success) {
+        throw new Error(res.error || 'Di chuyển thất bại.');
+      }
       toast.success('Di chuyển câu hỏi thành công', { id: toastId });
       setSelectedIds(new Set());
       setBulkMoveOpen(false);
@@ -119,7 +130,7 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
       setTargetSearch('');
       await loadData();
     } catch (err: any) {
-      toast.error('Di chuyển thất bại: ' + (err.response?.data?.error || err.message), { id: toastId });
+      toast.error('Di chuyển thất bại: ' + err.message, { id: toastId });
     } finally {
       setIsMoving(false);
     }

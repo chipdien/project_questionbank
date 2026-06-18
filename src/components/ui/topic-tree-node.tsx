@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronDown, Plus, Trash2, Folder, File } from 'lucide-react';
-import { Topic } from '@/services/topics';
+import { Topic } from '@/app/(main)/topics/queries/useTopicsQuery';
 
 interface TopicTreeNodeProps {
   topic: Topic;

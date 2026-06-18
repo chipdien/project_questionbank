@@ -177,39 +177,96 @@ export async function getAllQuestions(
     });
 
     // 9. Làm giàu từng câu hỏi (options, tags, topics dạng nested cho QuestionModal)
-    const questions: any[] = [];
-    for (const q of questionsRaw) {
-      const options = await prisma.lms_options.findMany({
-        where: { question_id: q.id },
-        orderBy: { order: 'asc' },
+    // Lấy câu hỏi con (sub_questions) cho các câu hỏi chính (main)
+    const mainQuestionIds = questionsRaw.filter(q => q.complex === 'main').map(q => q.id);
+    let subQuestionsRaw: any[] = [];
+    if (mainQuestionIds.length > 0) {
+      subQuestionsRaw = await prisma.lms_questions.findMany({
+        where: { ref_question_id: { in: mainQuestionIds }, complex: 'sub' },
+        orderBy: { id: 'asc' },
       });
+    }
 
-      const tagRels = await prisma.lms_questions_tags.findMany({
-        where: { question_id: q.id },
+    // Kết hợp tất cả câu hỏi để fetch gộp options, tags, topics
+    const allQuestionIds = [
+      ...questionsRaw.map(q => q.id),
+      ...subQuestionsRaw.map(sub => sub.id)
+    ];
+
+    const [allOptions, allTagsRelations, allTopicsRelations] = await Promise.all([
+      prisma.lms_options.findMany({
+        where: { question_id: { in: allQuestionIds } },
+        orderBy: { order: 'asc' },
+      }),
+      prisma.lms_questions_tags.findMany({
+        where: { question_id: { in: allQuestionIds } },
         include: { tag: true },
-      });
-      const tags = tagRels.map(r => ({
+      }),
+      prisma.lms_topics_questions.findMany({
+        where: { question_id: { in: allQuestionIds } },
+        include: { topic: true },
+      })
+    ]);
+
+    // Group options by question_id
+    const optionsMap = new Map<string, any[]>();
+    for (const opt of allOptions) {
+      if (!opt.question_id) continue;
+      const qIdStr = opt.question_id.toString();
+      if (!optionsMap.has(qIdStr)) optionsMap.set(qIdStr, []);
+      optionsMap.get(qIdStr)!.push(opt);
+    }
+
+    // Group tags by question_id
+    const tagsMap = new Map<string, any[]>();
+    for (const r of allTagsRelations) {
+      const qIdStr = r.question_id.toString();
+      if (!tagsMap.has(qIdStr)) tagsMap.set(qIdStr, []);
+      tagsMap.get(qIdStr)!.push({
         id: Number(r.tag.id),
         name: r.tag.name,
         category: r.tag.category,
-      }));
-
-      const topicRels = await prisma.lms_topics_questions.findMany({
-        where: { question_id: q.id },
-        include: { topic: true },
       });
-      const topics = topicRels.map(r => ({
+    }
+
+    // Group topics by question_id
+    const topicsMap = new Map<string, any[]>();
+    for (const r of allTopicsRelations) {
+      const qIdStr = r.question_id.toString();
+      if (!topicsMap.has(qIdStr)) topicsMap.set(qIdStr, []);
+      topicsMap.get(qIdStr)!.push({
         topic_id: Number(r.topic_id),
         topic: {
           id: Number(r.topic.id),
           title: r.topic.title ?? '',
           code: r.topic.code ?? null,
         },
-      }));
+      });
+    }
+
+    // Group sub-questions by ref_question_id
+    const subQuestionsMap = new Map<string, any[]>();
+    for (const sub of subQuestionsRaw) {
+      if (!sub.ref_question_id) continue;
+      const refIdStr = sub.ref_question_id.toString();
+      if (!subQuestionsMap.has(refIdStr)) subQuestionsMap.set(refIdStr, []);
+      
+      const subIdStr = sub.id.toString();
+      subQuestionsMap.get(refIdStr)!.push({
+        ...sub,
+        options: optionsMap.get(subIdStr) || [],
+      });
+    }
+
+    const questions: any[] = [];
+    for (const q of questionsRaw) {
+      const qIdStr = q.id.toString();
+      const tags = tagsMap.get(qIdStr) || [];
+      const topics = topicsMap.get(qIdStr) || [];
 
       const qObj: any = {
         ...q,
-        options,
+        options: optionsMap.get(qIdStr) || [],
         tags,
         topics,
         created_by_name: q.created_by_id ? creatorMap.get(Number(q.created_by_id)) ?? null : null,
@@ -217,21 +274,8 @@ export async function getAllQuestions(
         pendingRequestCount: pendingCountMap.get(q.id.toString()) ?? 0,
       };
 
-      // Câu chùm cha 'main' → gắn câu con 'sub'
       if (q.complex === 'main') {
-        const subsRaw = await prisma.lms_questions.findMany({
-          where: { ref_question_id: q.id, complex: 'sub' },
-          orderBy: { id: 'asc' },
-        });
-        const subs: any[] = [];
-        for (const sub of subsRaw) {
-          const subOptions = await prisma.lms_options.findMany({
-            where: { question_id: sub.id },
-            orderBy: { order: 'asc' },
-          });
-          subs.push({ ...sub, options: subOptions });
-        }
-        qObj.sub_questions = subs;
+        qObj.sub_questions = subQuestionsMap.get(qIdStr) || [];
       }
 
       questions.push(qObj);

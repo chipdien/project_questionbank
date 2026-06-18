@@ -1,13 +1,8 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import VditorEditor from '@/components/ui/VditorEditor';
-
-interface Option {
-  content: string;
-  order: number;
-  weight: number;
-}
+import { useAnswerForm, Option } from '../hooks/useAnswerForm';
 
 interface AnswerFormProps {
   questionType: string;
@@ -26,88 +21,18 @@ export default function AnswerForm({
   hint,
   setHint,
 }: AnswerFormProps) {
-  // Sync options when type changes
-  useEffect(() => {
-    if (questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE') {
-      if (options.length !== 4) {
-        setOptions([
-          { content: '', order: 1, weight: 0 },
-          { content: '', order: 2, weight: 0 },
-          { content: '', order: 3, weight: 0 },
-          { content: '', order: 4, weight: 0 },
-        ]);
-      }
-    } else if (questionType === 'TRUE_FALSE') {
-      if (options.length !== 4) {
-        setOptions([
-          { content: 'Mệnh đề a', order: 1, weight: 1 }, // 1 = Đúng, 0 = Sai
-          { content: 'Mệnh đề b', order: 2, weight: 1 },
-          { content: 'Mệnh đề c', order: 3, weight: 1 },
-          { content: 'Mệnh đề d', order: 4, weight: 1 },
-        ]);
-      }
-    } else if (questionType === 'FILL_IN') {
-      const matches = statement.match(/\[blank\]/g);
-      const count = matches ? matches.length : 0;
-      setOptions(prev => {
-        const next = [...prev];
-        if (next.length < count) {
-          for (let i = next.length; i < count; i++) {
-            next.push({ content: '', order: i + 1, weight: 1 });
-          }
-        } else if (next.length > count) {
-          next.splice(count);
-        }
-        return next;
-      });
-    } else {
-      // ESSAY: no options
-      setOptions([]);
-    }
-  }, [questionType, setOptions]);
+  const { actions } = useAnswerForm({
+    questionType,
+    statement,
+    options,
+    setOptions,
+  });
 
-  // Sync FILL_IN blanks count in real-time when statement changes
-  useEffect(() => {
-    if (questionType === 'FILL_IN') {
-      const matches = statement.match(/\[blank\]/g);
-      const count = matches ? matches.length : 0;
-      setOptions(prev => {
-        if (prev.length === count) return prev;
-        const next = [...prev];
-        if (next.length < count) {
-          for (let i = next.length; i < count; i++) {
-            next.push({ content: '', order: i + 1, weight: 1 });
-          }
-        } else if (next.length > count) {
-          next.splice(count);
-        }
-        return next;
-      });
-    }
-  }, [statement, questionType, setOptions]);
-
-  // Handle option changes
-  const handleOptionContentChange = (idx: number, content: string) => {
-    setOptions(prev => prev.map((opt, i) => i === idx ? { ...opt, content } : opt));
-  };
-
-  const handleMultipleChoiceWeightChange = (idx: number) => {
-    if (questionType === 'SINGLE_CHOICE') {
-      setOptions(prev => prev.map((opt, i) => ({
-        ...opt,
-        weight: i === idx ? 1 : 0
-      })));
-    } else {
-      setOptions(prev => prev.map((opt, i) => i === idx ? {
-        ...opt,
-        weight: opt.weight === 1 ? 0 : 1
-      } : opt));
-    }
-  };
-
-  const handleTrueFalseWeightChange = (idx: number, weight: number) => {
-    setOptions(prev => prev.map((opt, i) => i === idx ? { ...opt, weight } : opt));
-  };
+  const {
+    handleOptionContentChange,
+    handleMultipleChoiceWeightChange,
+    handleTrueFalseWeightChange,
+  } = actions;
 
   return (
     <div className="flex flex-col gap-4">

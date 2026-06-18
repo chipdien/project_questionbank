@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CollectionSaveModal from '@/app/(main)/collection/components/CollectionSaveModal';
-import { Difficulty } from '@/actions/difficulty';
+import { Difficulty } from '@/actions/difficulty.action';
 import { Loader2, Plus, Trash2, ChevronLeft, ChevronRight, Search, Bookmark } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -214,9 +214,11 @@ export default function QuestionBankManager({
   } = actions;
 
   const handleRefreshDifficulties = async () => {
-    const { getDifficulties } = await import('@/actions/difficulty');
-    const fresh = await getDifficulties();
-    setDifficultiesList(fresh);
+    const { getDifficultiesAction } = await import('@/actions/difficulty.action');
+    const response = await getDifficultiesAction();
+    if (response.success) {
+      setDifficultiesList(response.data || []);
+    }
   };
 
   const tagsByCategory = React.useMemo(() => {

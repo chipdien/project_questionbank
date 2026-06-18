@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import AppCheckbox from '@/components/ui/AppCheckbox';
-import { Difficulty } from '@/actions/difficulty';
+import { Difficulty } from '@/actions/difficulty.action';
 
 interface Topic {
   id: number;
