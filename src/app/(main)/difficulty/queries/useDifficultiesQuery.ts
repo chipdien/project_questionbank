@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getDifficultiesAction, Difficulty } from '@/actions/difficulty.action';
+import { getDifficultiesAction, Difficulty } from '@/lib/actions/difficulty.action';
 
 export function useDifficultiesQuery(initialData?: Difficulty[]) {
   return useQuery<Difficulty[]>({

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getCollections, getCollectionQuestions } from '@/actions/collection.action';
+import { getCollections, getCollectionQuestions } from '@/lib/actions/collection.action';
 
 interface UseQuestionLibraryProps {
   onSelect?: (question: any) => void;
@@ -52,8 +52,8 @@ export function useQuestionLibrary({ onSelect, onSelectMany }: UseQuestionLibrar
     setIsLoading(true);
     try {
       const response = await getCollectionQuestions(Number(selectedCollectionId), currentPage, 30);
-      const res = response.success && response.data 
-        ? response.data 
+      const res = response.success && response.data
+        ? response.data
         : { data: [], pagination: { totalPages: 0, page: 1 } };
 
       setQuestions(res.data);

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getS3ObjectBytes } from '@/lib/utils/s3-utils';
-import { getCurrentUserId } from '@/lib/utils/auth-utils';
+import { getS3ObjectBytes } from '@/lib/utils/s3.utils';
+import { getCurrentUserId } from '@/lib/utils/auth.utils';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

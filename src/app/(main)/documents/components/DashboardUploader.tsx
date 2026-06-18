@@ -5,7 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Modal } from '@/components/ui/Modal';
+import { Modal } from '@/lib/components/ui/Modal';
 import { toast } from 'react-hot-toast';
 import { useDashboardUploader, UPLOAD_STEPS } from '../hooks/useDashboardUploader';
 

@@ -9,13 +9,13 @@ import rehypeRaw from 'rehype-raw';
 
 import QuestionModal from '@/app/(main)/question-bank/components/QuestionModal';
 import AddToCollectionModal from '@/app/(main)/collection/components/AddToCollectionModal';
-import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 
-import { Question, Pagination } from '@/types';
-import { Difficulty } from '@/actions/difficulty.action';
-import AppBadge from '@/components/ui/AppBadge';
-import AppCheckbox from '@/components/ui/AppCheckbox';
-import AppButton from '@/components/ui/AppButton';
+import { Question, Pagination } from '@/lib/types';
+import { Difficulty } from '@/lib/actions/difficulty.action';
+import AppBadge from '@/lib/components/ui/AppBadge';
+import AppCheckbox from '@/lib/components/ui/AppCheckbox';
+import AppButton from '@/lib/components/ui/AppButton';
 import { useQuestionsDataGrid } from '../hooks/useQuestionsDataGrid';
 
 interface QuestionsDataGridProps {

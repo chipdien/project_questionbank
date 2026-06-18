@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getQuestionsByDocIdAction, getLibraryQuestionsAction } from '@/actions/question.action';
+import { getQuestionsByDocIdAction, getLibraryQuestionsAction } from '@/lib/actions/question.action';
 
 export interface QuestionsQueryParams {
   activeDocId: number | null;

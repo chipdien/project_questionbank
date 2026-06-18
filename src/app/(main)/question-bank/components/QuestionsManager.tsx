@@ -6,9 +6,9 @@ import QuestionsDataGrid from './QuestionsDataGrid';
 import Link from 'next/link';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Question, Document, Lesson, Pagination } from '@/types';
+import { Question, Document, Lesson, Pagination } from '@/lib/types';
 import DashboardUploader from '@/app/(main)/documents/components/DashboardUploader';
-import { Difficulty } from '@/actions/difficulty.action';
+import { Difficulty } from '@/lib/actions/difficulty.action';
 import { useQuestionsManager } from '../hooks/useQuestionsManager';
 
 function cn(...inputs: ClassValue[]) {

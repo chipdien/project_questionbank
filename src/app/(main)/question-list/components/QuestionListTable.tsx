@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 import QuestionDetailModal from './QuestionDetailModal';
-import AppBadge from '@/components/ui/AppBadge';
-import { getQuestionDisplayContent, cleanMathpixData } from '@/lib/utils/math-utils';
+import AppBadge from '@/lib/components/ui/AppBadge';
+import { getQuestionDisplayContent, cleanMathpixData } from '@/lib/utils/math.utils';
 
 interface Difficulty { id: number; name: string; color_code: string; display_order: number }
 

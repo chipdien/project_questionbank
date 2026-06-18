@@ -1,7 +1,7 @@
 import React from 'react';
-import { getCurrentUser } from '@/lib/utils/auth-utils';
-import { getCollections } from '@/actions/collection.action';
-import { getDifficultiesAction } from '@/actions/difficulty.action';
+import { getCurrentUser } from '@/lib/utils/auth.utils';
+import { getCollections } from '@/lib/actions/collection.action';
+import { getDifficultiesAction } from '@/lib/actions/difficulty.action';
 import { fetchTagsByCategory, fetchTopics } from '@/lib/services/question.service';
 import QuestionCreator from './components/QuestionCreator';
 

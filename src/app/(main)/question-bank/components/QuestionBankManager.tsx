@@ -3,19 +3,19 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CollectionSaveModal from '@/app/(main)/collection/components/CollectionSaveModal';
-import { Difficulty } from '@/actions/difficulty.action';
+import { Difficulty } from '@/lib/actions/difficulty.action';
 import { Loader2, Plus, Trash2, ChevronLeft, ChevronRight, Search, Bookmark } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
-import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 import { useQuestionBank, Document, Lesson, Question } from '../hooks/useQuestionBank';
-import { cn } from '@/lib/utils/cn';
-import AppBadge from '@/components/ui/AppBadge';
-import AppSelect from '@/components/ui/AppSelect';
-import AppButton from '@/components/ui/AppButton';
+import { cn } from '@/lib/utils/cn.utils';
+import AppBadge from '@/lib/components/ui/AppBadge';
+import AppSelect from '@/lib/components/ui/AppSelect';
+import AppButton from '@/lib/components/ui/AppButton';
 import QuestionFilterPanel from './QuestionFilterPanel';
 import QuestionModal from './QuestionModal';
 
@@ -125,8 +125,8 @@ const QuestionItem = React.memo(({
         onClick={() => onToggleSelect?.(question.id)}
         onDoubleClick={() => onDoubleClick?.(question)}
         className={`relative bg-surface-container-lowest rounded-xl border p-4 transition-all cursor-pointer group ${isSelected
-            ? 'border-primary ring-1 ring-primary/30 bg-primary/5 shadow-md'
-            : 'border-outline-variant/40 hover:border-primary/40 hover:shadow-md'
+          ? 'border-primary ring-1 ring-primary/30 bg-primary/5 shadow-md'
+          : 'border-outline-variant/40 hover:border-primary/40 hover:shadow-md'
           }`}
       >
         <div className="flex justify-between items-start mb-2">
@@ -187,8 +187,8 @@ interface QuestionBankManagerProps {
   isAdmin?: boolean;
 }
 
-export default function QuestionBankManager({ 
-  initialDocuments, 
+export default function QuestionBankManager({
+  initialDocuments,
   lessons,
   initialDifficulties = [],
   initialTags = [],
@@ -214,7 +214,7 @@ export default function QuestionBankManager({
   } = actions;
 
   const handleRefreshDifficulties = async () => {
-    const { getDifficultiesAction } = await import('@/actions/difficulty.action');
+    const { getDifficultiesAction } = await import('@/lib/actions/difficulty.action');
     const response = await getDifficultiesAction();
     if (response.success) {
       setDifficultiesList(response.data || []);

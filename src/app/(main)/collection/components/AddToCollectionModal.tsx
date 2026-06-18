@@ -3,8 +3,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAddToCollectionModal, Tab } from '../hooks/useAddToCollectionModal';
-import AppButton from '@/components/ui/AppButton';
-import AppInput from '@/components/ui/AppInput';
+import AppButton from '@/lib/components/ui/AppButton';
+import AppInput from '@/lib/components/ui/AppInput';
 
 interface AddToCollectionModalProps {
   selectedIds: number[];
@@ -30,8 +30,7 @@ export default function AddToCollectionModal({ selectedIds, onClose, onSuccess }
   } = useAddToCollectionModal({ selectedIds, onClose, onSuccess });
 
   const tabBtn = (key: Tab, label: string) =>
-    `px-4 py-2 text-sm font-bold border-b-2 -mb-px transition-colors ${
-      tab === key ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant hover:text-on-surface'
+    `px-4 py-2 text-sm font-bold border-b-2 -mb-px transition-colors ${tab === key ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant hover:text-on-surface'
     }`;
 
   return (
@@ -109,11 +108,10 @@ export default function AddToCollectionModal({ selectedIds, onClose, onSuccess }
                           const active = selectedCollectionId === Number(c.id);
                           return (
                             <button
-                               key={c.id}
-                               onClick={() => setSelectedCollectionId(Number(c.id))}
-                               className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border text-left transition-colors ${
-                                 active ? 'border-primary bg-primary/5' : 'border-outline-variant/30 hover:bg-surface-container-low'
-                               }`}
+                              key={c.id}
+                              onClick={() => setSelectedCollectionId(Number(c.id))}
+                              className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border text-left transition-colors ${active ? 'border-primary bg-primary/5' : 'border-outline-variant/30 hover:bg-surface-container-low'
+                                }`}
                             >
                               <span className="flex items-center gap-2 min-w-0">
                                 <span className={`material-symbols-outlined text-lg ${active ? 'text-primary' : 'text-outline'}`}>

@@ -1,10 +1,10 @@
 export const dynamic = 'force-dynamic';
 
-import { getCurrentUser } from '@/lib/utils/auth-utils';
-import { getRecentDocuments } from '@/actions/document-library';
+import { getCurrentUser } from '@/lib/utils/auth.utils';
+import { getRecentDocuments } from '@/lib/actions/document-library.action';
 import { fetchLessons, fetchTopics, fetchTagsByCategory } from '@/lib/services/question.service';
-import { getDifficultiesAction } from '@/actions/difficulty.action';
-import ImportWizard from '@/app/(main)/components/import/ImportWizard';
+import { getDifficultiesAction } from '@/lib/actions/difficulty.action';
+import ImportWizard from '@/app/(main)/import/components/ImportWizard';
 import { redirect } from 'next/navigation';
 
 export default async function ImportPage() {

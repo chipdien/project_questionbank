@@ -10,7 +10,7 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 
 import { useQuestionLibrary } from '../hooks/useQuestionLibrary';
-import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 
 interface QuestionLibraryProps {
   onSelect?: (question: any) => void;

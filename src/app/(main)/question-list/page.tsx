@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
-import { getCurrentUser } from '@/lib/utils/auth-utils';
-import { getDifficultiesAction } from '@/actions/difficulty.action';
+import { getCurrentUser } from '@/lib/utils/auth.utils';
+import { getDifficultiesAction } from '@/lib/actions/difficulty.action';
 import { fetchTagsByCategory } from '@/lib/services/question.service';
 import QuestionListManager from '@/app/(main)/question-list/components/QuestionListManager';
 

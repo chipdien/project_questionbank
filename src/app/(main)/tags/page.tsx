@@ -3,7 +3,7 @@
 import React from 'react';
 import { Plus, Search, RefreshCw, Trash2, Edit } from 'lucide-react';
 
-import TagManagementModal from '@/components/ui/tag-management-modal';
+import TagManagementModal from '@/lib/components/ui/tag-management-modal';
 import { useTagsPage } from './hooks/useTagsPage';
 
 export default function TagsPage() {
@@ -60,11 +60,10 @@ export default function TagsPage() {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                activeCategory === cat
+              className={`px-4 py-1.5 rounded-xl text-xs font-semibold border transition-all ${activeCategory === cat
                   ? 'bg-primary text-on-primary border-primary'
                   : 'bg-surface border-outline-variant/40 text-on-surface-variant hover:bg-outline-variant/10'
-              }`}
+                }`}
             >
               {cat === 'ALL' ? 'Tất cả' : cat}
             </button>

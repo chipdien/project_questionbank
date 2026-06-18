@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import VditorEditor from '@/components/ui/VditorEditor';
+import VditorEditor from '@/lib/components/ui/VditorEditor';
 import { useAnswerForm, Option } from '../hooks/useAnswerForm';
 
 interface AnswerFormProps {
@@ -49,11 +49,10 @@ export default function AnswerForm({
             return (
               <div
                 key={idx}
-                className={`flex flex-col gap-2 p-4 rounded-2xl border transition-all duration-300 ${
-                  isCorrect
+                className={`flex flex-col gap-2 p-4 rounded-2xl border transition-all duration-300 ${isCorrect
                     ? 'bg-green-500/5 border-green-500/60 shadow-sm shadow-green-500/5'
                     : 'bg-surface-container-low border-outline-variant/20 hover:border-outline-variant/40'
-                }`}
+                  }`}
               >
                 <div className="flex justify-between items-center px-1">
                   <span className={`text-xs font-bold ${isCorrect ? 'text-green-700' : 'text-outline'}`}>
@@ -93,17 +92,15 @@ export default function AnswerForm({
             return (
               <div
                 key={idx}
-                className={`flex flex-col md:flex-row gap-3 p-4 border rounded-2xl items-center transition-all duration-300 ${
-                  isTrue
+                className={`flex flex-col md:flex-row gap-3 p-4 border rounded-2xl items-center transition-all duration-300 ${isTrue
                     ? 'bg-green-500/5 border-green-500/30'
                     : 'bg-red-500/5 border-red-500/30'
-                }`}
+                  }`}
               >
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
-                  isTrue
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${isTrue
                     ? 'bg-green-500/10 text-green-700'
                     : 'bg-red-500/10 text-red-700'
-                }`}>
+                  }`}>
                   {String.fromCharCode(97 + idx)}
                 </span>
                 <div className="flex-1 w-full border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm bg-white">
@@ -119,22 +116,20 @@ export default function AnswerForm({
                   <button
                     type="button"
                     onClick={() => handleTrueFalseWeightChange(idx, 1)}
-                    className={`px-4 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
-                      isTrue
+                    className={`px-4 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${isTrue
                         ? 'bg-green-600 border-green-600 text-white shadow-sm'
                         : 'bg-white border-outline-variant/30 text-on-surface hover:border-green-600/50'
-                    }`}
+                      }`}
                   >
                     Đúng
                   </button>
                   <button
                     type="button"
                     onClick={() => handleTrueFalseWeightChange(idx, 0)}
-                    className={`px-4 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
-                      !isTrue
+                    className={`px-4 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${!isTrue
                         ? 'bg-red-600 border-red-600 text-white shadow-sm'
                         : 'bg-white border-outline-variant/30 text-on-surface hover:border-red-600/50'
-                    }`}
+                      }`}
                   >
                     Sai
                   </button>

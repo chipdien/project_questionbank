@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Inter, Manrope } from 'next/font/google'
 import './globals.css'
 import 'katex/dist/katex.min.css'
-import QueryProvider from '@/components/providers/QueryProvider'
+import QueryProvider from '@/lib/components/providers/QueryProvider'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope' })

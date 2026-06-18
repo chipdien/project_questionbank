@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getCollectionByIdAction, getCollectionQuestionsAction } from '@/actions/collection.action';
+import { getCollectionByIdAction, getCollectionQuestionsAction } from '@/lib/actions/collection.action';
 import QuestionsDataGrid from '@/app/(main)/question-bank/components/QuestionsDataGrid';
 
 export const dynamic = 'force-dynamic';
@@ -23,14 +23,14 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
 
   const page = parseInt(resolvedSearchParams.page || '1', 10);
   const pageSize = 10;
-  
+
   const questionsResponse = await getCollectionQuestionsAction(collectionId, page, pageSize);
-  const qData = questionsResponse.success && questionsResponse.data 
-    ? questionsResponse.data 
+  const qData = questionsResponse.success && questionsResponse.data
+    ? questionsResponse.data
     : { data: [], pagination: { totalCount: 0, page: 1, totalPages: 0 } };
 
   const totalItems = qData.pagination.totalCount;
-  
+
   const pagination = {
     currentPage: qData.pagination.page,
     totalPages: qData.pagination.totalPages,

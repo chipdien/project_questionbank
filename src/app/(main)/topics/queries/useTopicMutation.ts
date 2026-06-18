@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  createTopicAction, 
-  updateTopicAction, 
-  deleteTopicAction, 
-  bulkDeleteTopicsAction, 
-  bulkMoveTopicsAction, 
-  transferQuestionsAction 
-} from '@/actions/topics.action';
+import {
+  createTopicAction,
+  updateTopicAction,
+  deleteTopicAction,
+  bulkDeleteTopicsAction,
+  bulkMoveTopicsAction,
+  transferQuestionsAction
+} from '@/lib/actions/topics.action';
 import { Topic } from './useTopicsQuery';
 
 export function useCreateTopicMutation() {
@@ -115,7 +115,7 @@ export function useBulkMoveTopicsMutation() {
   return useMutation({
     mutationFn: async ({ topicIds, targetParentId }: { topicIds: string[]; targetParentId: string | null }) => {
       const response = await bulkMoveTopicsAction(
-        topicIds.map(Number), 
+        topicIds.map(Number),
         targetParentId ? Number(targetParentId) : null
       );
       if (!response.success) {
@@ -135,8 +135,8 @@ export function useTransferQuestionsMutation() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string | number; data: { target_topic_id: string; include_subtopics: boolean } }) => {
       const response = await transferQuestionsAction(
-        Number(id), 
-        Number(data.target_topic_id), 
+        Number(id),
+        Number(data.target_topic_id),
         data.include_subtopics
       );
       if (!response.success) {

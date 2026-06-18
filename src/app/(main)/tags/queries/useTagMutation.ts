@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createTagAction, updateTagAction, deleteTagAction } from '@/actions/tags.action';
+import { createTagAction, updateTagAction, deleteTagAction } from '@/lib/actions/tags.action';
 import { Tag } from './useTagsQuery';
 
 export function useCreateTagMutation() {

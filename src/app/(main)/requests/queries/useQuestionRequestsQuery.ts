@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getQuestionRequests, RequestType, RequestStatus } from '@/actions/question-request';
+import { getQuestionRequests, RequestType, RequestStatus } from '@/lib/actions/question-request.action';
 
 export interface QuestionRequestsQueryParams {
   types: RequestType[];

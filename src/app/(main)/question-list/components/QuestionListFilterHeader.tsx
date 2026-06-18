@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Search, X, Tag as TagIcon, RotateCcw } from 'lucide-react';
-import AppSelect from '@/components/ui/AppSelect';
-import TopicTreeSelect from '@/components/ui/topic-tree-select';
+import AppSelect from '@/lib/components/ui/AppSelect';
+import TopicTreeSelect from '@/lib/components/ui/topic-tree-select';
 
 interface Tag { id: number; name: string; category: string }
 

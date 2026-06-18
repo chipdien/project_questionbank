@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { RequestType, RequestStatus } from '@/actions/question-request';
+import { RequestType, RequestStatus } from '@/lib/actions/question-request.action';
 import RequestList from './RequestList';
 import RequestReviewModal from './RequestReviewModal';
-import { typeMeta, statusMeta } from '@/lib/constants/requests';
+import { typeMeta, statusMeta } from '@/lib/constants/requests.constant';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRequestsManager } from '../hooks/useRequestsManager';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import VditorEditor from '@/components/ui/VditorEditor';
+import VditorEditor from '@/lib/components/ui/VditorEditor';
 import AnswerForm from './AnswerForm';
 import ClassificationSidebar from './ClassificationSidebar';
 import SaveCollectionModal from './SaveCollectionModal';
@@ -58,15 +58,15 @@ export default function QuestionCreator({
     <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 flex-1 items-start">
       {/* Cột trái (70%): Biên soạn chính */}
       <div className="lg:col-span-7 flex flex-col gap-6">
-        
+
         {/* VÙNG 1: Loại hình câu hỏi */}
-        <div className="p-6 bg-white/70 backdrop-blur-md border border-outline-variant/30 border-l-4 border-l-indigo-500 bg-gradient-to-r from-indigo-500/5 to-transparent rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="p-6 bg-white/70 backdrop-blur-md border border-outline-variant/30 border-l-4 border-l-indigo-500 bg-linear-to-r from-indigo-500/5 to-transparent rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
           <div className="flex flex-col gap-4">
             <label className="text-xs font-bold uppercase tracking-widest text-indigo-700 flex items-center gap-1.5">
               <span className="material-symbols-outlined text-sm">settings</span>
               Loại hình câu hỏi
             </label>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {[
                 {
@@ -112,11 +112,10 @@ export default function QuestionCreator({
                     type="button"
                     disabled={isSaving}
                     onClick={() => setQuestionType(type.value)}
-                    className={`flex flex-col items-center justify-center p-3 text-center rounded-xl border transition-all duration-200 cursor-pointer ${
-                      isActive
-                        ? type.activeColor
-                        : 'bg-white border-outline-variant/30 text-on-surface-variant hover:border-outline-variant/60 hover:bg-surface-container-low'
-                    }`}
+                    className={`flex flex-col items-center justify-center p-3 text-center rounded-xl border transition-all duration-200 cursor-pointer ${isActive
+                      ? type.activeColor
+                      : 'bg-white border-outline-variant/30 text-on-surface-variant hover:border-outline-variant/60 hover:bg-surface-container-low'
+                      }`}
                   >
                     <span className={`material-symbols-outlined text-xl mb-1.5 ${isActive ? '' : 'text-outline-variant'}`}>
                       {type.icon}
@@ -135,7 +134,7 @@ export default function QuestionCreator({
         </div>
 
         {/* VÙNG 2: Nội dung câu hỏi (Đề bài) */}
-        <div className="p-6 bg-white/70 backdrop-blur-md border border-outline-variant/30 border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-500/5 to-transparent rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="p-6 bg-white/70 backdrop-blur-md border border-outline-variant/30 border-l-4 border-l-blue-500 bg-linear-to-r from-blue-500/5 to-transparent rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
           <div className="flex flex-col gap-3">
             <div className="flex justify-between items-center">
               <label className="text-xs font-bold uppercase tracking-widest text-blue-700 flex items-center gap-1.5">
@@ -161,7 +160,7 @@ export default function QuestionCreator({
         </div>
 
         {/* VÙNG 3: Cấu hình đáp án & Lời giải */}
-        <div className="p-6 bg-white/70 backdrop-blur-md border border-outline-variant/30 border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-500/5 to-transparent rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="p-6 bg-white/70 backdrop-blur-md border border-outline-variant/30 border-l-4 border-l-emerald-500 bg-linear-to-r from-emerald-500/5 to-transparent rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
           <AnswerForm
             questionType={questionType}
             statement={statement}
@@ -176,8 +175,8 @@ export default function QuestionCreator({
         {message && (
           <div
             className={`p-4 rounded-xl text-sm font-semibold border transition-all ${message.type === 'success'
-                ? 'bg-green-50 border-green-200 text-green-800'
-                : 'bg-red-50 border-red-200 text-red-800'
+              ? 'bg-green-50 border-green-200 text-green-800'
+              : 'bg-red-50 border-red-200 text-red-800'
               }`}
           >
             {message.text}

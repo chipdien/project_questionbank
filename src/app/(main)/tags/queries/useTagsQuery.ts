@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getTagsAction } from '@/actions/tags.action';
+import { getTagsAction } from '@/lib/actions/tags.action';
 
 export interface Tag {
   id: string;

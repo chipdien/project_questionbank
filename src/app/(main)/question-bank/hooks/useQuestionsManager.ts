@@ -3,10 +3,10 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { getDifficultiesAction, Difficulty } from '@/actions/difficulty.action';
-import { classifyQuestionsAction } from '@/actions/question.action';
-import { autoClassifyWithAI } from '@/actions/ai-classify';
-import { Document, Pagination } from '@/types';
+import { getDifficultiesAction, Difficulty } from '@/lib/actions/difficulty.action';
+import { classifyQuestionsAction } from '@/lib/actions/question.action';
+import { autoClassifyWithAI } from '@/lib/actions/ai-classify.action';
+import { Document, Pagination } from '@/lib/types';
 
 interface UseQuestionsManagerProps {
   documents: Document[];

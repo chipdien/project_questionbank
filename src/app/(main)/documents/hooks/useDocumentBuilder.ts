@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { blocksToMarkdown } from '@/lib/utils/export-utils';
+import { blocksToMarkdown } from '@/lib/utils/export.utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type BlockType = 'headline' | 'subheadline' | 'textbox' | 'question';

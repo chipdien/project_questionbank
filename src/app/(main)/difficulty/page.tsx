@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic';
 
-import { getCurrentUser } from '@/lib/utils/auth-utils';
+import { getCurrentUser } from '@/lib/utils/auth.utils';
 import { redirect } from 'next/navigation';
-import { getDifficultiesAction } from '@/actions/difficulty.action';
+import { getDifficultiesAction } from '@/lib/actions/difficulty.action';
 import DifficultyManager from './components/DifficultyManager';
 
 export default async function DifficultyPage() {

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { Question, Pagination } from '@/types';
+import { Question, Pagination } from '@/lib/types';
 
 interface UseQuestionsDataGridProps {
   questions: Question[];

@@ -10,10 +10,10 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import Link from 'next/link';
 
-import { getTopicsAction, fetchTopicQuestionsAction, bulkMoveQuestionsAction } from '@/actions/topics.action';
+import { getTopicsAction, fetchTopicQuestionsAction, bulkMoveQuestionsAction } from '@/lib/actions/topics.action';
 import { Topic } from '@/app/(main)/topics/queries/useTopicsQuery';
-import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
-import QuestionEditModal from '@/components/common/QuestionEditModal';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
+import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
 
 // Shared img renderer: skip images with empty src to prevent React warning
 const markdownComponents = {
@@ -268,8 +268,8 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
                   <div
                     key={q.id}
                     className={`flex gap-4 p-5 bg-surface border rounded-2xl transition-all group ${isSelected
-                        ? 'border-primary bg-primary/5 shadow-md'
-                        : 'border-outline-variant/30 hover:border-outline-variant/70 hover:shadow-sm'
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-outline-variant/30 hover:border-outline-variant/70 hover:shadow-sm'
                       }`}
                   >
                     {/* Checkbox */}
@@ -321,8 +321,8 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
                                 <div
                                   key={opt.id}
                                   className={`flex gap-2 p-3 rounded-xl border text-xs transition-all ${isCorrect
-                                      ? 'bg-success/5 border-success/40 text-success'
-                                      : 'bg-surface-container-lowest border-outline-variant/20'
+                                    ? 'bg-success/5 border-success/40 text-success'
+                                    : 'bg-surface-container-lowest border-outline-variant/20'
                                     }`}
                                 >
                                   <span className="font-bold mr-1">{charLabel}.</span>

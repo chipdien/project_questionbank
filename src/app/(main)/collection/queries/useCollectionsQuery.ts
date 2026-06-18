@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getMyCollections } from '@/actions/collection.action';
+import { getMyCollections } from '@/lib/actions/collection.action';
 
 /**
  * Hook for fetching current user's collections

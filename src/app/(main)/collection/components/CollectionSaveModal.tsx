@@ -10,9 +10,9 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 
 import { useCollectionSaveModal } from '../hooks/useCollectionSaveModal';
-import { cleanMathpixData } from '@/lib/utils/math-utils';
-import AppButton from '@/components/ui/AppButton';
-import AppInput from '@/components/ui/AppInput';
+import { cleanMathpixData } from '@/lib/utils/math.utils';
+import AppButton from '@/lib/components/ui/AppButton';
+import AppInput from '@/lib/components/ui/AppInput';
 
 interface Question {
   id: number;

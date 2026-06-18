@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { addDifficultyAction, updateDifficultyAction, deleteDifficultyAction } from '@/actions/difficulty.action';
+import { addDifficultyAction, updateDifficultyAction, deleteDifficultyAction } from '@/lib/actions/difficulty.action';
 
 export function useAddDifficultyMutation() {
   const queryClient = useQueryClient();

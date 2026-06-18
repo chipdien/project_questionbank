@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
-import { serializeBigInt } from '@/lib/utils/serialization';
-import { generatePath, updateDescendantsPaths } from '@/lib/materialized-path';
+import { serializeBigInt } from '@/lib/utils/serialization.utils';
+import { generatePath, updateDescendantsPaths } from '@/lib/utils/materialized-path.utils';
 
 export interface CreateTopicInput {
   title: string;

@@ -3,7 +3,7 @@
 import React from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import BlockEditor from './BlockEditor';
-import QuestionEditModal from '@/components/common/QuestionEditModal';
+import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
 import {
   FileDown, Plus, X, RotateCcw, Settings,
   GraduationCap, Calendar, User, BookOpen, Quote,

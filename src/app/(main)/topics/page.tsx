@@ -3,10 +3,10 @@
 import React from 'react';
 import { Plus, Search, RefreshCw, FolderPlus, ArrowRightLeft, CheckSquare, Square, Trash2 } from 'lucide-react';
 
-import TopicTreeNode from '@/components/ui/topic-tree-node';
-import TopicDetailsPanel from '@/components/ui/topic-details-panel';
-import TopicDeleteTransferModal from '@/components/ui/topic-delete-transfer-modal';
-import TopicBulkMoveModal from '@/components/ui/topic-bulk-move-modal';
+import TopicTreeNode from '@/lib/components/ui/topic-tree-node';
+import TopicDetailsPanel from '@/lib/components/ui/topic-details-panel';
+import TopicDeleteTransferModal from '@/lib/components/ui/topic-delete-transfer-modal';
+import TopicBulkMoveModal from '@/lib/components/ui/topic-bulk-move-modal';
 import { useTopicsPage } from './hooks/useTopicsPage';
 
 export default function TopicsPage() {
@@ -57,16 +57,15 @@ export default function TopicsPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={toggleMultiSelectMode}
-            className={`px-4 py-2.5 rounded-xl border text-sm font-semibold flex items-center gap-2 transition-all ${
-              isMultiSelectMode
+            className={`px-4 py-2.5 rounded-xl border text-sm font-semibold flex items-center gap-2 transition-all ${isMultiSelectMode
                 ? 'bg-warning/15 text-warning border-warning/30'
                 : 'border-outline-variant hover:bg-outline-variant/15 text-on-surface-variant'
-            }`}
+              }`}
           >
             {isMultiSelectMode ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
             <span>{isMultiSelectMode ? 'Hủy chọn nhiều' : 'Chọn nhiều'}</span>
           </button>
-          
+
           {isMultiSelectMode && selectedIds.size > 0 && (
             <>
               <button
@@ -144,11 +143,10 @@ export default function TopicsPage() {
                   <div
                     key={topic.id}
                     onClick={() => handleSelect(topic)}
-                    className={`flex items-center justify-between py-2.5 px-4 rounded-xl cursor-pointer border transition-all ${
-                      selectedTopic?.id === topic.id
+                    className={`flex items-center justify-between py-2.5 px-4 rounded-xl cursor-pointer border transition-all ${selectedTopic?.id === topic.id
                         ? 'bg-primary/10 text-primary border-primary/30'
                         : 'border-outline-variant/30 hover:bg-outline-variant/10 text-on-surface-variant'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       {isMultiSelectMode && (

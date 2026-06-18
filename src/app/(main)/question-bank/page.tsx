@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic';
 
 import QuestionBankManager from '@/app/(main)/question-bank/components/QuestionBankManager';
-import { getCurrentUser } from '@/lib/utils/auth-utils';
-import { getDifficultiesAction } from '@/actions/difficulty.action';
+import { getCurrentUser } from '@/lib/utils/auth.utils';
+import { getDifficultiesAction } from '@/lib/actions/difficulty.action';
 import { fetchAccessibleDocuments, fetchLessons, fetchTopics, fetchTagsByCategory } from '@/lib/services/question.service';
 import { redirect } from 'next/navigation';
 

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
 import crypto from 'crypto';
-import { IngestService } from '@/lib/services/ingest';
-import { getCurrentUserId } from '@/lib/utils/auth-utils';
-import { replaceMathpixImagesInText, uploadToS3 } from '@/lib/utils/s3-utils';
+import { IngestService } from '@/lib/services/ingest.service';
+import { getCurrentUserId } from '@/lib/utils/auth.utils';
+import { replaceMathpixImagesInText, uploadToS3 } from '@/lib/utils/s3.utils';
 
 export const maxDuration = 300; // 5 minutes
 
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
 
     // 2. Check for duplicate in completed tasks
     const existingDocs = await IngestService.checkDuplicatesByHash(fileHash);
-    
+
     if (existingDocs && existingDocs.length > 0) {
       // 1. Kiểm tra nếu user hiện tại đã có file này rồi -> Trả về ID cũ
       const currentUserDoc = existingDocs.find(d => d.created_by_id === userId);

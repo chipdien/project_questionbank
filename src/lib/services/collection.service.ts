@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { serializeBigInt } from '@/lib/utils/serialization';
+import { serializeBigInt } from '@/lib/utils/serialization.utils';
 
 export class CollectionService {
   /**

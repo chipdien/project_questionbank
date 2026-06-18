@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ChevronDown, Check, X, Tag as TagIcon } from 'lucide-react';
-import AppSelect from '@/components/ui/AppSelect';
-import TopicTreeSelect from '@/components/ui/topic-tree-select';
+import AppSelect from '@/lib/components/ui/AppSelect';
+import TopicTreeSelect from '@/lib/components/ui/topic-tree-select';
 
 interface Difficulty {
   id: number;
@@ -190,9 +190,8 @@ export default function ClassificationSidebar({
         <label className="text-xs font-bold uppercase tracking-widest text-outline">Thẻ Tag bổ trợ</label>
         <div
           onClick={() => setIsTagsOpen((prev) => !prev)}
-          className={`w-full min-h-[38px] flex items-center justify-between gap-1 border border-outline-variant/35 rounded-xl px-2.5 py-1 bg-surface-container-lowest transition-all duration-200 relative cursor-pointer ${
-            isTagsOpen ? 'border-primary ring-2 ring-primary/10 shadow-sm' : 'border-outline-variant/30 hover:border-primary/50'
-          }`}
+          className={`w-full min-h-[38px] flex items-center justify-between gap-1 border border-outline-variant/35 rounded-xl px-2.5 py-1 bg-surface-container-lowest transition-all duration-200 relative cursor-pointer ${isTagsOpen ? 'border-primary ring-2 ring-primary/10 shadow-sm' : 'border-outline-variant/30 hover:border-primary/50'
+            }`}
         >
           {/* List tag chips */}
           <div className="flex flex-wrap gap-1 flex-1 min-w-0 pr-5 pl-5">
@@ -216,7 +215,7 @@ export default function ClassificationSidebar({
               ))
             )}
           </div>
-          
+
           <ChevronDown className="w-3.5 h-3.5 text-outline-variant shrink-0 absolute right-2.5 top-1/2 -translate-y-1/2" />
           <TagIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-outline pointer-events-none" />
         </div>

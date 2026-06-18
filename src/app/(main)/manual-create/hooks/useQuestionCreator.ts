@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { createManualQuestionAction } from '@/actions/question-manual';
+import { createManualQuestionAction } from '@/lib/actions/question-manual.action';
 
 export interface Difficulty {
   id: number;

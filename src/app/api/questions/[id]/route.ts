@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getCurrentUserId, getCurrentUser } from '@/lib/utils/auth-utils';
+import { getCurrentUserId, getCurrentUser } from '@/lib/utils/auth.utils';
 
 function serialize(obj: any) {
   return JSON.parse(

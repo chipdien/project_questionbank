@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getAllQuestionsAction } from '@/actions/question-list.action';
+import { getAllQuestionsAction } from '@/lib/actions/question-list.action';
 
 export interface QuestionListQueryParams {
   page: number;

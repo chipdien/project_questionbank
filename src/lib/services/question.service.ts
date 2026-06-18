@@ -1,8 +1,8 @@
 'use server'; // Needed because called from Server Components
 
 import { prisma } from '@/lib/db';
-import { getCurrentUser } from '@/lib/utils/auth-utils';
-import { serializeBigInt } from '@/lib/utils/serialization';
+import { getCurrentUser } from '@/lib/utils/auth.utils';
+import { serializeBigInt } from '@/lib/utils/serialization.utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

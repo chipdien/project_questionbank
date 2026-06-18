@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getTopicsAction } from '@/actions/topics.action';
+import { getTopicsAction } from '@/lib/actions/topics.action';
 
 export interface Topic {
   id: string;

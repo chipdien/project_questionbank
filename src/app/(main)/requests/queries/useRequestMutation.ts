@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { cancelQuestionRequest, approveQuestionRequest, rejectQuestionRequest } from '@/actions/question-request';
+import { cancelQuestionRequest, approveQuestionRequest, rejectQuestionRequest } from '@/lib/actions/question-request.action';
 
 export function useCancelRequestMutation() {
   const queryClient = useQueryClient();

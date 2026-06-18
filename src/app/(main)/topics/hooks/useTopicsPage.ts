@@ -8,7 +8,7 @@ import {
   useDeleteTopicMutation,
   useBulkDeleteTopicsMutation,
 } from '../queries/useTopicMutation';
-import { getTopicRelatedAction } from '@/actions/topics.action';
+import { getTopicRelatedAction } from '@/lib/actions/topics.action';
 
 export function useTopicsPage() {
   const { data: rawTopics = [], isLoading: loading, refetch: loadTopics } = useTopicsQuery();
@@ -18,7 +18,7 @@ export function useTopicsPage() {
   const bulkDeleteMutation = useBulkDeleteTopicsMutation();
 
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [isNew, setIsNew] = useState(false);
 
@@ -166,7 +166,7 @@ export function useTopicsPage() {
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
-    
+
     const confirmDelete = window.confirm(
       `Bạn có chắc chắn muốn xóa ${selectedIds.size} chủ đề đã chọn? Hành động này không thể hoàn tác.`
     );
@@ -192,7 +192,7 @@ export function useTopicsPage() {
       if (isNew) {
         const created = await createMutation.mutateAsync(saveData);
         toast.success('Tạo chủ đề thành công');
-        
+
         // Auto expand parents of the new topic
         if (created.parent_id) {
           setExpandedIds(prev => {

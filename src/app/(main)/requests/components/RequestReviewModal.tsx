@@ -8,12 +8,12 @@ import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
-import { cleanMathpixData } from '@/lib/utils/math-utils';
-import { classifyQuestionsAction, getTopicsAction, getTagsByCategoryAction } from '@/actions/question.action';
-import { getQuestionByIdAction } from '@/actions/question-list.action';
-import { approveQuestionRequest, rejectQuestionRequest, getRequestsForQuestion } from '@/actions/question-request';
-import QuestionFixModal from '@/components/common/QuestionFixModal';
-import { typeMeta, statusMeta } from '@/lib/constants/requests';
+import { cleanMathpixData } from '@/lib/utils/math.utils';
+import { classifyQuestionsAction, getTopicsAction, getTagsByCategoryAction } from '@/lib/actions/question.action';
+import { getQuestionByIdAction } from '@/lib/actions/question-list.action';
+import { approveQuestionRequest, rejectQuestionRequest, getRequestsForQuestion } from '@/lib/actions/question-request.action';
+import QuestionFixModal from '@/lib/components/common/QuestionFixModal';
+import { typeMeta, statusMeta } from '@/lib/constants/requests.constant';
 
 interface Props {
   request: any;
@@ -138,15 +138,17 @@ export default function RequestReviewModal({ request, currentUserId = null, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-2xl bg-surface-container-lowest rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-5 border-b border-outline-variant/20">
           <h2 className="flex items-center gap-2 text-lg font-bold font-headline">
             <span>Xử lý yêu cầu #{request.id}</span>
-            {(() => { const tm = typeMeta(request.type); const TIcon = tm.icon; return (
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${tm.badge}`}><TIcon className="w-3.5 h-3.5" />{tm.short}</span>
-            ); })()}
+            {(() => {
+              const tm = typeMeta(request.type); const TIcon = tm.icon; return (
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${tm.badge}`}><TIcon className="w-3.5 h-3.5" />{tm.short}</span>
+              );
+            })()}
           </h2>
           <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-surface-container-low"><X className="w-5 h-5" /></button>
         </div>
@@ -192,8 +194,8 @@ export default function RequestReviewModal({ request, currentUserId = null, onCl
                           {classify.topicIds.length === 0
                             ? <span className="text-xs text-on-surface-variant">—</span>
                             : classify.topicIds.map(id => (
-                                <span key={id} className="px-2 py-0.5 rounded-lg bg-primary/10 text-primary text-[11px] font-bold">{topicMap.get(id) || `#${id}`}</span>
-                              ))}
+                              <span key={id} className="px-2 py-0.5 rounded-lg bg-primary/10 text-primary text-[11px] font-bold">{topicMap.get(id) || `#${id}`}</span>
+                            ))}
                         </div>
                       </div>
                       <div className="flex items-start gap-2">
@@ -202,8 +204,8 @@ export default function RequestReviewModal({ request, currentUserId = null, onCl
                           {classify.tagIds.length === 0
                             ? <span className="text-xs text-on-surface-variant">—</span>
                             : classify.tagIds.map(id => (
-                                <span key={id} className="px-2 py-0.5 rounded-lg bg-tertiary/10 text-tertiary text-[11px] font-bold">#{tagMap.get(id) || id}</span>
-                              ))}
+                              <span key={id} className="px-2 py-0.5 rounded-lg bg-tertiary/10 text-tertiary text-[11px] font-bold">#{tagMap.get(id) || id}</span>
+                            ))}
                         </div>
                       </div>
                     </>

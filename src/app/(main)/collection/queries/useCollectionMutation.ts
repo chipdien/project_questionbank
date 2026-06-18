@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createCollection, addQuestionsToCollection } from '@/actions/collection.action';
+import { createCollection, addQuestionsToCollection } from '@/lib/actions/collection.action';
 
 /**
  * Hook for creating a new collection
