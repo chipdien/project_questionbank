@@ -67,6 +67,7 @@ export default function QuestionListTable({
               <th className="px-3 py-3 font-extrabold">Hình thức</th>
               <th className="px-3 py-3 font-extrabold">Chủ đề</th>
               <th className="px-3 py-3 font-extrabold">Tags</th>
+              <th className="px-3 py-3 font-extrabold">Lượt dùng</th>
               <th className="px-3 py-3 font-extrabold">Người tạo</th>
               <th className="px-3 py-3 font-extrabold">Ngày tạo</th>
               <th className="px-3 py-3 font-extrabold">Phân loại</th>
@@ -100,6 +101,7 @@ export default function QuestionListTable({
                     {(q.tags || []).length === 0 && <span className="text-[10px] text-outline">—</span>}
                   </div>
                 </td>
+                <td className="px-3 py-3 whitespace-nowrap text-xs font-semibold text-primary">{q.export_count || 0}</td>
                 <td className="px-3 py-3 whitespace-nowrap text-xs">{q.created_by_name || '—'}</td>
                 <td className="px-3 py-3 whitespace-nowrap text-xs text-outline">{q.created_at ? new Date(q.created_at).toLocaleDateString('vi-VN') : '—'}</td>
                 <td className="px-3 py-3">

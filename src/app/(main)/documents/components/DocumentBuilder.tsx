@@ -40,7 +40,7 @@ const PrimaryHeader = ({ metadata, totalPages }: { metadata: DocumentMetadata; t
             <div className="text-md font-bold uppercase leading-tight mb-2">HỆ THỐNG GIÁO DỤC VIETELITE</div>
             <div className="text-md uppercase leading-tight mb-2">VIETELITE EDUCATION</div>
             <div className="inline-block border-[1.5px] border-black px-4 py-1.5">
-              <span className="text-md font-black uppercase tracking-widest">TÀI LIỆU HỌC TẬP</span>
+              <span className="text-md font-black uppercase tracking-widest">{metadata.docType || 'TÀI LIỆU HỌC TẬP'}</span>
             </div>
             <div className="text-md mt-1 italic">
               Tài liệu gồm <span className="font-bold">{totalPages.toString().padStart(2, '0')}</span> trang
@@ -365,6 +365,18 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
               </div>
 
               <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-on-surface-variant uppercase ml-1 flex items-center gap-1.5">
+                    <BookOpen className="w-3 h-3" /> Loại tài liệu (Ví dụ: TÀI LIỆU HỌC TẬP)
+                  </label>
+                  <input
+                    type="text"
+                    value={metadata.docType || ''}
+                    onChange={(e) => setMetadata((prev) => ({ ...prev, docType: e.target.value }))}
+                    className="w-full px-4 py-2 bg-surface-container rounded-xl border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium"
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   {[
                     { key: 'subject', label: 'Môn học', icon: <BookOpen className="w-3 h-3" /> },

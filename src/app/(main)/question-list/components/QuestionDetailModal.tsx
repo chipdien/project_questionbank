@@ -66,6 +66,7 @@ export default function QuestionDetailModal({ question, isAdmin, currentUserId, 
               <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase">{q.question_type || '—'}</span>
               <span className="px-2 py-0.5 rounded bg-outline-variant/10 text-outline-variant text-[10px] font-bold uppercase">{q.grade ? `Lớp ${q.grade}` : '—'}</span>
               <span className="px-2 py-0.5 rounded bg-error/10 text-error text-[10px] font-bold uppercase">{q.question_difficulty || '—'}</span>
+              <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-bold uppercase">Đã dùng: {q.export_count || 0} lần</span>
             </div>
           </div>
           <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-surface-container-low"><X className="w-5 h-5" /></button>

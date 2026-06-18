@@ -121,6 +121,9 @@ export default function QuestionLibrary({ onSelect, onSelectMany }: QuestionLibr
                         {q.question_difficulty}
                       </span>
                     )}
+                    <span className="text-[9px] font-bold uppercase text-slate-500 bg-slate-100 px-1 py-0.5 rounded">
+                      đã dùng {q.export_count || 0}
+                    </span>
                   </div>
                   {/* Plus icon to signify "Double Click to Add" */}
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary/10 p-1 rounded-lg" title="Click đúp để thêm ngay">
