@@ -47,11 +47,13 @@ model lms_documents {
   is_ai_classified Boolean?  @default(false)
   link_s3          String?   @db.Text
   link_s3_answer   String?   @db.Text
+  copied_from_id   BigInt?
 
   @@index([created_by_id], map: "lms_documents_created_by_id")
   @@index([session_id], map: "lms_documents_session_id")
   @@index([teacher_owned], map: "lms_documents_teacher_owned")
   @@index([updated_by_id], map: "lms_documents_updated_by_id")
+  @@index([copied_from_id], map: "idx_lms_documents_copied_from_id")
 }
 
 model lms_documents_classes {
