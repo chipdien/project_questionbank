@@ -77,13 +77,13 @@ export default function TopicTreeSelect({
 
         setFlatTopics(
           filtered.map((t) => ({
-            id: t.id,
+            id: String(t.id),
             title: t.title || '',
             code: t.code || null,
-            parent_id: t.parent_id || null,
+            parent_id: t.parent_id ? String(t.parent_id) : null,
             path: t.path || null,
             type: t.type || '',
-            order_index: t.order_index || '0',
+            order_index: t.order_index ? String(t.order_index) : '0',
           }))
         );
       } catch (error) {
@@ -176,9 +176,9 @@ export default function TopicTreeSelect({
   // ─── 5. Tính toán danh sách ID đang được chọn ────────────────────────────
   const selectedIds = useMemo<string[]>(() => {
     if (multiple) {
-      return Array.isArray(value) ? value : [];
+      return Array.isArray(value) ? value.map(String) : [];
     }
-    return value && typeof value === 'string' ? [value] : [];
+    return value !== undefined && value !== null ? [String(value)] : [];
   }, [value, multiple]);
 
   // ─── 6. Handlers ──────────────────────────────────────────────────────────
@@ -281,7 +281,7 @@ export default function TopicTreeSelect({
           </span>
 
           {/* Tooltip breadcrumb khi hover */}
-          <div className="absolute left-1/2 -translate-x-1/2 -bottom-9 hidden group-hover/node:block bg-slate-900 text-white text-[11px] leading-tight py-1.5 px-2.5 rounded-lg shadow-xl z-[200] whitespace-nowrap pointer-events-none border border-slate-700">
+          <div className="absolute left-1/2 -translate-x-1/2 -bottom-9 hidden group-hover/node:block bg-slate-900 text-white text-[11px] leading-tight py-1.5 px-2.5 rounded-lg shadow-xl z-200 whitespace-nowrap pointer-events-none border border-slate-700">
             <span className="opacity-60 mr-1">📍</span>
             {topicMapWithBreadcrumb.get(node.id)?.breadcrumb || node.title}
           </div>
@@ -374,7 +374,7 @@ export default function TopicTreeSelect({
 
       {/* ── Dropdown Popover ── */}
       {isOpen && (
-        <div className="absolute left-0 right-0 mt-2 bg-surface border border-outline-variant/40 rounded-2xl shadow-2xl z-[100] flex flex-col overflow-hidden min-w-[500px]">
+        <div className="absolute left-0 right-0 mt-2 bg-surface border border-outline-variant/40 rounded-2xl shadow-2xl z-100 flex flex-col overflow-hidden min-w-[500px]">
           {/* Ô tìm kiếm */}
           <div className="p-3 border-b border-outline-variant/20 shrink-0">
             <div className="relative">

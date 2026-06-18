@@ -545,31 +545,33 @@ export class TopicsService {
         },
       });
 
-      // 2. Tạo liên kết mới
-      let count = 0;
-      for (const qId of questionBigIds) {
-        const existing = await tx.lms_topics_questions.findUnique({
-          where: {
-            topic_id_question_id: {
-              topic_id: targetTopicBigId,
-              question_id: qId,
-            },
-          },
-        });
+      // 2. Tìm xem các câu hỏi này đã liên kết với target topic chưa
+      const existingRelations = await tx.lms_topics_questions.findMany({
+        where: {
+          question_id: { in: questionBigIds },
+          topic_id: targetTopicBigId,
+        },
+        select: { question_id: true },
+      });
+      const existingQIds = new Set(existingRelations.map((r) => r.question_id.toString()));
 
-        if (!existing) {
-          await tx.lms_topics_questions.create({
-            data: {
-              topic_id: targetTopicBigId,
-              question_id: qId,
-              created_at: new Date(),
-              updated_at: new Date(),
-            },
-          });
-          count++;
-        }
+      // 3. Tạo liên kết mới
+      const relationsToCreate = questionBigIds
+        .filter((qId) => !existingQIds.has(qId.toString()))
+        .map((qId) => ({
+          question_id: qId,
+          topic_id: targetTopicBigId,
+          created_at: new Date(),
+          updated_at: new Date(),
+        }));
+
+      if (relationsToCreate.length > 0) {
+        await tx.lms_topics_questions.createMany({
+          data: relationsToCreate,
+        });
       }
-      return count;
+
+      return relationsToCreate.length;
     });
 
     return movedCount;

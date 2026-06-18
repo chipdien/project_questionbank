@@ -51,14 +51,15 @@ export async function getQuestionIdsByTags(tagIds: number[]): Promise<bigint[]> 
     (tagsByCategory[cat] ||= []).push(t.id);
   }
 
-  const categorySets: Set<string>[] = [];
-  for (const ids of Object.values(tagsByCategory)) {
-    const rels = await prisma.lms_questions_tags.findMany({
-      where: { tag_id: { in: ids } },
-      select: { question_id: true },
-    });
-    categorySets.push(new Set(rels.map(r => r.question_id.toString())));
-  }
+  const categorySets = await Promise.all(
+    Object.values(tagsByCategory).map(async (ids) => {
+      const rels = await prisma.lms_questions_tags.findMany({
+        where: { tag_id: { in: ids } },
+        select: { question_id: true },
+      });
+      return new Set(rels.map(r => r.question_id.toString()));
+    })
+  );
 
   if (categorySets.length === 0) return [];
 

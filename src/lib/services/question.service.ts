@@ -306,6 +306,8 @@ export async function fetchLibraryQuestions(
   const user = await getCurrentUser();
   const userId = user?.id ?? null;
   const levelRank = user?.level_rank ?? 0;
+  const isAdmin = levelRank >= 5;
+
 
   const safePage = Math.max(1, Number(page));
   const safePageSize = Math.max(1, Number(pageSize));
@@ -317,21 +319,26 @@ export async function fetchLibraryQuestions(
     { created_by_id: null },
   ];
 
-  const docs = await prisma.lms_documents.findMany({
-    where: levelRank >= 5 ? {} : { OR: docQueryOr },
-    select: { id: true },
-  });
+  let targetQuestionIds: bigint[] | null = null;
 
-  const allowedDocIds = docs.map((d) => d.id);
+  // 1. Phân quyền theo tài liệu (Chỉ áp dụng với Non-Admin)
+  if (!isAdmin) {
+    const docs = await prisma.lms_documents.findMany({
+      where: { OR: docQueryOr },
+      select: { id: true },
+    });
 
-  const qdRelations = await prisma.lms_questions_documents.findMany({
-    where: { document_id: { in: allowedDocIds } },
-    select: { question_id: true },
-  });
+    const allowedDocIds = docs.map((d) => d.id);
 
-  let targetQuestionIds = Array.from(new Set(qdRelations.map((r) => r.question_id)));
+    const qdRelations = await prisma.lms_questions_documents.findMany({
+      where: { document_id: { in: allowedDocIds } },
+      select: { question_id: true },
+    });
 
-  // Filter by recursive topics
+    targetQuestionIds = Array.from(new Set(qdRelations.map((r) => r.question_id)));
+  }
+
+  // 2. Lọc theo recursive topics
   if (topicIds.length > 0) {
     const selectedTopics = await prisma.lms_topics.findMany({
       where: { id: { in: topicIds.map(BigInt) } },
@@ -352,15 +359,20 @@ export async function fetchLibraryQuestions(
         select: { question_id: true },
       });
       const questionIdsFromTopics = topicRelations.map((r) => r.question_id);
-      targetQuestionIds = targetQuestionIds.filter((id) =>
-        questionIdsFromTopics.includes(id)
-      );
+
+      if (targetQuestionIds === null) {
+        targetQuestionIds = questionIdsFromTopics;
+      } else {
+        // Giao nhau bằng Set để tối ưu hiệu năng O(N)
+        const topicSet = new Set(questionIdsFromTopics.map((id) => id.toString()));
+        targetQuestionIds = targetQuestionIds.filter((id) => topicSet.has(id.toString()));
+      }
     } else {
       targetQuestionIds = [];
     }
   }
 
-  // Filter by tags (AND between categories, OR within)
+  // 3. Lọc theo tags (AND giữa các category, OR bên trong category)
   if (tagIds.length > 0) {
     const selectedTags = await prisma.lms_tags.findMany({
       where: { id: { in: tagIds.map(BigInt) } },
@@ -374,31 +386,58 @@ export async function fetchLibraryQuestions(
       tagsByCat[cat].push(t.id);
     }
 
-    let currentFilteredIds = new Set(targetQuestionIds);
-    for (const [, ids] of Object.entries(tagsByCat)) {
-      const tagRelations = await prisma.lms_questions_tags.findMany({
-        where: { question_id: { in: Array.from(currentFilteredIds) }, tag_id: { in: ids } },
-        select: { question_id: true },
-      });
-      const matchingIds = new Set(tagRelations.map((r) => r.question_id));
-      currentFilteredIds = new Set(
-        Array.from(currentFilteredIds).filter((id) => matchingIds.has(id))
-      );
+    const categoryResults = await Promise.all(
+      Object.values(tagsByCat).map(async (ids) => {
+        const tagRelations = await prisma.lms_questions_tags.findMany({
+          where: { tag_id: { in: ids } },
+          select: { question_id: true },
+        });
+        return new Set(tagRelations.map((r) => r.question_id.toString()));
+      })
+    );
+
+    let currentFilteredIds: Set<string> | null = targetQuestionIds
+      ? new Set(targetQuestionIds.map((id) => id.toString()))
+      : null;
+
+    for (const categorySet of categoryResults) {
+      if (currentFilteredIds === null) {
+        currentFilteredIds = categorySet;
+      } else {
+        // Giao nhau bằng Set
+        currentFilteredIds = new Set(
+          Array.from(currentFilteredIds).filter((idStr) => categorySet.has(idStr))
+        );
+      }
     }
-    targetQuestionIds = Array.from(currentFilteredIds);
+
+    if (currentFilteredIds !== null) {
+      targetQuestionIds = Array.from(currentFilteredIds).map(BigInt);
+    }
   }
 
+  // 4. Xây dựng whereClause cho lms_questions
   const whereClause: any = {
-    id: { in: targetQuestionIds },
     AND: [{ OR: [{ complex: { not: 'sub' } }, { complex: null }] }],
   };
+
+  // Chỉ thêm điều kiện lọc id nếu targetQuestionIds không phải null
+  if (targetQuestionIds !== null) {
+    whereClause.id = { in: targetQuestionIds };
+  }
 
   if (grades.length > 0) whereClause.grade = { in: grades.map(Number) };
   if (difficulties.length > 0) whereClause.question_difficulty = { in: difficulties };
   if (questionTypes.length > 0) whereClause.question_type = { in: questionTypes };
+  
   if (excludeIds.length > 0) {
-    whereClause.id = { in: targetQuestionIds, notIn: excludeIds.map(BigInt) };
+    if (whereClause.id) {
+      whereClause.id.notIn = excludeIds.map(BigInt);
+    } else {
+      whereClause.id = { notIn: excludeIds.map(BigInt) };
+    }
   }
+  
   if (keyword) {
     whereClause.AND.push({
       OR: [{ statement: { contains: keyword } }, { content: { contains: keyword } }],
