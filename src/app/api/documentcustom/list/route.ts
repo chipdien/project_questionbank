@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getCurrentUser } from "@/lib/utils/auth-utils";
-import { serializeBigInt } from "@/lib/utils/serialization";
+import { getCurrentUser } from "@/lib/utils/auth.utils";
+import { serializeBigInt } from "@/lib/utils/serialization.utils";
 
 export async function GET() {
   try {
@@ -27,9 +27,9 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(serializeBigInt({ 
-      success: true, 
-      data: rows 
+    return NextResponse.json(serializeBigInt({
+      success: true,
+      data: rows
     }));
   } catch (error: any) {
     console.error("Error fetching custom documents:", error);

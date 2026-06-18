@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React from 'react';
 import { Search, Loader2, ChevronLeft, ChevronRight, Bookmark } from 'lucide-react';
-import { getCollections, getCollectionQuestions } from '@/actions/collection';
 import { ReactSortable } from 'react-sortablejs';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -10,8 +9,8 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 
-
-import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
+import { useQuestionLibrary } from '../hooks/useQuestionLibrary';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 
 interface QuestionLibraryProps {
   onSelect?: (question: any) => void;
@@ -19,90 +18,22 @@ interface QuestionLibraryProps {
 }
 
 export default function QuestionLibrary({ onSelect, onSelectMany }: QuestionLibraryProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [collections, setCollections] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingCollections, setIsLoadingCollections] = useState(true);
-
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [selectedCollectionId, setSelectedCollectionId] = useState<string>('');
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-
-  // Fetch collections
-  useEffect(() => {
-    async function fetchCollections() {
-      try {
-        const data = await getCollections();
-        setCollections(data);
-        if (data.length > 0) {
-          setSelectedCollectionId(String(data[0].id));
-        }
-      } catch (e) {
-        console.error('Error fetching collections:', e);
-      } finally {
-        setIsLoadingCollections(false);
-      }
-    }
-    fetchCollections();
-  }, []);
-
-  // Fetch questions
-  const loadQuestions = async (currentPage = 1) => {
-    if (!selectedCollectionId) {
-      setQuestions([]);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const res = await getCollectionQuestions(Number(selectedCollectionId), currentPage, 30);
-
-      setQuestions(res.data);
-      setTotalPages(res.totalPages);
-      setPage(res.page);
-    } catch (e) {
-      console.error('Client Library Error:', e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadQuestions(1);
-  }, [selectedCollectionId]);
-
-  const handleToggleSelect = (id: number) => {
-    const newSelected = new Set(selectedIds);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelectedIds(newSelected);
-  };
-
-  const handleAddSelected = () => {
-    const selectedQuestions = questions.filter(q => selectedIds.has(q.id));
-    if (selectedQuestions.length > 0) {
-      onSelectMany?.(selectedQuestions);
-      setSelectedIds(new Set());
-    }
-  };
-
-  const handleSelectAll = () => {
-    if (selectedIds.size === questions.length && questions.length > 0) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(questions.map(q => q.id)));
-    }
-  };
+  const {
+    mounted,
+    questions,
+    collections,
+    isLoading,
+    isLoadingCollections,
+    page,
+    totalPages,
+    selectedCollectionId,
+    setSelectedCollectionId,
+    selectedIds,
+    handleToggleSelect,
+    handleAddSelected,
+    handleSelectAll,
+    loadQuestions,
+  } = useQuestionLibrary({ onSelect, onSelectMany });
 
   if (!mounted) return null;
 
@@ -128,7 +59,7 @@ export default function QuestionLibrary({ onSelect, onSelectMany }: QuestionLibr
             ) : collections.length === 0 ? (
               <option>Chưa có bộ sưu tập nào</option>
             ) : (
-              collections.map(col => (
+              collections.map((col) => (
                 <option key={col.id} value={col.id}>
                   {col.title} ({col.question_count} câu)
                 </option>

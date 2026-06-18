@@ -1,6 +1,6 @@
 'use client';
 
-import { typeMeta, statusMeta } from '@/lib/constants/requests';
+import { typeMeta, statusMeta } from '@/lib/constants/requests.constant';
 
 interface Props {
   rows: any[];
@@ -44,8 +44,8 @@ export default function RequestList({ rows, loading, isAdmin, currentUserId, onR
                   {isAdmin
                     ? <button onClick={() => onReview(r)} className="px-2.5 py-1.5 rounded-lg border border-primary/40 text-primary text-xs font-bold">Xử lý</button>
                     : (r.status === 'PENDING' && Number(r.created_by_id) === currentUserId
-                        ? <button onClick={() => onCancel(Number(r.id))} className="px-2.5 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-bold hover:text-error">Hủy</button>
-                        : <span className="text-xs text-outline">—</span>)}
+                      ? <button onClick={() => onCancel(Number(r.id))} className="px-2.5 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-bold hover:text-error">Hủy</button>
+                      : <span className="text-xs text-outline">—</span>)}
                 </td>
               </tr>
             );

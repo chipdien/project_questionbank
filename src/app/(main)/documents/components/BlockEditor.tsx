@@ -9,8 +9,8 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 
-import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
-import VditorEditor from '@/components/ui/VditorEditor';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
+import VditorEditor from '@/lib/components/ui/VditorEditor';
 
 interface BlockEditorProps {
   block: Block;
@@ -25,13 +25,13 @@ interface BlockEditorProps {
   isReadOnly?: boolean;
 }
 
-export default function BlockEditor({ 
-  block, 
-  onChange, 
-  onRemove, 
-  activeFieldId, 
-  setActiveFieldId, 
-  qNumber, 
+export default function BlockEditor({
+  block,
+  onChange,
+  onRemove,
+  activeFieldId,
+  setActiveFieldId,
+  qNumber,
   onEditQuestion,
   currentUserId,
   isAdmin = false,
@@ -56,7 +56,7 @@ export default function BlockEditor({
   }, [block.content]);
 
   // Determine if current user is owner of the question
-  const isOwner = !isReadOnly && (isAdmin || 
+  const isOwner = !isReadOnly && (isAdmin ||
     (localQuestion?.teacher_owned_by_id !== undefined && Number(localQuestion.teacher_owned_by_id) === currentUserId) ||
     (localQuestion?.created_by_id !== undefined && Number(localQuestion.created_by_id) === currentUserId));
 

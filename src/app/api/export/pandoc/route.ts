@@ -6,8 +6,8 @@ import fsSync from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import os from 'os';
-import { getS3ObjectBytes } from '@/lib/utils/s3-utils';
-import { getS3ObjectRefFromProxyUrl, getS3ObjectRefFromUrl } from '@/lib/utils/s3-url-utils';
+import { getS3ObjectBytes } from '@/lib/utils/s3.utils';
+import { getS3ObjectRefFromProxyUrl, getS3ObjectRefFromUrl } from '@/lib/utils/s3-url.utils';
 
 const execAsync = util.promisify(exec);
 

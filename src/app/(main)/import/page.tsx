@@ -1,10 +1,10 @@
 export const dynamic = 'force-dynamic';
 
-import { getCurrentUser } from '@/lib/utils/auth-utils';
-import { getRecentDocuments } from '@/actions/document-library';
-import { getLessons, getTagsByCategory, getTopics } from '@/actions/question';
-import { getDifficulties } from '@/actions/difficulty';
-import ImportWizard from '@/app/(main)/components/import/ImportWizard';
+import { getCurrentUser } from '@/lib/utils/auth.utils';
+import { getRecentDocuments } from '@/lib/actions/document-library.action';
+import { fetchLessons, fetchTopics, fetchTagsByCategory } from '@/lib/services/question.service';
+import { getDifficultiesAction } from '@/lib/actions/difficulty.action';
+import ImportWizard from '@/app/(main)/import/components/ImportWizard';
 import { redirect } from 'next/navigation';
 
 export default async function ImportPage() {
@@ -15,13 +15,14 @@ export default async function ImportPage() {
   }
 
   // Load dữ liệu phân loại song song
-  const [recentDocuments, lessons, difficulties, topics, tagsByCategory] = await Promise.all([
+  const [recentDocuments, lessons, difficultiesResponse, topics, tagsByCategory] = await Promise.all([
     getRecentDocuments(8),
-    getLessons(),
-    getDifficulties(),
-    getTopics(),
-    getTagsByCategory(),
+    fetchLessons(),
+    getDifficultiesAction(),
+    fetchTopics(),
+    fetchTagsByCategory(),
   ]);
+  const difficulties = difficultiesResponse.success ? difficultiesResponse.data || [] : [];
 
   return (
     <div className="p-6 min-h-full flex flex-col gap-4">

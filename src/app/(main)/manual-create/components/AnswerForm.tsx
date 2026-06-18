@@ -1,13 +1,8 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import VditorEditor from '@/components/ui/VditorEditor';
-
-interface Option {
-  content: string;
-  order: number;
-  weight: number;
-}
+import React from 'react';
+import VditorEditor from '@/lib/components/ui/VditorEditor';
+import { useAnswerForm, Option } from '../hooks/useAnswerForm';
 
 interface AnswerFormProps {
   questionType: string;
@@ -26,88 +21,18 @@ export default function AnswerForm({
   hint,
   setHint,
 }: AnswerFormProps) {
-  // Sync options when type changes
-  useEffect(() => {
-    if (questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE') {
-      if (options.length !== 4) {
-        setOptions([
-          { content: '', order: 1, weight: 0 },
-          { content: '', order: 2, weight: 0 },
-          { content: '', order: 3, weight: 0 },
-          { content: '', order: 4, weight: 0 },
-        ]);
-      }
-    } else if (questionType === 'TRUE_FALSE') {
-      if (options.length !== 4) {
-        setOptions([
-          { content: 'Mệnh đề a', order: 1, weight: 1 }, // 1 = Đúng, 0 = Sai
-          { content: 'Mệnh đề b', order: 2, weight: 1 },
-          { content: 'Mệnh đề c', order: 3, weight: 1 },
-          { content: 'Mệnh đề d', order: 4, weight: 1 },
-        ]);
-      }
-    } else if (questionType === 'FILL_IN') {
-      const matches = statement.match(/\[blank\]/g);
-      const count = matches ? matches.length : 0;
-      setOptions(prev => {
-        const next = [...prev];
-        if (next.length < count) {
-          for (let i = next.length; i < count; i++) {
-            next.push({ content: '', order: i + 1, weight: 1 });
-          }
-        } else if (next.length > count) {
-          next.splice(count);
-        }
-        return next;
-      });
-    } else {
-      // ESSAY: no options
-      setOptions([]);
-    }
-  }, [questionType, setOptions]);
+  const { actions } = useAnswerForm({
+    questionType,
+    statement,
+    options,
+    setOptions,
+  });
 
-  // Sync FILL_IN blanks count in real-time when statement changes
-  useEffect(() => {
-    if (questionType === 'FILL_IN') {
-      const matches = statement.match(/\[blank\]/g);
-      const count = matches ? matches.length : 0;
-      setOptions(prev => {
-        if (prev.length === count) return prev;
-        const next = [...prev];
-        if (next.length < count) {
-          for (let i = next.length; i < count; i++) {
-            next.push({ content: '', order: i + 1, weight: 1 });
-          }
-        } else if (next.length > count) {
-          next.splice(count);
-        }
-        return next;
-      });
-    }
-  }, [statement, questionType, setOptions]);
-
-  // Handle option changes
-  const handleOptionContentChange = (idx: number, content: string) => {
-    setOptions(prev => prev.map((opt, i) => i === idx ? { ...opt, content } : opt));
-  };
-
-  const handleMultipleChoiceWeightChange = (idx: number) => {
-    if (questionType === 'SINGLE_CHOICE') {
-      setOptions(prev => prev.map((opt, i) => ({
-        ...opt,
-        weight: i === idx ? 1 : 0
-      })));
-    } else {
-      setOptions(prev => prev.map((opt, i) => i === idx ? {
-        ...opt,
-        weight: opt.weight === 1 ? 0 : 1
-      } : opt));
-    }
-  };
-
-  const handleTrueFalseWeightChange = (idx: number, weight: number) => {
-    setOptions(prev => prev.map((opt, i) => i === idx ? { ...opt, weight } : opt));
-  };
+  const {
+    handleOptionContentChange,
+    handleMultipleChoiceWeightChange,
+    handleTrueFalseWeightChange,
+  } = actions;
 
   return (
     <div className="flex flex-col gap-4">
@@ -124,11 +49,10 @@ export default function AnswerForm({
             return (
               <div
                 key={idx}
-                className={`flex flex-col gap-2 p-4 rounded-2xl border transition-all duration-300 ${
-                  isCorrect
+                className={`flex flex-col gap-2 p-4 rounded-2xl border transition-all duration-300 ${isCorrect
                     ? 'bg-green-500/5 border-green-500/60 shadow-sm shadow-green-500/5'
                     : 'bg-surface-container-low border-outline-variant/20 hover:border-outline-variant/40'
-                }`}
+                  }`}
               >
                 <div className="flex justify-between items-center px-1">
                   <span className={`text-xs font-bold ${isCorrect ? 'text-green-700' : 'text-outline'}`}>
@@ -168,17 +92,15 @@ export default function AnswerForm({
             return (
               <div
                 key={idx}
-                className={`flex flex-col md:flex-row gap-3 p-4 border rounded-2xl items-center transition-all duration-300 ${
-                  isTrue
+                className={`flex flex-col md:flex-row gap-3 p-4 border rounded-2xl items-center transition-all duration-300 ${isTrue
                     ? 'bg-green-500/5 border-green-500/30'
                     : 'bg-red-500/5 border-red-500/30'
-                }`}
+                  }`}
               >
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
-                  isTrue
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${isTrue
                     ? 'bg-green-500/10 text-green-700'
                     : 'bg-red-500/10 text-red-700'
-                }`}>
+                  }`}>
                   {String.fromCharCode(97 + idx)}
                 </span>
                 <div className="flex-1 w-full border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm bg-white">
@@ -194,22 +116,20 @@ export default function AnswerForm({
                   <button
                     type="button"
                     onClick={() => handleTrueFalseWeightChange(idx, 1)}
-                    className={`px-4 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
-                      isTrue
+                    className={`px-4 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${isTrue
                         ? 'bg-green-600 border-green-600 text-white shadow-sm'
                         : 'bg-white border-outline-variant/30 text-on-surface hover:border-green-600/50'
-                    }`}
+                      }`}
                   >
                     Đúng
                   </button>
                   <button
                     type="button"
                     onClick={() => handleTrueFalseWeightChange(idx, 0)}
-                    className={`px-4 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
-                      !isTrue
+                    className={`px-4 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${!isTrue
                         ? 'bg-red-600 border-red-600 text-white shadow-sm'
                         : 'bg-white border-outline-variant/30 text-on-surface hover:border-red-600/50'
-                    }`}
+                      }`}
                   >
                     Sai
                   </button>

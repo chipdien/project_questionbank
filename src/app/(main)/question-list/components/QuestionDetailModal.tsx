@@ -8,12 +8,12 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import toast from 'react-hot-toast';
-import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
-import { RequestType, getRequestsForQuestion, cancelQuestionRequest } from '@/actions/question-request';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
+import { RequestType, getRequestsForQuestion, cancelQuestionRequest } from '@/lib/actions/question-request.action';
 import RequestSubmitModal from './RequestSubmitModal';
 import AddToCollectionModal from '@/app/(main)/collection/components/AddToCollectionModal';
-import QuestionEditModal from '@/components/common/QuestionEditModal';
-import { typeMeta, statusMeta } from '@/lib/constants/requests';
+import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
+import { typeMeta, statusMeta } from '@/lib/constants/requests.constant';
 
 interface Tag { id: number; name: string; category: string }
 

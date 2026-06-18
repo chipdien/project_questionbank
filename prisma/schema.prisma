@@ -214,6 +214,12 @@ model lms_questions {
   @@index([question_id], map: "lms_questions_question_id")
   @@index([teacher_owned_by_id], map: "lms_questions_teacher_owned_by_id")
   @@index([updated_by_id], map: "lms_questions_updated_by_id")
+  @@index([grade], map: "idx_lms_questions_grade")
+  @@index([question_type], map: "idx_lms_questions_question_type")
+  @@index([question_difficulty], map: "idx_lms_questions_question_difficulty")
+  @@index([complex], map: "idx_lms_questions_complex")
+  @@index([public], map: "idx_lms_questions_public")
+  @@index([ref_question_id], map: "idx_lms_questions_ref_question_id")
 }
 
 model lms_questions_collections {

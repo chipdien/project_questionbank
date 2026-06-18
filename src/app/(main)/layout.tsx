@@ -1,5 +1,5 @@
-import LayoutWrapper from '@/components/layout/LayoutWrapper';
-import { getCurrentUser } from '@/lib/utils/auth-utils';
+import LayoutWrapper from '@/lib/components/layout/LayoutWrapper';
+import { getCurrentUser } from '@/lib/utils/auth.utils';
 
 export default async function MainLayout({
   children,

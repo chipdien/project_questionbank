@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getCollectionsAction } from '@/actions/collection';
+import { getCollectionsAction } from '@/lib/actions/collection.action';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +8,8 @@ export default async function CollectionsPage({ searchParams }: { searchParams: 
   const page = parseInt(resolvedSearchParams.page || '1', 10);
   const pageSize = 20;
 
-  const collections = await getCollectionsAction();
+  const response = await getCollectionsAction();
+  const collections = response.success ? response.data || [] : [];
   const totalItems = collections.length;
   const totalPages = Math.ceil(totalItems / pageSize);
 
@@ -103,9 +104,8 @@ export default async function CollectionsPage({ searchParams }: { searchParams: 
               <nav className="flex items-center gap-1 justify-between w-full sm:w-auto sm:gap-4">
                 <Link
                   href={`/collection?page=${page - 1}`}
-                  className={`px-3 py-2 rounded-lg text-sm font-semibold text-outline hover:text-primary hover:bg-primary/5 transition-all flex items-center gap-1 ${
-                    page <= 1 ? 'pointer-events-none opacity-50' : ''
-                  }`}
+                  className={`px-3 py-2 rounded-lg text-sm font-semibold text-outline hover:text-primary hover:bg-primary/5 transition-all flex items-center gap-1 ${page <= 1 ? 'pointer-events-none opacity-50' : ''
+                    }`}
                 >
                   <span className="material-symbols-outlined text-lg">chevron_left</span>
                   Trước
@@ -117,9 +117,8 @@ export default async function CollectionsPage({ searchParams }: { searchParams: 
 
                 <Link
                   href={`/collection?page=${page + 1}`}
-                  className={`px-3 py-2 rounded-lg text-sm font-semibold text-outline hover:text-primary hover:bg-primary/5 transition-all flex items-center gap-1 ${
-                    page >= totalPages ? 'pointer-events-none opacity-50' : ''
-                  }`}
+                  className={`px-3 py-2 rounded-lg text-sm font-semibold text-outline hover:text-primary hover:bg-primary/5 transition-all flex items-center gap-1 ${page >= totalPages ? 'pointer-events-none opacity-50' : ''
+                    }`}
                 >
                   Sau
                   <span className="material-symbols-outlined text-lg">chevron_right</span>

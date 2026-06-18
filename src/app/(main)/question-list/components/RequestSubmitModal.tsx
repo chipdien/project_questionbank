@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
-import AppSelect from '@/components/ui/AppSelect';
-import TopicTreeSelect from '@/components/ui/topic-tree-select';
-import VditorEditor from '@/components/ui/VditorEditor';
-import { cleanMathDelimiters } from '@/components/common/hooks/useQuestionEditModal';
-import { createQuestionRequest, RequestType, ClassifySuggest } from '@/actions/question-request';
-import { typeMeta } from '@/lib/constants/requests';
+import AppSelect from '@/lib/components/ui/AppSelect';
+import TopicTreeSelect from '@/lib/components/ui/topic-tree-select';
+import VditorEditor from '@/lib/components/ui/VditorEditor';
+import { cleanMathDelimiters } from '@/lib/components/common/hooks/useQuestionEditModal';
+import { createQuestionRequest, RequestType, ClassifySuggest } from '@/lib/actions/question-request.action';
+import { typeMeta } from '@/lib/constants/requests.constant';
 
 interface Tag { id: number; name: string; category: string }
 
@@ -56,7 +56,7 @@ export default function RequestSubmitModal({ question, mode, tagsByCategory, onC
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-7xl bg-surface-container-lowest rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-5 border-b border-outline-variant/20">

@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit3, Check, AlertTriangle, Loader2, Palette, ArrowUpDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { Difficulty } from '@/lib/actions/difficulty.action';
+import { useDifficultiesQuery } from '../queries/useDifficultiesQuery';
 import {
-  addDifficulty,
-  updateDifficulty,
-  deleteDifficulty,
-  getDifficulties,
-  Difficulty
-} from '@/actions/difficulty';
+  useAddDifficultyMutation,
+  useUpdateDifficultyMutation,
+  useDeleteDifficultyMutation,
+} from '../queries/useDifficultyMutation';
 
 interface DifficultyManagerProps {
   initialDifficulties: Difficulty[];
@@ -27,7 +27,11 @@ const PRESET_COLORS = [
 ];
 
 export default function DifficultyManager({ initialDifficulties }: DifficultyManagerProps) {
-  const [difficulties, setDifficulties] = useState<Difficulty[]>(initialDifficulties);
+  const { data: difficulties = [] } = useDifficultiesQuery(initialDifficulties);
+  const addMutation = useAddDifficultyMutation();
+  const updateMutation = useUpdateDifficultyMutation();
+  const deleteMutation = useDeleteDifficultyMutation();
+
   const [mode, setMode] = useState<'add' | 'edit' | 'delete'>('add');
   const [selectedDiff, setSelectedDiff] = useState<Difficulty | null>(null);
 
@@ -64,15 +68,6 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
     }
   }, [mode, selectedDiff, difficulties]);
 
-  const handleRefresh = async () => {
-    try {
-      const data = await getDifficulties();
-      setDifficulties(data);
-    } catch (err) {
-      console.error('Failed to refresh difficulties:', err);
-    }
-  };
-
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -84,16 +79,11 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
     setError(null);
 
     try {
-      const res = await addDifficulty(name, colorCode, displayOrder);
-      if (res.success) {
-        toast.success(`Đã thêm độ khó "${name}" thành công!`);
-        await handleRefresh();
-        setName('');
-        const maxOrder = difficulties.reduce((max, d) => d.display_order > max ? d.display_order : max, 0);
-        setDisplayOrder(maxOrder + 1);
-      } else {
-        setError(res.error || 'Đã xảy ra lỗi.');
-      }
+      await addMutation.mutateAsync({ name, colorCode, displayOrder });
+      toast.success(`Đã thêm độ khó "${name}" thành công!`);
+      setName('');
+      const maxOrder = difficulties.reduce((max, d) => d.display_order > max ? d.display_order : max, 0);
+      setDisplayOrder(maxOrder + 1);
     } catch (err: any) {
       setError(err.message || 'Lỗi kết nối Server Action.');
     } finally {
@@ -113,21 +103,16 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
     setError(null);
 
     try {
-      const res = await updateDifficulty(
-        selectedDiff.id,
-        selectedDiff.name,
-        name,
+      await updateMutation.mutateAsync({
+        id: selectedDiff.id,
+        oldName: selectedDiff.name,
+        newName: name,
         colorCode,
-        displayOrder
-      );
-      if (res.success) {
-        toast.success('Cập nhật độ khó thành công!');
-        await handleRefresh();
-        setMode('add');
-        setSelectedDiff(null);
-      } else {
-        setError(res.error || 'Đã xảy ra lỗi.');
-      }
+        displayOrder,
+      });
+      toast.success('Cập nhật độ khó thành công!');
+      setMode('add');
+      setSelectedDiff(null);
     } catch (err: any) {
       setError(err.message || 'Lỗi kết nối Server Action.');
     } finally {
@@ -146,19 +131,14 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
     setError(null);
 
     try {
-      const res = await deleteDifficulty(
-        selectedDiff.id,
-        selectedDiff.name,
-        replacementName
-      );
-      if (res.success) {
-        toast.success(`Đã xóa độ khó "${selectedDiff.name}" thành công!`);
-        await handleRefresh();
-        setMode('add');
-        setSelectedDiff(null);
-      } else {
-        setError(res.error || 'Đã xảy ra lỗi.');
-      }
+      await deleteMutation.mutateAsync({
+        id: selectedDiff.id,
+        name: selectedDiff.name,
+        replacementName,
+      });
+      toast.success(`Đã xóa độ khó "${selectedDiff.name}" thành công!`);
+      setMode('add');
+      setSelectedDiff(null);
     } catch (err: any) {
       setError(err.message || 'Lỗi kết nối Server Action.');
     } finally {
@@ -178,7 +158,7 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
         {/* Left column: List of difficulties */}
         <div className="lg:col-span-2 bg-surface-container-lowest border border-outline-variant/20 rounded-3xl p-6 shadow-sm flex flex-col min-h-[400px]">
           <div className="flex justify-between items-center mb-6">
@@ -208,11 +188,10 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
                 return (
                   <div
                     key={diff.id}
-                    className={`flex items-center justify-between p-4 bg-surface-container-low border rounded-2xl transition-all group ${
-                      isSelected 
-                        ? 'border-primary shadow-sm bg-primary/5' 
+                    className={`flex items-center justify-between p-4 bg-surface-container-low border rounded-2xl transition-all group ${isSelected
+                        ? 'border-primary shadow-sm bg-primary/5'
                         : 'border-outline-variant/20 hover:border-primary/30'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-4">
                       <span
@@ -226,18 +205,17 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
                         Thứ tự: {diff.display_order}
                       </span>
                     </div>
-                    
+
                     <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => {
                           setSelectedDiff(diff);
                           setMode('edit');
                         }}
-                        className={`p-2 rounded-xl transition-colors ${
-                          isSelected && mode === 'edit'
+                        className={`p-2 rounded-xl transition-colors ${isSelected && mode === 'edit'
                             ? 'text-primary bg-primary/10'
                             : 'text-on-surface-variant hover:text-primary hover:bg-primary/10'
-                        }`}
+                          }`}
                         title="Sửa"
                       >
                         <Edit3 className="w-4 h-4" />
@@ -248,11 +226,10 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
                             setSelectedDiff(diff);
                             setMode('delete');
                           }}
-                          className={`p-2 rounded-xl transition-colors ${
-                            isSelected && mode === 'delete'
+                          className={`p-2 rounded-xl transition-colors ${isSelected && mode === 'delete'
                               ? 'text-error bg-error/10'
                               : 'text-on-surface-variant hover:text-error hover:bg-error/10'
-                          }`}
+                            }`}
                           title="Xóa"
                         >
                           <Trash2 className="w-4 h-4" />

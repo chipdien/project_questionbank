@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getCurrentUser } from "@/lib/utils/auth-utils";
-import { serializeBigInt } from "@/lib/utils/serialization";
+import { getCurrentUser } from "@/lib/utils/auth.utils";
+import { serializeBigInt } from "@/lib/utils/serialization.utils";
 
 export async function GET(req: NextRequest) {
   try {
@@ -67,8 +67,8 @@ export async function GET(req: NextRequest) {
       q.options = options;
     }
 
-    return NextResponse.json(serializeBigInt({ 
-      success: true, 
+    return NextResponse.json(serializeBigInt({
+      success: true,
       document,
       questions: questionsList
     }));

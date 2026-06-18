@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-import { getCurrentUser } from '@/lib/utils/auth-utils';
+import { getCurrentUser } from '@/lib/utils/auth.utils';
 import RequestsManager from './components/RequestsManager';
 
 export default async function RequestsPage() {

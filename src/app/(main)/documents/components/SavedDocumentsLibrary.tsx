@@ -1,39 +1,15 @@
-﻿'use client';
+'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { FileText, Loader2, Download, ExternalLink, History, Search } from 'lucide-react';
+import { useSavedDocumentsLibrary } from '../hooks/useSavedDocumentsLibrary';
 
 interface SavedDocumentsLibraryProps {
   onLoadDocument: (docId: string) => void;
 }
 
 export default function SavedDocumentsLibrary({ onLoadDocument }: SavedDocumentsLibraryProps) {
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const fetchDocuments = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/documentcustom/list');
-      const data = await res.json();
-      if (data.success) {
-        setDocuments(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDocuments();
-  }, []);
-
-  const filteredDocs = documents.filter(doc =>
-    doc.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const { isLoading, filteredDocs, searchTerm, setSearchTerm } = useSavedDocumentsLibrary();
 
   return (
     <div className="flex flex-col h-full bg-surface-container-lowest border-l border-outline-variant/30 no-print overflow-hidden">

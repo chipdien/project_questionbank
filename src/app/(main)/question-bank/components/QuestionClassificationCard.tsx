@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Difficulty } from '@/actions/difficulty';
-import AppSelect from '@/components/ui/AppSelect';
-import AppButton from '@/components/ui/AppButton';
+import { Difficulty } from '@/lib/actions/difficulty.action';
+import AppSelect from '@/lib/components/ui/AppSelect';
+import AppButton from '@/lib/components/ui/AppButton';
 
 interface QuestionClassificationCardProps {
   selectedCount: number;
