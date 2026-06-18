@@ -70,23 +70,3 @@ export async function getQuestionIdsByTags(tagIds: number[]): Promise<bigint[]> 
 
   return Array.from(acc).map(s => BigInt(s));
 }
-
-/**
- * Trả về danh sách question_id ĐÃ phân loại đầy đủ = có chủ đề VÀ có tag.
- * Dùng cho bộ lọc "chưa phân loại" (notIn tập này).
- */
-export async function getClassifiedQuestionIds(): Promise<bigint[]> {
-  const topicQ = await prisma.lms_topics_questions.findMany({
-    select: { question_id: true },
-    distinct: ['question_id'],
-  });
-  const tagQ = await prisma.lms_questions_tags.findMany({
-    select: { question_id: true },
-    distinct: ['question_id'],
-  });
-
-  const tagSet = new Set(tagQ.map(r => r.question_id.toString()));
-  return topicQ
-    .filter(r => tagSet.has(r.question_id.toString()))
-    .map(r => r.question_id);
-}

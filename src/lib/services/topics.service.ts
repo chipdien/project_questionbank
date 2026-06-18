@@ -496,22 +496,30 @@ export class TopicsService {
 
     const questionIds = topicQuestions.map((tq) => tq.question_id);
 
+    if (questionIds.length === 0) return [];
+
     const questions = await prisma.lms_questions.findMany({
       where: { id: { in: questionIds } },
       orderBy: { id: 'desc' },
     });
 
-    const questionsWithOptions = [];
-    for (const q of questions) {
-      const options = await prisma.lms_options.findMany({
-        where: { question_id: q.id },
-        orderBy: { order: 'asc' },
-      });
-      questionsWithOptions.push({
-        ...q,
-        options,
-      });
+    // Gộp options của tất cả câu hỏi vào 1 truy vấn rồi nhóm theo question_id
+    // (tránh N+1: trước đây mỗi câu hỏi chạy 1 truy vấn options riêng).
+    const allOptions = await prisma.lms_options.findMany({
+      where: { question_id: { in: questionIds } },
+      orderBy: { order: 'asc' },
+    });
+    const optionsByQuestion = new Map<string, any[]>();
+    for (const opt of allOptions) {
+      if (!opt.question_id) continue;
+      const key = opt.question_id.toString();
+      (optionsByQuestion.get(key) ?? optionsByQuestion.set(key, []).get(key)!).push(opt);
     }
+
+    const questionsWithOptions = questions.map((q) => ({
+      ...q,
+      options: optionsByQuestion.get(q.id.toString()) ?? [],
+    }));
 
     return serializeBigInt(questionsWithOptions);
   }

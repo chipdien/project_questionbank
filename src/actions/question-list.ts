@@ -6,7 +6,6 @@ import { serializeBigInt } from '@/lib/utils/serialization';
 import {
   resolveTopicQuestionIds,
   getQuestionIdsByTags,
-  getClassifiedQuestionIds,
 } from '@/lib/services/question-filters';
 
 export interface QuestionListFilters {
@@ -85,16 +84,15 @@ export async function getAllQuestions(
       }
     }
 
-    // 5. Bộ lọc "chưa phân loại" → notIn tập đã đủ topic + tag
-    let notInIds: bigint[] | null = null;
+    // 5. Bộ lọc "chưa phân loại" = thiếu topic HOẶC thiếu tag → lọc thẳng bằng SQL
+    // (trước đây nạp toàn bộ ~40k+ quan hệ topic/tag vào RAM rồi dựng notIn khổng lồ).
     if (unclassified) {
-      notInIds = await getClassifiedQuestionIds();
+      whereClause.AND.push({
+        OR: [{ topics: { none: {} } }, { tags: { none: {} } }],
+      });
     }
 
-    const idFilter: any = {};
-    if (idConstraint !== null) idFilter.in = idConstraint;
-    if (notInIds !== null) idFilter.notIn = notInIds;
-    if (Object.keys(idFilter).length > 0) whereClause.id = idFilter;
+    if (idConstraint !== null) whereClause.id = { in: idConstraint };
 
     if (whereClause.AND.length === 0) delete whereClause.AND;
 
@@ -304,25 +302,28 @@ export async function getQuestionById(id: number) {
     const q = await prisma.lms_questions.findUnique({ where: { id: BigInt(id) } });
     if (!q) return null;
 
-    const options = await prisma.lms_options.findMany({
-      where: { question_id: q.id },
-      orderBy: { order: 'asc' },
-    });
+    // 3 truy vấn độc lập → chạy song song thay vì tuần tự
+    const [options, tagRels, topicRels] = await Promise.all([
+      prisma.lms_options.findMany({
+        where: { question_id: q.id },
+        orderBy: { order: 'asc' },
+      }),
+      prisma.lms_questions_tags.findMany({
+        where: { question_id: q.id },
+        include: { tag: true },
+      }),
+      prisma.lms_topics_questions.findMany({
+        where: { question_id: q.id },
+        include: { topic: true },
+      }),
+    ]);
 
-    const tagRels = await prisma.lms_questions_tags.findMany({
-      where: { question_id: q.id },
-      include: { tag: true },
-    });
     const tags = tagRels.map(r => ({
       id: Number(r.tag.id),
       name: r.tag.name,
       category: r.tag.category,
     }));
 
-    const topicRels = await prisma.lms_topics_questions.findMany({
-      where: { question_id: q.id },
-      include: { topic: true },
-    });
     const topics = topicRels.map(r => ({
       topic_id: Number(r.topic_id),
       topic: {
