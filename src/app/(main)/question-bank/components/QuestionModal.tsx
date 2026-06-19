@@ -12,6 +12,11 @@ import { useRouter } from 'next/navigation';
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
 
+const markdownComponents = {
+  img: ({ src, alt, ...props }: any) =>
+    src ? <img src={src} alt={alt || ''} {...props} /> : null,
+};
+
 interface Option {
   id: number;
   question_id: number;
@@ -158,6 +163,7 @@ export default function QuestionModal({
                     key={question.statement}
                     remarkPlugins={[remarkMath, remarkGfm]}
                     rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
+                    components={markdownComponents}
                   >
                     {cleanMathpixData(getQuestionDisplayContent(question.statement, question.content))}
                   </ReactMarkdown>
@@ -192,6 +198,7 @@ export default function QuestionModal({
                             <ReactMarkdown
                               remarkPlugins={[remarkMath, remarkGfm]}
                               rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
+                              components={markdownComponents}
                             >
                               {cleanMathpixData(opt.content)}
                             </ReactMarkdown>
@@ -219,6 +226,7 @@ export default function QuestionModal({
                       <ReactMarkdown
                         remarkPlugins={[remarkMath, remarkGfm]}
                         rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
+                        components={markdownComponents}
                       >
                         {cleanMathpixData(question.hint)}
                       </ReactMarkdown>

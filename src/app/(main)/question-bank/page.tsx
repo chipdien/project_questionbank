@@ -48,6 +48,7 @@ export default async function QuestionBankPage() {
         initialTags={tags}
         initialTopics={normalizedTopics}
         isAdmin={isAdmin}
+        currentUserId={user.id}
       />
     </div>
   );
