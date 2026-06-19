@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Menu, Search } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { User } from '@/lib/utils/auth.utils';
 import { getPendingRequestCount } from '@/lib/actions/question-request.action';
-import { toast } from 'react-toastify';
+import UserProfileModal from '@/lib/components/ui/UserProfileModal';
 
 interface TopNavBarProps {
   toggleSidebar: () => void;
@@ -15,6 +15,7 @@ interface TopNavBarProps {
 export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
   const router = useRouter();
   const [pending, setPending] = useState(0);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   useEffect(() => {
     let active = true;
     getPendingRequestCount().then(n => { if (active) setPending(n); });
@@ -35,9 +36,6 @@ export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
           <div className="text-xl font-bold text-primary flex items-center gap-2 font-headline">
             VietElite
           </div>
-          <div className="hidden md:flex items-center ml-4 text-outline cursor-pointer hover:text-primary transition-colors">
-            <Search className="w-5 h-5" onClick={() => toast.info('Chức năng đang cập nhật!')} />
-          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -50,7 +48,10 @@ export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
             )}
           </button>
 
-          <div className="flex items-center gap-3 pl-2 border-l border-outline-variant/20">
+          <div
+            onClick={() => setIsProfileOpen(true)}
+            className="flex items-center gap-3 pl-2 border-l border-outline-variant/20 cursor-pointer hover:opacity-80 transition-all select-none"
+          >
             <div className="flex-col items-end hidden sm:flex">
               <span className="text-xs font-bold text-on-surface">
                 {user?.nickname || user?.username || 'Đang tải...'}
@@ -75,6 +76,12 @@ export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
           </div>
         </div>
       </header>
+
+      <UserProfileModal
+        user={user}
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+      />
     </>
   );
 }
