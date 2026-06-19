@@ -133,15 +133,26 @@ const VditorEditor: React.FC<VditorEditorProps> = ({
           flex-wrap: nowrap !important;
         }
 
+        /* Make sure internal vditor elements don't force a large minimum height */
+        .vditor-wrapper-container .vditor {
+          min-height: 0 !important;
+        }
+        .vditor-wrapper-container .vditor-content {
+          min-height: 0 !important;
+        }
+        .vditor-wrapper-container .vditor-ir,
+        .vditor-wrapper-container .vditor-wysiwyg,
+        .vditor-wrapper-container .vditor-sv {
+          min-height: 0 !important;
+        }
+
         .vditor-sticky-mode .vditor {
           border: none !important;
           background: transparent !important;
-          min-height: 0 !important;
         }
 
         .vditor-sticky-mode .vditor-content {
           background: transparent !important;
-          min-height: 0 !important;
         }
 
         .vditor-sticky-mode .vditor-ir {
@@ -150,7 +161,6 @@ const VditorEditor: React.FC<VditorEditorProps> = ({
           border: none !important;
           border-radius: 0 !important;
           box-shadow: none !important;
-          min-height: 0 !important;
           font-family: inherit !important;
           font-size: inherit !important;
           line-height: inherit !important;

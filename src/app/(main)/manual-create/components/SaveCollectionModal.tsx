@@ -1,21 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { X, FolderPlus, Folder, AlertCircle } from 'lucide-react';
 
-interface Collection {
-  id: number;
-  title: string;
-  question_count?: number;
-}
-
-interface SaveCollectionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  collections: Collection[];
-  onConfirm: (collectionId?: number, newTitle?: string) => void;
-  isSaving: boolean;
-}
+import { SaveCollectionModalProps } from '@/lib/types/manual-question.type';
 
 export default function SaveCollectionModal({
   isOpen,
@@ -68,11 +56,10 @@ export default function SaveCollectionModal({
           <button
             type="button"
             onClick={() => { setMode('select'); setError(''); }}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              mode === 'select'
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${mode === 'select'
                 ? 'bg-white text-primary shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface'
-            }`}
+              }`}
           >
             <Folder className="w-3.5 h-3.5" />
             Chọn bộ sưu tập
@@ -80,11 +67,10 @@ export default function SaveCollectionModal({
           <button
             type="button"
             onClick={() => { setMode('create'); setError(''); }}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              mode === 'create'
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${mode === 'create'
                 ? 'bg-white text-primary shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface'
-            }`}
+              }`}
           >
             <FolderPlus className="w-3.5 h-3.5" />
             Tạo mới bộ sưu tập

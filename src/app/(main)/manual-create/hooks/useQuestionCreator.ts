@@ -4,36 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useConfirm } from '@/lib/components/providers/ConfirmProvider';
 import { createManualQuestionAction } from '@/lib/actions/question-manual.action';
-
-export interface Difficulty {
-  id: number;
-  name: string;
-  color_code: string;
-}
-
-export interface Tag {
-  id: number;
-  name: string;
-  category: string;
-}
-
-export interface Topic {
-  id: number;
-  title: string;
-  parent_id: number | null;
-  path: string;
-}
-
-export interface Option {
-  content: string;
-  order: number;
-  weight: number;
-}
-
-export interface UseQuestionCreatorProps {
-  difficulties: Difficulty[];
-  initialCollections?: any[];
-}
+import { Option, UseQuestionCreatorProps } from '@/lib/types/manual-question.type';
 
 export function useQuestionCreator({
   difficulties,

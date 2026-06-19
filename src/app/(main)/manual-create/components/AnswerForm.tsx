@@ -1,17 +1,9 @@
 'use client';
 
-import React from 'react';
+import { CheckSquare, Lightbulb } from 'lucide-react';
 import VditorEditor from '@/lib/components/ui/VditorEditor';
-import { useAnswerForm, Option } from '../hooks/useAnswerForm';
-
-interface AnswerFormProps {
-  questionType: string;
-  statement: string;
-  options: Option[];
-  setOptions: React.Dispatch<React.SetStateAction<Option[]>>;
-  hint: string;
-  setHint: (hint: string) => void;
-}
+import { useAnswerForm } from '../hooks/useAnswerForm';
+import { AnswerFormProps } from '@/lib/types/manual-question.type';
 
 export default function AnswerForm({
   questionType,
@@ -35,30 +27,33 @@ export default function AnswerForm({
   } = actions;
 
   return (
-    <div className="flex flex-col gap-4">
-      <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-700 flex items-center gap-1.5 mb-2">
-        <span className="material-symbols-outlined text-sm">checklist</span>
-        Cấu hình đáp án & Lời giải
-      </h3>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between pb-1 w-full">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 bg-primary/10 text-primary rounded-lg flex items-center justify-center shrink-0">
+            <CheckSquare className="w-4 h-4 text-primary" />
+          </div>
+          <span className="text-sm font-bold uppercase tracking-wider text-on-surface select-none">
+            Cấu hình đáp án & Lời giải
+          </span>
+        </div>
+      </div>
 
       {/* Trắc nghiệm SINGLE/MULTIPLE_CHOICE */}
       {(questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE') && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {options.map((opt, idx) => {
             const isCorrect = opt.weight === 1;
             return (
               <div
                 key={idx}
-                className={`flex flex-col gap-2 p-4 rounded-2xl border transition-all duration-300 ${isCorrect
-                    ? 'bg-green-500/5 border-green-500/60 shadow-sm shadow-green-500/5'
-                    : 'bg-surface-container-low border-outline-variant/20 hover:border-outline-variant/40'
-                  }`}
+                className="flex flex-col gap-2 w-full"
               >
                 <div className="flex justify-between items-center px-1">
-                  <span className={`text-xs font-bold ${isCorrect ? 'text-green-700' : 'text-outline'}`}>
+                  <span className={`text-xs font-bold ${isCorrect ? 'text-green-700 font-extrabold' : 'text-outline'}`}>
                     Phương án {String.fromCharCode(65 + idx)}
                   </span>
-                  <label className={`flex items-center gap-1.5 cursor-pointer text-xs font-bold select-none ${isCorrect ? 'text-green-700' : 'text-primary'}`}>
+                  <label className={`flex items-center gap-1.5 cursor-pointer text-xs font-bold select-none ${isCorrect ? 'text-green-700 font-extrabold' : 'text-primary'}`}>
                     <input
                       type={questionType === 'SINGLE_CHOICE' ? 'radio' : 'checkbox'}
                       name="correct-answer"
@@ -69,13 +64,13 @@ export default function AnswerForm({
                     <span>Đáp án đúng</span>
                   </label>
                 </div>
-                <div className="border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm bg-white mt-1">
+                <div className="w-full mt-1">
                   <VditorEditor
                     value={opt.content}
                     onChange={(val) => handleOptionContentChange(idx, val)}
                     isStickyToolbar={false}
                     placeholder={`Nhập nội dung phương án ${String.fromCharCode(65 + idx)}...`}
-                    className="w-full min-h-[100px]"
+                    className="w-full min-h-[50px]"
                   />
                 </div>
               </div>
@@ -92,24 +87,21 @@ export default function AnswerForm({
             return (
               <div
                 key={idx}
-                className={`flex flex-col md:flex-row gap-3 p-4 border rounded-2xl items-center transition-all duration-300 ${isTrue
-                    ? 'bg-green-500/5 border-green-500/30'
-                    : 'bg-red-500/5 border-red-500/30'
-                  }`}
+                className="flex flex-col md:flex-row gap-3 items-center w-full"
               >
                 <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${isTrue
-                    ? 'bg-green-500/10 text-green-700'
-                    : 'bg-red-500/10 text-red-700'
+                  ? 'bg-green-500/10 text-green-700'
+                  : 'bg-red-500/10 text-red-700'
                   }`}>
                   {String.fromCharCode(97 + idx)}
                 </span>
-                <div className="flex-1 w-full border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm bg-white">
+                <div className="flex-1 w-full">
                   <VditorEditor
                     value={opt.content}
                     onChange={(val) => handleOptionContentChange(idx, val)}
                     isStickyToolbar={false}
                     placeholder={`Nhập nội dung phát biểu ${String.fromCharCode(97 + idx)}...`}
-                    className="w-full min-h-[80px]"
+                    className="w-full min-h-[50px]"
                   />
                 </div>
                 <div className="flex gap-2 shrink-0">
@@ -117,8 +109,8 @@ export default function AnswerForm({
                     type="button"
                     onClick={() => handleTrueFalseWeightChange(idx, 1)}
                     className={`px-4 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${isTrue
-                        ? 'bg-green-600 border-green-600 text-white shadow-sm'
-                        : 'bg-white border-outline-variant/30 text-on-surface hover:border-green-600/50'
+                      ? 'bg-green-600 border-green-600 text-white shadow-sm'
+                      : 'bg-white border-outline-variant/30 text-on-surface hover:border-green-600/50'
                       }`}
                   >
                     Đúng
@@ -127,8 +119,8 @@ export default function AnswerForm({
                     type="button"
                     onClick={() => handleTrueFalseWeightChange(idx, 0)}
                     className={`px-4 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${!isTrue
-                        ? 'bg-red-600 border-red-600 text-white shadow-sm'
-                        : 'bg-white border-outline-variant/30 text-on-surface hover:border-red-600/50'
+                      ? 'bg-red-600 border-red-600 text-white shadow-sm'
+                      : 'bg-white border-outline-variant/30 text-on-surface hover:border-red-600/50'
                       }`}
                   >
                     Sai
@@ -145,7 +137,7 @@ export default function AnswerForm({
         <div className="flex flex-col gap-4">
           {options.length > 0 ? (
             options.map((opt, idx) => (
-              <div key={idx} className="flex flex-col gap-1.5 p-4 bg-surface-container-low border border-outline-variant/20 rounded-2xl">
+              <div key={idx} className="flex flex-col gap-1.5 w-full">
                 <span className="text-xs font-bold text-outline">
                   Từ/Cụm từ cần điền cho ô trống thứ {idx + 1}
                 </span>
@@ -167,18 +159,22 @@ export default function AnswerForm({
       )}
 
       {/* Tự luận hoặc Lời giải chung cho các câu khác */}
-      <div className="flex flex-col gap-3 mt-4 p-4 bg-amber-500/5 border border-amber-500/20 rounded-2xl">
-        <label className="text-xs font-bold uppercase tracking-widest text-amber-800 flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-sm">lightbulb</span>
-          {questionType === 'ESSAY' ? 'Nội dung đáp án / Lời giải chi tiết' : 'Lời giải chi tiết / Gợi ý (Không bắt buộc)'}
-        </label>
-        <div className="border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm bg-white focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/10 transition-all">
+      <div className="flex flex-col gap-3 mt-6 w-full">
+        <div className="flex items-center gap-2">
+          <div className="p-1 bg-primary/10 text-primary rounded-md flex items-center justify-center shrink-0">
+            <Lightbulb className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <span className="text-xs font-bold uppercase tracking-wider text-on-surface select-none">
+            {questionType === 'ESSAY' ? 'Nội dung đáp án / Lời giải chi tiết' : 'Lời giải chi tiết / Gợi ý (Không bắt buộc)'}
+          </span>
+        </div>
+        <div className="w-full">
           <VditorEditor
             value={hint}
             onChange={setHint}
             isStickyToolbar={false}
             placeholder="Biên soạn lời giải chi tiết cho câu hỏi..."
-            className="w-full min-h-[150px]"
+            className="w-full"
           />
         </div>
       </div>
