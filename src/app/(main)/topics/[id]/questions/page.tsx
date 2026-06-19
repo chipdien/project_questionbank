@@ -10,9 +10,10 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import Link from 'next/link';
 
-import { topicsService, Topic } from '@/services/topics';
-import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
-import QuestionEditModal from '@/components/common/QuestionEditModal';
+import { getTopicsAction, fetchTopicQuestionsAction, bulkMoveQuestionsAction } from '@/lib/actions/topics.action';
+import { Topic } from '@/app/(main)/topics/queries/useTopicsQuery';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
+import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
 
 // Shared img renderer: skip images with empty src to prevent React warning
 const markdownComponents = {
@@ -61,13 +62,20 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
   const loadData = async () => {
     setLoading(true);
     try {
-      const all = await topicsService.fetchTopics();
+      const allRes = await getTopicsAction();
+      if (!allRes.success) {
+        throw new Error(allRes.error || 'Không thể lấy danh sách chủ đề.');
+      }
+      const all = allRes.data || [];
       setAllTopics(all);
       const current = all.find(t => t.id === id);
       if (current) setTopic(current);
 
-      const qs = await topicsService.fetchTopicQuestions(id);
-      setQuestions(qs);
+      const qsRes = await fetchTopicQuestionsAction(Number(id));
+      if (!qsRes.success) {
+        throw new Error(qsRes.error || 'Không thể tải danh sách câu hỏi.');
+      }
+      setQuestions(qsRes.data || []);
     } catch (err: any) {
       toast.error('Không thể tải danh sách câu hỏi: ' + err.message);
     } finally {
@@ -107,11 +115,14 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
     setIsMoving(true);
     const toastId = toast.loading(`Đang di chuyển ${selectedIds.size} câu hỏi...`);
     try {
-      await topicsService.bulkMoveQuestions(
-        Array.from(selectedIds),
-        id,
-        targetTopicId
+      const res = await bulkMoveQuestionsAction(
+        Array.from(selectedIds).map(Number),
+        Number(id),
+        Number(targetTopicId)
       );
+      if (!res.success) {
+        throw new Error(res.error || 'Di chuyển thất bại.');
+      }
       toast.success('Di chuyển câu hỏi thành công', { id: toastId });
       setSelectedIds(new Set());
       setBulkMoveOpen(false);
@@ -119,7 +130,7 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
       setTargetSearch('');
       await loadData();
     } catch (err: any) {
-      toast.error('Di chuyển thất bại: ' + (err.response?.data?.error || err.message), { id: toastId });
+      toast.error('Di chuyển thất bại: ' + err.message, { id: toastId });
     } finally {
       setIsMoving(false);
     }
@@ -257,8 +268,8 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
                   <div
                     key={q.id}
                     className={`flex gap-4 p-5 bg-surface border rounded-2xl transition-all group ${isSelected
-                        ? 'border-primary bg-primary/5 shadow-md'
-                        : 'border-outline-variant/30 hover:border-outline-variant/70 hover:shadow-sm'
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-outline-variant/30 hover:border-outline-variant/70 hover:shadow-sm'
                       }`}
                   >
                     {/* Checkbox */}
@@ -310,8 +321,8 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
                                 <div
                                   key={opt.id}
                                   className={`flex gap-2 p-3 rounded-xl border text-xs transition-all ${isCorrect
-                                      ? 'bg-success/5 border-success/40 text-success'
-                                      : 'bg-surface-container-lowest border-outline-variant/20'
+                                    ? 'bg-success/5 border-success/40 text-success'
+                                    : 'bg-surface-container-lowest border-outline-variant/20'
                                     }`}
                                 >
                                   <span className="font-bold mr-1">{charLabel}.</span>

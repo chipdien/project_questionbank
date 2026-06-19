@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { replaceMathpixImagesInText } from '@/lib/utils/s3-utils';
+import { replaceMathpixImagesInText } from '@/lib/utils/s3.utils';
 
 export async function POST(request: NextRequest) {
   try {

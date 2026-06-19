@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { getQuestionsByDocId, getLibraryQuestions } from '@/actions/question';
-import { createCollection } from '@/actions/collection';
+import { useCreateCollectionMutation } from '@/app/(main)/collection/queries/useCollectionMutation';
 import toast from 'react-hot-toast';
+import { useDebounce } from '@/lib/hooks/useDebounce';
+import { useQuestionsQuery } from '../queries/useQuestionsQuery';
+
 
 export interface Option {
   id: number;
@@ -36,6 +38,9 @@ export interface Document {
   link_s3?: string | null;
   teacher_name?: string | null;
   created_by_id?: number | null;
+  teacher_owned?: number | null;
+  copied_from_id?: number | null;
+  original_owner_name?: string | null;
 }
 
 export interface Lesson {
@@ -86,9 +91,7 @@ export function useQuestionBank() {
   });
 
   // Source list of questions and selections
-  const [sourceQuestions, setSourceQuestions] = useState<Question[]>([]);
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [selectedSourceIds, setSelectedSourceIds] = useState<Set<number>>(new Set());
@@ -98,7 +101,6 @@ export function useQuestionBank() {
     return pageParam ? Math.max(1, Number(pageParam)) : 1;
   });
 
-  const [totalPages, setTotalPages] = useState(0);
   const PAGE_SIZE = 30;
 
   // Sync state changes to URL SearchParams
@@ -179,79 +181,93 @@ export function useQuestionBank() {
     selectedQuestionsRef.current = selectedQuestions;
   }, [selectedQuestions]);
 
-  useEffect(() => {
-    let isActive = true;
+  const debouncedKeyword = useDebounce(keyword, 400);
 
-    async function loadQuestions() {
-      const isAnyFilterActive =
-        grades.length > 0 ||
-        difficulties.length > 0 ||
-        questionTypes.length > 0 ||
-        topicIds.length > 0 ||
-        tagIds.length > 0 ||
-        keyword !== '';
+  const isAnyFilterActive =
+    grades.length > 0 ||
+    difficulties.length > 0 ||
+    questionTypes.length > 0 ||
+    topicIds.length > 0 ||
+    tagIds.length > 0 ||
+    debouncedKeyword !== '';
 
-      if (!activeDocId && !isAnyFilterActive) {
-        if (isActive) {
-          setSourceQuestions([]);
-          setTotalPages(0);
-        }
-        return;
-      }
+  const isEnabled = !!activeDocId || isAnyFilterActive;
 
-      setIsLoading(true);
-      let result: any;
-      const excludeIds = selectedQuestionsRef.current.map(q => q.id);
+  // React Query integration for fetching questions
+  const { data: queryResult, isLoading: isQueryLoading, isFetching: isQueryFetching } = useQuestionsQuery({
+    activeDocId,
+    grades,
+    difficulties,
+    questionTypes,
+    topicIds,
+    tagIds,
+    keyword: debouncedKeyword,
+    page,
+    pageSize: PAGE_SIZE,
+    excludeIds: selectedQuestionsRef.current.map(q => q.id)
+  }, isEnabled);
 
-      if (activeDocId) {
-        result = await getQuestionsByDocId(activeDocId, page, PAGE_SIZE, excludeIds);
-      } else {
-        result = await getLibraryQuestions(page, PAGE_SIZE, {
-          grades,
-          difficulties,
-          questionTypes,
-          topicIds,
-          tagIds,
-          keyword
-        }, excludeIds);
-      }
+  const currentSelectedIds = new Set(selectedQuestions.map(q => q.id));
+  const rawData = queryResult?.data || [];
+  
+  // Derived sourceQuestions state
+  const sourceQuestions: Question[] = rawData
+    .filter((q: any) => !currentSelectedIds.has(q.id))
+    .map((q: any) => ({
+      ...q,
+      containerId: 'source' as const,
+      document_id: activeDocId || undefined,
+    }));
 
-      if (!isActive) return;
+  const totalPages = queryResult?.totalPages || 0;
+  
+  const [duplicatingDocId, setDuplicatingDocId] = useState<number | null>(null);
+  const isDuplicating = duplicatingDocId !== null;
+  const isLoading = isQueryLoading || isQueryFetching || isDuplicating;
 
-      const data = result.data || [];
-      setTotalPages(result.totalPages || 0);
-
-      const currentSelectedIds = new Set(selectedQuestionsRef.current.map(q => q.id));
-      const filteredData = data.filter((q: any) => !currentSelectedIds.has(q.id));
-
-      setSourceQuestions(filteredData.map((q: any) => ({
-        ...q,
-        containerId: 'source',
-        document_id: activeDocId || undefined
-      })));
-      setIsLoading(false);
-    }
-
-    loadQuestions();
-
-    return () => {
-      isActive = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeDocId, grades, difficulties, questionTypes, topicIds, tagIds, keyword, page]);
+  const createCollectionMutation = useCreateCollectionMutation();
 
   const handleSaveCollection = async (title: string) => {
     const questionIds = selectedQuestions.map(q => q.id);
-    const result = await createCollection(title, questionIds);
-
-    if (result.success) {
+    try {
+      await createCollectionMutation.mutateAsync({ title, questionIds });
       toast.success('Đã tạo bộ sưu tập thành công!');
       return { success: true };
-    } else {
-      toast.error(result.error || 'Có lỗi xảy ra');
-      return { success: false, error: result.error };
+    } catch (error: any) {
+      toast.error(error.message || 'Có lỗi xảy ra');
+      return { success: false, error: error.message };
     }
   };
+
+  const handleDuplicateDoc = useCallback(async (docId: number) => {
+    setDuplicatingDocId(docId);
+    try {
+      const { duplicateDocumentAction } = await import('@/lib/actions/document-library.action');
+      const res = await duplicateDocumentAction(docId);
+      if (res.success) {
+        if (res.alreadyExists) {
+          toast.success('Bạn đã tạo bản sao cho tài liệu này từ trước. Đang chuyển hướng...');
+        } else {
+          toast.success('Tạo bản sao tài liệu thành công!');
+        }
+        
+        // Cập nhật URL thông qua query param, force reload trang và set active tab sang tệp của tôi
+        if (res.docId !== undefined) {
+          const params = new URLSearchParams(window.location.search);
+          params.set('docId', res.docId.toString());
+          params.set('tab', 'my-files');
+          window.location.href = `${window.location.pathname}?${params.toString()}`;
+        }
+      } else {
+        toast.error(res.error || 'Có lỗi xảy ra khi tạo bản sao');
+      }
+    } catch (error: any) {
+      console.error('Error duplicating doc:', error);
+      toast.error('Không thể tạo bản sao tài liệu');
+    } finally {
+      setDuplicatingDocId(null);
+    }
+  }, [router]);
 
   const handleToggleSelect = useCallback((id: number) => {
     setSelectedSourceIds(prev => {
@@ -273,7 +289,6 @@ export function useQuestionBank() {
 
   const handleAddQuestion = useCallback((question: Question, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setSourceQuestions(prev => prev.filter(q => q.id !== question.id));
     setSelectedQuestions(prev => {
       if (prev.some(q => q.id === question.id)) return prev;
       return [...prev, { ...question, containerId: 'selected' }];
@@ -287,27 +302,19 @@ export function useQuestionBank() {
   }, []);
 
   const handleAddSelectedList = useCallback(() => {
-    setSourceQuestions(prev => {
-      const itemsToAdd = prev.filter(q => selectedSourceIds.has(q.id));
-      if (itemsToAdd.length > 0) {
-        setSelectedQuestions(sq => {
-          const existingIds = new Set(sq.map(q => q.id));
-          const newItems = itemsToAdd.filter(item => !existingIds.has(item.id)).map(q => ({ ...q, containerId: 'selected' }));
-          return [...sq, ...newItems];
-        });
-      }
-      return prev.filter(q => !selectedSourceIds.has(q.id));
+    setSelectedQuestions(sq => {
+      const existingIds = new Set(sq.map(q => q.id));
+      const itemsToAdd = sourceQuestions.filter(q => selectedSourceIds.has(q.id) && !existingIds.has(q.id));
+      const newItems = itemsToAdd.map(q => ({ ...q, containerId: 'selected' as const }));
+      return [...sq, ...newItems];
     });
     setSelectedSourceIds(new Set());
-  }, [selectedSourceIds]);
+  }, [selectedSourceIds, sourceQuestions]);
 
   const handleRemoveQuestion = useCallback((question: Question, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setSelectedQuestions(prev => prev.filter(q => q.id !== question.id));
-    if (activeDocId === null || question.document_id === activeDocId) {
-      setSourceQuestions(prev => [{ ...question, containerId: 'source' }, ...prev]);
-    }
-  }, [activeDocId]);
+  }, []);
 
   const isFiltering =
     grades.length > 0 ||
@@ -333,7 +340,9 @@ export function useQuestionBank() {
       selectedSourceIds,
       page,
       totalPages,
-      isFiltering
+      isFiltering,
+      isDuplicating,
+      duplicatingDocId
     },
     actions: {
       setGrades,
@@ -352,7 +361,8 @@ export function useQuestionBank() {
       handleSelectAllSource,
       handleAddQuestion,
       handleAddSelectedList,
-      handleRemoveQuestion
+      handleRemoveQuestion,
+      handleDuplicateDoc
     }
   };
 }

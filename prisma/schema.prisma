@@ -47,11 +47,13 @@ model lms_documents {
   is_ai_classified Boolean?  @default(false)
   link_s3          String?   @db.Text
   link_s3_answer   String?   @db.Text
+  copied_from_id   BigInt?
 
   @@index([created_by_id], map: "lms_documents_created_by_id")
   @@index([session_id], map: "lms_documents_session_id")
   @@index([teacher_owned], map: "lms_documents_teacher_owned")
   @@index([updated_by_id], map: "lms_documents_updated_by_id")
+  @@index([copied_from_id], map: "idx_lms_documents_copied_from_id")
 }
 
 model lms_documents_classes {
@@ -204,6 +206,7 @@ model lms_questions {
   owned_by_id         BigInt?
   teacher_owned_by_id BigInt?
   code                String?   @db.VarChar(6)
+  export_count        Int       @default(0)
 
   topics              lms_topics_questions[]
   tags                lms_questions_tags[]
@@ -214,6 +217,12 @@ model lms_questions {
   @@index([question_id], map: "lms_questions_question_id")
   @@index([teacher_owned_by_id], map: "lms_questions_teacher_owned_by_id")
   @@index([updated_by_id], map: "lms_questions_updated_by_id")
+  @@index([grade], map: "idx_lms_questions_grade")
+  @@index([question_type], map: "idx_lms_questions_question_type")
+  @@index([question_difficulty], map: "idx_lms_questions_question_difficulty")
+  @@index([complex], map: "idx_lms_questions_complex")
+  @@index([public], map: "idx_lms_questions_public")
+  @@index([ref_question_id], map: "idx_lms_questions_ref_question_id")
 }
 
 model lms_questions_collections {
@@ -270,8 +279,15 @@ model lms_requests {
   type            String?   @db.VarChar(255)
   content_suggest String?   @db.LongText
 
+  // 011-question-requests
+  question_id     BigInt?
+  status          String    @default("PENDING") @db.VarChar(50)
+  admin_note      String?   @db.LongText
+
   @@index([created_by_id], map: "lms_requests_created_by_id")
   @@index([updated_by_id], map: "lms_requests_updated_by_id")
+  @@index([question_id], map: "idx_lms_requests_question_id")
+  @@index([status], map: "idx_lms_requests_status")
 }
 
 model lms_syllabus {

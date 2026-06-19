@@ -1,24 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import QuestionClassificationCard from './QuestionClassificationCard';
 import QuestionsDataGrid from './QuestionsDataGrid';
-import { classifyQuestions } from '@/actions/question';
-import { autoClassifyWithAI } from '@/actions/ai-classify';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { toast } from 'react-hot-toast';
-import { Question, Document, Lesson, Pagination } from '@/types';
+import { Question, Document, Lesson, Pagination } from '@/lib/types';
 import DashboardUploader from '@/app/(main)/documents/components/DashboardUploader';
-import { Difficulty } from '@/actions/difficulty';
+import { Difficulty } from '@/lib/actions/difficulty.action';
+import { useQuestionsManager } from '../hooks/useQuestionsManager';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-
-import { getDifficulties } from '@/actions/difficulty';
 
 interface QuestionsManagerProps {
   questions: Question[];
@@ -43,81 +38,27 @@ export default function QuestionsManager({
   difficulties = [],
   isAdmin = false
 }: QuestionsManagerProps) {
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [difficultiesList, setDifficultiesList] = useState<Difficulty[]>(difficulties);
-  const router = useRouter();
+  const { state, actions } = useQuestionsManager({
+    documents,
+    activeDocId,
+    docPagination,
+    currentUserId,
+    difficulties,
+  });
 
-  const handleRefreshDifficulties = async () => {
-    try {
-      const fresh = await getDifficulties();
-      setDifficultiesList(fresh);
-    } catch (err) {
-      console.error('Failed to refresh difficulties:', err);
-    }
-  };
+  const {
+    selectedIds,
+    difficultiesList,
+    isAiClassified,
+    isOwner,
+  } = state;
 
-
-  const activeDoc = documents.find(d => d.id === activeDocId);
-  const isAiClassified = activeDoc?.is_ai_classified === 1;
-  const isOwner = activeDoc ? (activeDoc.created_by_id === currentUserId || activeDoc.teacher_owned === currentUserId) : false;
-
-  const handleSelectionChange = (newSelectedIds: Set<number>) => {
-    setSelectedIds(newSelectedIds);
-  };
-
-  const handleDocPageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > docPagination.totalPages) return;
-    const params = new URLSearchParams(window.location.search);
-    params.set('docPage', newPage.toString());
-    // Giữ nguyên docId hiện tại nếu có
-    router.push(`/?${params.toString()}`);
-  };
-
-  const handleApplyClassification = async (classification: {
-    grade?: string;
-    lessonId?: string;
-    difficulty?: string;
-  }) => {
-    if (selectedIds.size === 0) {
-      toast.error('Vui lòng chọn ít nhất một câu hỏi.');
-      return;
-    }
-
-    try {
-      const result = await classifyQuestions(Array.from(selectedIds), classification);
-
-      if (result.success) {
-        toast.success('Phân loại thành công!');
-        setSelectedIds(new Set());
-        router.refresh(); // Tải lại dữ liệu từ server thông qua Server Action revalidatePath
-      } else {
-        toast.error('Lỗi: ' + result.error);
-      }
-    } catch (err: any) {
-      toast.error('Có lỗi xảy ra: ' + err.message);
-    }
-  };
-
-  const handleAIClassify = async () => {
-    if (!activeDocId) {
-      toast.error('Không tìm thấy tài liệu để phân loại.');
-      return;
-    }
-
-    try {
-      const result = await autoClassifyWithAI(activeDocId);
-
-      if (result.success) {
-        toast.success(`AI đã phân loại thành công ${result.count} câu hỏi trong tài liệu này!`);
-        setSelectedIds(new Set());
-        router.refresh();
-      } else {
-        toast.error('Lỗi AI: ' + result.error);
-      }
-    } catch (err: any) {
-      toast.error('Có lỗi xảy ra khi gọi AI: ' + err.message);
-    }
-  };
+  const {
+    handleSelectionChange,
+    handleDocPageChange,
+    handleApplyClassification,
+    handleAIClassify,
+  } = actions;
 
   return (
     <div className="flex flex-col gap-[20px]">
@@ -127,7 +68,7 @@ export default function QuestionsManager({
         {/* Upload File Area */}
         <DashboardUploader />
 
-        {/* Recent File Uploads Card (Client component logic for active highlighting) */}
+        {/* Recent File Uploads Card */}
         <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col min-h-[420px]">
           <div className="flex justify-between items-center mb-6 text-on-surface">
             <h4 className="font-bold flex items-center gap-2 text-lg font-headline">
@@ -252,7 +193,7 @@ export default function QuestionsManager({
             </div>
 
             <button
-              onClick={() => router.push('/question-bank')}
+              onClick={() => window.location.href = '/question-bank'}
               className="shrink-0 px-3 py-2 text-[9px] cursor-pointer font-extrabold uppercase tracking-widest text-outline-variant hover:text-primary bg-surface-container-low border border-outline-variant/20 rounded-xl hover:bg-primary/5 hover:border-primary/30 transition-all flex items-center justify-center gap-1.5 group"
             >
               Xem Kho
@@ -289,4 +230,3 @@ export default function QuestionsManager({
     </div>
   );
 }
-

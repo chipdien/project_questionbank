@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import AppCheckbox from '@/components/ui/AppCheckbox';
-import { Difficulty } from '@/actions/difficulty';
+import AppCheckbox from '@/lib/components/ui/AppCheckbox';
+import { Difficulty } from '@/lib/actions/difficulty.action';
 
 interface Topic {
   id: number;
@@ -30,7 +30,7 @@ interface QuestionFilterPanelProps {
   onTagIdsChange: (ids: number[]) => void;
   keyword: string;
   onKeywordChange: (keyword: string) => void;
-  
+
   difficultiesList: Difficulty[];
   tagsByCategory: Record<string, Tag[]>;
   topicsList: Topic[];
@@ -190,11 +190,10 @@ export default function QuestionFilterPanel({
               return (
                 <label
                   key={g}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
-                    isChecked
-                      ? 'bg-primary/5 border-primary/30 text-primary'
-                      : 'border-outline-variant/20 hover:border-primary/20 text-on-surface-variant'
-                  }`}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${isChecked
+                    ? 'bg-primary/5 border-primary/30 text-primary'
+                    : 'border-outline-variant/20 hover:border-primary/20 text-on-surface-variant'
+                    }`}
                 >
                   <AppCheckbox checked={isChecked} onChange={() => handleToggleGrade(g)} />
                   Lớp {g}
@@ -226,11 +225,10 @@ export default function QuestionFilterPanel({
               return (
                 <label
                   key={d.id}
-                  className={`flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
-                    isChecked
-                      ? 'bg-primary/5 border-primary/30 text-primary'
-                      : 'border-outline-variant/20 hover:border-primary/20 text-on-surface-variant'
-                  }`}
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${isChecked
+                    ? 'bg-primary/5 border-primary/30 text-primary'
+                    : 'border-outline-variant/20 hover:border-primary/20 text-on-surface-variant'
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <AppCheckbox checked={isChecked} onChange={() => handleToggleDifficulty(d.name)} />
@@ -268,11 +266,10 @@ export default function QuestionFilterPanel({
               return (
                 <label
                   key={type}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
-                    isChecked
-                      ? 'bg-primary/5 border-primary/30 text-primary'
-                      : 'border-outline-variant/20 hover:border-primary/20 text-on-surface-variant'
-                  }`}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${isChecked
+                    ? 'bg-primary/5 border-primary/30 text-primary'
+                    : 'border-outline-variant/20 hover:border-primary/20 text-on-surface-variant'
+                    }`}
                 >
                   <AppCheckbox checked={isChecked} onChange={() => handleToggleQuestionType(type)} />
                   {label}
@@ -335,11 +332,10 @@ export default function QuestionFilterPanel({
                           <button
                             key={tag.id}
                             onClick={() => handleToggleTag(tag.id)}
-                            className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${
-                              isChecked
-                                ? 'bg-primary/10 border-primary/40 text-primary shadow-xs'
-                                : 'bg-surface-container-lowest border-outline-variant/30 text-on-surface-variant hover:border-primary/20'
-                            }`}
+                            className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${isChecked
+                              ? 'bg-primary/10 border-primary/40 text-primary shadow-xs'
+                              : 'bg-surface-container-lowest border-outline-variant/30 text-on-surface-variant hover:border-primary/20'
+                              }`}
                           >
                             #{tag.name}
                           </button>

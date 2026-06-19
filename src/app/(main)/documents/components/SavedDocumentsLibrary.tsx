@@ -1,39 +1,15 @@
-﻿'use client';
+'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { FileText, Loader2, Download, ExternalLink, History, Search } from 'lucide-react';
+import { useSavedDocumentsLibrary } from '../hooks/useSavedDocumentsLibrary';
 
 interface SavedDocumentsLibraryProps {
   onLoadDocument: (docId: string) => void;
 }
 
 export default function SavedDocumentsLibrary({ onLoadDocument }: SavedDocumentsLibraryProps) {
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const fetchDocuments = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/documentcustom/list');
-      const data = await res.json();
-      if (data.success) {
-        setDocuments(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDocuments();
-  }, []);
-
-  const filteredDocs = documents.filter(doc =>
-    doc.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const { isLoading, filteredDocs, searchTerm, setSearchTerm, isAdmin } = useSavedDocumentsLibrary();
 
   return (
     <div className="flex flex-col h-full bg-surface-container-lowest border-l border-outline-variant/30 no-print overflow-hidden">
@@ -83,9 +59,16 @@ export default function SavedDocumentsLibrary({ onLoadDocument }: SavedDocuments
                     <h3 className="text-sm font-bold text-on-surface truncate pr-2" title={doc.title}>
                       {doc.title}
                     </h3>
-                    <p className="text-[10px] text-outline mt-1 font-medium tracking-wide uppercase">
-                      {new Date(doc.created_at).toLocaleString('vi-VN')}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <p className="text-[10px] text-outline font-medium tracking-wide uppercase">
+                        {new Date(doc.created_at).toLocaleString('vi-VN')}
+                      </p>
+                      {isAdmin && doc.created_by_name && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container truncate max-w-[150px]" title={`Export bởi: ${doc.created_by_name}`}>
+                          Bởi: {doc.created_by_name}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { loginAction } from '@/actions/auth';
+import { loginAction } from '@/lib/actions/auth.action';
 import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {

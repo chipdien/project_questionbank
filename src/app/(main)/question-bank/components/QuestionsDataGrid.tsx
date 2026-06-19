@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
@@ -9,14 +9,14 @@ import rehypeRaw from 'rehype-raw';
 
 import QuestionModal from '@/app/(main)/question-bank/components/QuestionModal';
 import AddToCollectionModal from '@/app/(main)/collection/components/AddToCollectionModal';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math-utils';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 
-import { Question, Pagination } from '@/types';
-import { Difficulty } from '@/actions/difficulty';
-import AppBadge from '@/components/ui/AppBadge';
-import AppCheckbox from '@/components/ui/AppCheckbox';
-import AppButton from '@/components/ui/AppButton';
+import { Question, Pagination } from '@/lib/types';
+import { Difficulty } from '@/lib/actions/difficulty.action';
+import AppBadge from '@/lib/components/ui/AppBadge';
+import AppCheckbox from '@/lib/components/ui/AppCheckbox';
+import AppButton from '@/lib/components/ui/AppButton';
+import { useQuestionsDataGrid } from '../hooks/useQuestionsDataGrid';
 
 interface QuestionsDataGridProps {
   questions: Question[];
@@ -39,55 +39,33 @@ export default function QuestionsDataGrid({
   currentUserId,
   isAdmin = false
 }: QuestionsDataGridProps) {
-  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
-  const [internalSelectedIds, setInternalSelectedIds] = useState<Set<number>>(new Set());
-  const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
+  const { state, actions } = useQuestionsDataGrid({
+    questions,
+    externalSelectedIds,
+    onSelectionChange,
+    pagination,
+  });
 
-  const { currentPage, totalPages, totalItems, pageSize } = pagination;
+  const {
+    selectedQuestion,
+    isCollectionModalOpen,
+    selectedIds,
+    isAllSelected,
+    startIdx,
+    endIdx,
+    currentPage,
+    totalPages,
+    totalItems,
+  } = state;
 
-  // Use external selection if provided
-  const selectedIds = externalSelectedIds || internalSelectedIds;
-  const updateSelectedIds = (newIds: Set<number>) => {
-    if (onSelectionChange) {
-      onSelectionChange(newIds);
-    } else {
-      setInternalSelectedIds(newIds);
-    }
-  };
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages) return;
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('page', newPage.toString());
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const toggleAll = () => {
-    if (selectedIds.size === questions.length) {
-      updateSelectedIds(new Set());
-    } else {
-      updateSelectedIds(new Set(questions.map(q => q.id)));
-    }
-  };
-
-  const toggleId = (id: number) => {
-    const newSelected = new Set(selectedIds);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    updateSelectedIds(newSelected);
-  };
-
-  const isAllSelected = questions.length > 0 && selectedIds.size === questions.length;
-
-  // Calculate slice indicators
-  const startIdx = (currentPage - 1) * pageSize + 1;
-  const endIdx = Math.min(currentPage * pageSize, totalItems);
+  const {
+    setSelectedQuestion,
+    setIsCollectionModalOpen,
+    updateSelectedIds,
+    handlePageChange,
+    toggleAll,
+    toggleId,
+  } = actions;
 
   return (
     <>
@@ -141,7 +119,7 @@ export default function QuestionsDataGrid({
                     </td>
                   )}
                   <td className="px-6 py-4 text-sm font-medium text-primary">
-                    {(currentPage - 1) * pageSize + index + 1}
+                    {(currentPage - 1) * pagination.pageSize + index + 1}
                   </td>
                   <td className="px-6 py-4 text-sm font-semibold text-on-surface">
                     <div className="line-clamp-2 prose prose-slate prose-sm max-w-none text-sm [&_p]:my-0 [&_img]:hidden">
@@ -152,13 +130,26 @@ export default function QuestionsDataGrid({
                       >
                         {cleanMathpixData(getQuestionDisplayContent(q.statement, q.content))}
                       </ReactMarkdown>
-
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-on-surface-variant max-w-[150px]">
-                    <div className="truncate" title={q.lesson_name}>
-                      {q.lesson_name || '---'}
-                    </div>
+                  <td className="px-6 py-4 text-sm text-on-surface-variant max-w-[200px]">
+                    {q.topics && q.topics.length > 0 ? (
+                      <div className="flex flex-wrap gap-1 max-w-full">
+                        {q.topics.map((t) => (
+                          <span
+                            key={t.topic_id}
+                            className="inline-block bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded truncate max-w-[150px]"
+                            title={t.topic?.title || ''}
+                          >
+                            {t.topic?.title || ''}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="truncate" title={q.lesson_name}>
+                        {q.lesson_name || '---'}
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm text-on-surface-variant">
                     {q.grade ? `Lớp ${q.grade}` : '---'}
@@ -234,4 +225,3 @@ export default function QuestionsDataGrid({
     </>
   );
 }
-

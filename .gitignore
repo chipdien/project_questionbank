@@ -133,7 +133,6 @@ Thumbs.db
 desktop.ini
 
 # Prisma
-/prisma/migrations
 /prisma/*.db
 /prisma/*.db-journal
 

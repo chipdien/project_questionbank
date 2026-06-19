@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
-import { getCurrentUserId } from "@/lib/utils/auth-utils";
-import { uploadToS3 } from "@/lib/utils/s3-utils";
+import { getCurrentUserId } from "@/lib/utils/auth.utils";
+import { uploadToS3 } from "@/lib/utils/s3.utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
       const buffer = Buffer.from(arrayBuffer);
 
       s3Url = await uploadToS3(buffer, localKey, file.type || "application/pdf");
-      
+
       const folderPrefix = process.env.AWS_S3_FOLDER_PREFIX || '';
       objectKey = folderPrefix ? `${folderPrefix.replace(/\/$/, '')}/${localKey}` : localKey;
     }
@@ -100,6 +100,12 @@ export async function POST(req: NextRequest) {
             document_custom_id: doc.id,
           })),
         });
+
+        // Tăng export_count của các câu hỏi tương ứng lên 1
+        const questionIdListStr = questionIds.map((id: any) => Number(id)).join(',');
+        await tx.$executeRawUnsafe(
+          `UPDATE lms_questions SET export_count = export_count + 1 WHERE id IN (${questionIdListStr})`
+        );
       }
 
       return doc.id;
