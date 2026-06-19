@@ -24,8 +24,10 @@ import { usePathname } from 'next/navigation';
 import { logoutAction } from '@/lib/actions/auth.action';
 import { User } from '@/lib/utils/auth.utils';
 import { useConfirm } from '@/lib/components/providers/ConfirmProvider';
+import logo from '@/app/logo.png';
+import icon from '@/app/icon.png';
 
-export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; user: User | null }) {
+export default function Sidebar({ isCollapsed, user, toggleSidebar }: { isCollapsed: boolean; user: User | null; toggleSidebar?: () => void }) {
   const pathname = usePathname();
 
   const [isPending, startTransition] = useTransition();
@@ -100,11 +102,25 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
 
   return (
     <aside
-      className={`fixed left-0 top-16 h-[calc(100vh-64px)] border-r border-outline-variant/30 bg-surface-container-low flex flex-col p-4 gap-2 z-40 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'
-        }`}
+      className={`fixed left-0 top-0 bottom-0 h-screen border-r border-outline-variant/30 bg-surface-container-low flex flex-col gap-2 z-40 transition-all duration-300 ${
+        isCollapsed ? 'w-20 p-2' : 'w-64 p-4'
+      }`}
       id="sidebar"
     >
-      <div className="mb-4 px-2 nav-section w-full flex-col flex gap-2 overflow-y-auto">
+      <div
+        onClick={toggleSidebar}
+        className={`h-16 flex items-center border-b border-outline-variant/15 mb-4 select-none shrink-0 transition-colors cursor-pointer bg-surface-container-lowest/60 hover:bg-surface-container-lowest/90 ${
+          isCollapsed ? '-mx-2 -mt-2 w-[calc(100%+1rem)] justify-center px-4' : '-mx-4 -mt-4 w-[calc(100%+2rem)] justify-start px-6'
+        }`}
+      >
+        {isCollapsed ? (
+          <img src={icon.src} alt="VietElite Icon" className="h-12 object-contain" />
+        ) : (
+          <img src={logo.src} alt="VietElite Logo" className="h-18 object-contain" />
+        )}
+      </div>
+
+      <div className={`mb-4 nav-section w-full flex-col flex gap-2 overflow-y-auto flex-1 ${isCollapsed ? 'px-0' : 'px-2'}`}>
         <nav className="space-y-2 w-full flex-col flex gap-2">
           {navItems.map((item) => {
             if ('children' in item && item.children) {
@@ -115,7 +131,9 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
                   <button
                     type="button"
                     onClick={() => !isCollapsed && toggleSubmenu(item.label)}
-                    className={`nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ease-in-out group ${isChildActive
+                    className={`nav-item flex items-center rounded-xl transition-all duration-200 ease-in-out group ${
+                      isCollapsed ? 'justify-center w-12 h-12 mx-auto p-0' : 'justify-start gap-3 px-4 py-3 w-full'
+                    } ${isChildActive
                       ? 'bg-secondary-container text-on-secondary-container font-semibold'
                       : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-high'
                       }`}
@@ -161,7 +179,9 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
               <Link
                 key={item.label}
                 href={item.href}
-                className={`nav-item flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ease-in-out group ${isActive
+                className={`nav-item flex items-center rounded-xl transition-all duration-200 ease-in-out group ${
+                  isCollapsed ? 'justify-center w-12 h-12 mx-auto p-0' : 'justify-start gap-3 px-4 py-3 w-full'
+                } ${isActive
                   ? 'bg-secondary-container text-on-secondary-container font-semibold'
                   : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-high'
                   }`}
@@ -176,12 +196,14 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
         </nav>
       </div>
 
-      <div className={`mt-auto border-t border-outline-variant/20 pt-4 px-2 space-y-2 nav-section w-full`}>
+      <div className={`mt-auto border-t border-outline-variant/20 pt-4 space-y-2 nav-section w-full ${isCollapsed ? 'px-0' : 'px-2'}`}>
         <button
           type="button"
           onClick={handleLogout}
           disabled={isPending}
-          className="nav-item w-full flex items-center gap-3 px-4 py-3 text-error hover:bg-error-container/20 transition-all duration-200 ease-in-out rounded-xl disabled:opacity-50 disabled:cursor-wait cursor-pointer"
+          className={`nav-item flex items-center text-error hover:bg-error-container/20 transition-all duration-200 ease-in-out rounded-xl disabled:opacity-50 disabled:cursor-wait cursor-pointer ${
+            isCollapsed ? 'justify-center w-12 h-12 mx-auto p-0' : 'justify-start gap-3 px-4 py-3 w-full'
+          }`}
         >
           <LogOut className={`w-5 h-5 shrink-0 ${isPending ? 'animate-pulse' : ''}`} />
           {!isCollapsed && (

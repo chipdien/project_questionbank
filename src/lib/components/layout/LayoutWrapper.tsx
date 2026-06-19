@@ -19,8 +19,8 @@ export default function LayoutWrapper({ children, user }: LayoutWrapperProps) {
   return (
     <ConfirmProvider>
       <ToastContainer position="top-right" autoClose={3000} />
-      <TopNavBar user={user} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
-      <Sidebar isCollapsed={isCollapsed} user={user} />
+      <TopNavBar user={user} isCollapsed={isCollapsed} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
+      <Sidebar isCollapsed={isCollapsed} user={user} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
       <main
         id="main-content"
         className={`mt-16 h-[calc(100vh-64px)] overflow-y-auto bg-background relative ${isCollapsed ? 'ml-20' : 'ml-64'

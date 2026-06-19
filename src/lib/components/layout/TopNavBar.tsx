@@ -10,9 +10,10 @@ import UserProfileModal from '@/lib/components/ui/UserProfileModal';
 interface TopNavBarProps {
   toggleSidebar: () => void;
   user: User | null;
+  isCollapsed: boolean;
 }
 
-export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
+export default function TopNavBar({ toggleSidebar, user, isCollapsed }: TopNavBarProps) {
   const router = useRouter();
   const [pending, setPending] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -24,20 +25,8 @@ export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
 
   return (
     <>
-      <header className="fixed top-0 w-full z-50 border-b border-outline-variant/30 bg-white dark:bg-slate-900 shadow-sm dark:shadow-none flex justify-between items-center h-16 px-6" style={{ backgroundColor: '#ffffff' }}>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-xl hover:bg-surface-container-high transition-colors text-on-surface-variant flex items-center justify-center"
-            id="sidebar-toggle"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-          <div className="text-xl font-bold text-primary flex items-center gap-2 font-headline">
-            VietElite
-          </div>
-        </div>
-
+      <header className={`fixed top-0 right-0 z-50 border-b border-outline-variant/30 bg-white dark:bg-slate-900 shadow-sm dark:shadow-none flex justify-end items-center h-16 px-6 transition-all duration-300 ${isCollapsed ? 'left-20' : 'left-64'
+        }`} style={{ backgroundColor: '#ffffff' }}>
         <div className="flex items-center gap-4">
           <button onClick={() => router.push('/requests')} className="p-2 rounded-full cursor-pointer hover:bg-surface-container-high transition-colors text-on-surface-variant relative" title="Yêu cầu">
             <span className="material-symbols-outlined">notifications</span>
