@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit3, Check, AlertTriangle, Loader2, Palette, ArrowUpDown } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { Difficulty } from '@/lib/actions/difficulty.action';
 import { useDifficultiesQuery } from '../queries/useDifficultiesQuery';
 import {

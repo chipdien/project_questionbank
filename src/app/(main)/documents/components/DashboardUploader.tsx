@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Modal } from '@/lib/components/ui/Modal';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { useDashboardUploader, UPLOAD_STEPS } from '../hooks/useDashboardUploader';
 
 function cn(...inputs: (string | undefined | null | false)[]) {
@@ -40,8 +40,8 @@ export default function DashboardUploader() {
       toast.success('Tải và xử lý tài liệu phân tích thành công!');
     } catch (err: any) {
       if (err.publicDocumentId) {
-        toast.custom((t) => (
-          <div className={`${t.visible ? 'animate-in fade-in slide-in-from-top-4' : 'animate-out fade-out slide-out-to-top-4'} max-w-sm w-full bg-surface-container-highest shadow-xl rounded-2xl pointer-events-auto border border-outline-variant/30 flex overflow-hidden`}>
+        toast(
+          <div className="max-w-sm w-full bg-surface-container-highest shadow-xl rounded-2xl pointer-events-auto border border-outline-variant/30 flex overflow-hidden">
             <div className="flex-1 p-4">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
@@ -57,8 +57,9 @@ export default function DashboardUploader() {
                 </div>
               </div>
             </div>
-          </div>
-        ), { duration: 2500, position: 'top-center' });
+          </div>,
+          { autoClose: 2500, position: 'top-center' }
+        );
       } else {
         toast.error(err.message || 'Lỗi kết nối máy chủ.');
       }

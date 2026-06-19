@@ -5,6 +5,7 @@ import { Menu, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { User } from '@/lib/utils/auth.utils';
 import { getPendingRequestCount } from '@/lib/actions/question-request.action';
+import { toast } from 'react-toastify';
 
 interface TopNavBarProps {
   toggleSidebar: () => void;
@@ -35,7 +36,7 @@ export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
             VietElite
           </div>
           <div className="hidden md:flex items-center ml-4 text-outline cursor-pointer hover:text-primary transition-colors">
-            <Search className="w-5 h-5" onClick={() => window.alert('Chức năng đang cập nhật!')} />
+            <Search className="w-5 h-5" onClick={() => toast.info('Chức năng đang cập nhật!')} />
           </div>
         </div>
 

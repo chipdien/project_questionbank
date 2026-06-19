@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Pencil } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';

@@ -17,6 +17,7 @@ import {
   type BlockType,
   type DocumentMetadata,
 } from '../hooks/useDocumentBuilder';
+import { useConfirm } from '@/lib/components/providers/ConfirmProvider';
 
 // ─── Public types re-exported for parent (page.tsx / etc.) ───────────────────
 export type { Block, BlockType, DocumentMetadata };
@@ -136,6 +137,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
     addQuestion,
     addQuestions,
   } = useDocumentBuilder();
+  const confirm = useConfirm();
 
   // Expose imperative API via ref
   React.useImperativeHandle(ref, () => ({ loadDocument, addQuestion, addQuestions }));
@@ -186,7 +188,16 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
             <div className="w-px h-6 bg-outline-variant/20 mx-1" />
 
             <button
-              onClick={() => { if (window.confirm('Bạn có chắc chắn muốn làm trắng tài liệu hiện tại không?')) resetDocument(); }}
+              onClick={async () => {
+                const isConfirmed = await confirm({
+                  title: 'Làm mới tài liệu',
+                  message: 'Bạn có chắc chắn muốn làm trắng tài liệu hiện tại không? Tất cả các khối câu hỏi và văn bản hiện tại sẽ bị xóa sạch.',
+                  confirmLabel: 'Làm trắng tài liệu',
+                  cancelLabel: 'Quay lại',
+                  confirmStyle: 'error'
+                });
+                if (isConfirmed) resetDocument();
+              }}
               className="flex items-center gap-1.5 px-3 py-2 text-red-500 hover:bg-red-50 rounded-xl transition-all text-xs font-bold group"
             >
               <RotateCcw className="w-3.5 h-3.5 group-hover:rotate-45 transition-transform" />

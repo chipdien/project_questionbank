@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useConfirm } from '@/lib/components/providers/ConfirmProvider';
 import { createManualQuestionAction } from '@/lib/actions/question-manual.action';
 
 export interface Difficulty {
@@ -39,6 +40,7 @@ export function useQuestionCreator({
   initialCollections = [],
 }: UseQuestionCreatorProps) {
   const router = useRouter();
+  const confirm = useConfirm();
 
   // Collections state
   const [collections, setCollections] = useState<any[]>(initialCollections);
@@ -213,11 +215,18 @@ export function useQuestionCreator({
     router
   ]);
 
-  const handleCancel = useCallback(() => {
-    if (confirm('Các thay đổi chưa lưu sẽ bị mất. Bạn có chắc chắn muốn hủy?')) {
+  const handleCancel = useCallback(async () => {
+    const isConfirmed = await confirm({
+      title: 'Hủy soạn thảo',
+      message: 'Các thay đổi chưa lưu sẽ bị mất. Bạn có chắc chắn muốn hủy?',
+      confirmLabel: 'Hủy soạn thảo',
+      cancelLabel: 'Quay lại',
+      confirmStyle: 'warning'
+    });
+    if (isConfirmed) {
       router.push('/question-bank');
     }
-  }, [router]);
+  }, [confirm, router]);
 
   return {
     state: {

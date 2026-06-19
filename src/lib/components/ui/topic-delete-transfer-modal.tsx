@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, AlertTriangle, ArrowRightLeft, Trash2, Search } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { Topic, RelatedData } from '@/app/(main)/topics/queries/useTopicsQuery';
 import { useUpdateTopicMutation, useDeleteTopicMutation, useTransferQuestionsMutation } from '@/app/(main)/topics/queries/useTopicMutation';
 

@@ -5,6 +5,7 @@ import DocumentBuilder, { DocumentBuilderRef } from '@/app/(main)/documents/comp
 import QuestionLibrary from '@/app/(main)/documents/components/QuestionLibrary';
 import SavedDocumentsLibrary from '@/app/(main)/documents/components/SavedDocumentsLibrary';
 import { Database, History, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 export default function DocumentsPage() {
   const [activeTab, setActiveTab] = useState<'library' | 'history'>('library');
@@ -20,11 +21,11 @@ export default function DocumentsPage() {
       if (data.success && data.document && data.questions) {
         builderRef.current?.loadDocument(data.document.title, data.questions, data.document.content_blocks);
       } else {
-        alert('Không thể tải chi tiết tài liệu');
+        toast.error('Không thể tải chi tiết tài liệu');
       }
     } catch (error) {
       console.error('Error loading document detail:', error);
-      alert('Có lỗi xảy ra khi tải dữ liệu');
+      toast.error('Có lỗi xảy ra khi tải dữ liệu');
     } finally {
       setIsLoadingDetail(false);
     }
@@ -85,7 +86,7 @@ export default function DocumentsPage() {
           {/* Sidebar Content */}
           <div className="flex-1 overflow-hidden">
             {activeTab === 'library' ? (
-              <QuestionLibrary 
+              <QuestionLibrary
                 onSelect={(q) => builderRef.current?.addQuestion(q)}
                 onSelectMany={(qs) => builderRef.current?.addQuestions(qs)}
               />
@@ -98,4 +99,3 @@ export default function DocumentsPage() {
     </div>
   );
 }
-

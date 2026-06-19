@@ -23,6 +23,7 @@ import { usePathname } from 'next/navigation';
 
 import { logoutAction } from '@/lib/actions/auth.action';
 import { User } from '@/lib/utils/auth.utils';
+import { useConfirm } from '@/lib/components/providers/ConfirmProvider';
 
 export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; user: User | null }) {
   const pathname = usePathname();
@@ -52,8 +53,17 @@ export default function Sidebar({ isCollapsed, user }: { isCollapsed: boolean; u
     }));
   };
 
-  const handleLogout = () => {
-    if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+  const confirm = useConfirm();
+
+  const handleLogout = async () => {
+    const isConfirmed = await confirm({
+      title: 'Xác nhận đăng xuất',
+      message: 'Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?',
+      confirmLabel: 'Đăng xuất',
+      cancelLabel: 'Quay lại',
+      confirmStyle: 'error',
+    });
+    if (isConfirmed) {
       startTransition(async () => {
         await logoutAction();
       });

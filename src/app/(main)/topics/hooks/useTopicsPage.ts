@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
+import { useConfirm } from '@/lib/components/providers/ConfirmProvider';
 import { Topic } from '../queries/useTopicsQuery';
 import { useTopicsQuery } from '../queries/useTopicsQuery';
 import {
@@ -11,6 +12,7 @@ import {
 import { getTopicRelatedAction } from '@/lib/actions/topics.action';
 
 export function useTopicsPage() {
+  const confirm = useConfirm();
   const { data: rawTopics = [], isLoading: loading, refetch: loadTopics } = useTopicsQuery();
   const createMutation = useCreateTopicMutation();
   const updateMutation = useUpdateTopicMutation();
@@ -151,7 +153,14 @@ export function useTopicsPage() {
       if (related.subtopics_count > 0 || related.questions_count > 0) {
         setDeleteModalOpen(true);
       } else {
-        if (confirm(`Bạn có chắc chắn muốn xóa chủ đề "${topic.title}"?`)) {
+        const isConfirmed = await confirm({
+          title: 'Xác nhận xóa chủ đề',
+          message: `Bạn có chắc chắn muốn xóa chủ đề "${topic.title}"?`,
+          confirmLabel: 'Xóa',
+          cancelLabel: 'Hủy',
+          confirmStyle: 'error'
+        });
+        if (isConfirmed) {
           await deleteMutation.mutateAsync(topic.id);
           toast.success('Xóa chủ đề thành công');
           if (selectedTopic?.id === topic.id) {
@@ -167,22 +176,26 @@ export function useTopicsPage() {
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
 
-    const confirmDelete = window.confirm(
-      `Bạn có chắc chắn muốn xóa ${selectedIds.size} chủ đề đã chọn? Hành động này không thể hoàn tác.`
-    );
+    const confirmDelete = await confirm({
+      title: 'Xóa hàng loạt chủ đề',
+      message: `Bạn có chắc chắn muốn xóa ${selectedIds.size} chủ đề đã chọn? Hành động này không thể hoàn tác.`,
+      confirmLabel: 'Xóa tất cả',
+      cancelLabel: 'Hủy',
+      confirmStyle: 'error'
+    });
     if (!confirmDelete) return;
 
     const toastId = toast.loading('Đang thực hiện xóa hàng loạt...');
     try {
       await bulkDeleteMutation.mutateAsync(Array.from(selectedIds));
-      toast.success('Đã xóa các chủ đề thành công', { id: toastId });
+      toast.update(toastId, { render: 'Đã xóa các chủ đề thành công', type: 'success', isLoading: false, autoClose: 3000 });
       setSelectedIds(new Set());
       setIsMultiSelectMode(false);
       setSelectedTopic(null);
     } catch (err: any) {
       console.error(err);
       const errMsg = err.message || 'Lỗi khi xóa hàng loạt';
-      toast.error(errMsg, { id: toastId, duration: 5000 });
+      toast.update(toastId, { render: errMsg, type: 'error', isLoading: false, autoClose: 5000 });
     }
   };
 

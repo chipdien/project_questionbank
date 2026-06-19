@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import TopNavBar from './TopNavBar';
 import Sidebar from './Sidebar';
-import { Toaster } from 'react-hot-toast';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { User } from '@/lib/utils/auth.utils';
+import { ConfirmProvider } from '@/lib/components/providers/ConfirmProvider';
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
@@ -15,8 +17,8 @@ export default function LayoutWrapper({ children, user }: LayoutWrapperProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <>
-      <Toaster position="top-right" />
+    <ConfirmProvider>
+      <ToastContainer position="top-right" autoClose={3000} />
       <TopNavBar user={user} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
       <Sidebar isCollapsed={isCollapsed} user={user} />
       <main
@@ -26,6 +28,6 @@ export default function LayoutWrapper({ children, user }: LayoutWrapperProps) {
       >
         {children}
       </main>
-    </>
+    </ConfirmProvider>
   );
 }

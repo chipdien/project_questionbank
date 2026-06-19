@@ -7,7 +7,7 @@ import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 import { RequestType, getRequestsForQuestion, cancelQuestionRequest } from '@/lib/actions/question-request.action';
 import RequestSubmitModal from './RequestSubmitModal';
