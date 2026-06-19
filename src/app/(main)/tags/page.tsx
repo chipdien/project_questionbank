@@ -1,10 +1,8 @@
 'use client';
-
-import React from 'react';
 import { Plus, Search, RefreshCw, Trash2, Edit } from 'lucide-react';
-
 import TagManagementModal from '@/lib/components/ui/tag-management-modal';
 import { useTagsPage } from './hooks/useTagsPage';
+import Loading from '@/lib/components/ui/Loading';
 
 export default function TagsPage() {
   const {
@@ -61,8 +59,8 @@ export default function TagsPage() {
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={`px-4 py-1.5 rounded-xl text-xs font-semibold border transition-all ${activeCategory === cat
-                  ? 'bg-primary text-on-primary border-primary'
-                  : 'bg-surface border-outline-variant/40 text-on-surface-variant hover:bg-outline-variant/10'
+                ? 'bg-primary text-on-primary border-primary'
+                : 'bg-surface border-outline-variant/40 text-on-surface-variant hover:bg-outline-variant/10'
                 }`}
             >
               {cat === 'ALL' ? 'Tất cả' : cat}
@@ -85,10 +83,7 @@ export default function TagsPage() {
       {/* Main List Section */}
       <div className="flex-1 bg-surface-container-low border border-outline-variant/30 rounded-2xl p-5 min-h-0 shadow-sm overflow-y-auto">
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-2 text-on-surface-variant/60">
-            <RefreshCw className="w-6 h-6 animate-spin text-primary" />
-            <span className="text-sm font-medium">Đang tải danh sách thẻ tag...</span>
-          </div>
+          <Loading size="md" text="Đang tải danh sách thẻ tag..." />
         ) : filteredTags.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-center text-on-surface-variant/60">
             <span className="text-sm font-medium">Không tìm thấy thẻ tag nào phù hợp.</span>

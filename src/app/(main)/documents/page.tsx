@@ -4,8 +4,9 @@ import React, { useState, useRef } from 'react';
 import DocumentBuilder, { DocumentBuilderRef } from '@/app/(main)/documents/components/DocumentBuilder';
 import QuestionLibrary from '@/app/(main)/documents/components/QuestionLibrary';
 import SavedDocumentsLibrary from '@/app/(main)/documents/components/SavedDocumentsLibrary';
-import { Database, History, Loader2 } from 'lucide-react';
+import { Database, History } from 'lucide-react';
 import { toast } from 'react-toastify';
+import Loading from '@/lib/components/ui/Loading';
 
 export default function DocumentsPage() {
   const [activeTab, setActiveTab] = useState<'library' | 'history'>('library');
@@ -35,12 +36,7 @@ export default function DocumentsPage() {
     <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden bg-surface-container-low">
       {/* Loading Overlay when fetching doc details */}
       {isLoadingDetail && (
-        <div className="fixed inset-0 z-200 bg-slate-900/20 backdrop-blur-[2px] flex items-center justify-center">
-          <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <p className="text-sm font-bold">Đang tải tài liệu...</p>
-          </div>
-        </div>
+        <Loading fullscreen text="Đang tải tài liệu..." size="lg" />
       )}
 
       <div className="flex-1 flex overflow-hidden">
