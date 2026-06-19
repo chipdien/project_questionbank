@@ -1,19 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Menu, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { User } from '@/lib/utils/auth.utils';
 import { getPendingRequestCount } from '@/lib/actions/question-request.action';
+import UserProfileModal from '@/lib/components/ui/UserProfileModal';
 
 interface TopNavBarProps {
   toggleSidebar: () => void;
   user: User | null;
+  isCollapsed: boolean;
 }
 
-export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
+export default function TopNavBar({ toggleSidebar, user, isCollapsed }: TopNavBarProps) {
   const router = useRouter();
   const [pending, setPending] = useState(0);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   useEffect(() => {
     let active = true;
     getPendingRequestCount().then(n => { if (active) setPending(n); });
@@ -22,23 +24,8 @@ export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
 
   return (
     <>
-      <header className="fixed top-0 w-full z-50 border-b border-outline-variant/30 bg-white dark:bg-slate-900 shadow-sm dark:shadow-none flex justify-between items-center h-16 px-6" style={{ backgroundColor: '#ffffff' }}>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-xl hover:bg-surface-container-high transition-colors text-on-surface-variant flex items-center justify-center"
-            id="sidebar-toggle"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-          <div className="text-xl font-bold text-primary flex items-center gap-2 font-headline">
-            VietElite
-          </div>
-          <div className="hidden md:flex items-center ml-4 text-outline cursor-pointer hover:text-primary transition-colors">
-            <Search className="w-5 h-5" onClick={() => window.alert('Chức năng đang cập nhật!')} />
-          </div>
-        </div>
-
+      <header className={`fixed top-0 right-0 z-50 border-b border-outline-variant/30 bg-white dark:bg-slate-900 shadow-sm dark:shadow-none flex justify-end items-center h-16 px-6 transition-all duration-300 ${isCollapsed ? 'left-20' : 'left-64'
+        }`} style={{ backgroundColor: '#ffffff' }}>
         <div className="flex items-center gap-4">
           <button onClick={() => router.push('/requests')} className="p-2 rounded-full cursor-pointer hover:bg-surface-container-high transition-colors text-on-surface-variant relative" title="Yêu cầu">
             <span className="material-symbols-outlined">notifications</span>
@@ -49,7 +36,10 @@ export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
             )}
           </button>
 
-          <div className="flex items-center gap-3 pl-2 border-l border-outline-variant/20">
+          <div
+            onClick={() => setIsProfileOpen(true)}
+            className="flex items-center gap-3 pl-2 border-l border-outline-variant/20 cursor-pointer hover:opacity-80 transition-all select-none"
+          >
             <div className="flex-col items-end hidden sm:flex">
               <span className="text-xs font-bold text-on-surface">
                 {user?.nickname || user?.username || 'Đang tải...'}
@@ -74,6 +64,12 @@ export default function TopNavBar({ toggleSidebar, user }: TopNavBarProps) {
           </div>
         </div>
       </header>
+
+      <UserProfileModal
+        user={user}
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+      />
     </>
   );
 }

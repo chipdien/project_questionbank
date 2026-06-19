@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { getQuestionDisplayContent } from '@/lib/utils/math.utils';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 // Hàm chuẩn hóa riêng dành cho modal để editor Vditor hiển thị đúng
 export const cleanMathDelimiters = (text: string) => {
@@ -94,7 +94,7 @@ export function useQuestionEditModal({
 
   const processFileForOcr = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      alert('Vui lòng chọn hoặc dán tệp hình ảnh.');
+      toast.warning('Vui lòng chọn hoặc dán tệp hình ảnh.');
       return;
     }
 
@@ -137,10 +137,11 @@ export function useQuestionEditModal({
                 return { ...prev, options: newOptions };
               });
             } else {
-              alert(
+              toast.warning(
                 'Không tự động phân tách được thành 4 phương án.\n\n' +
                 'Văn bản nhận diện được:\n' + mathText + '\n\n' +
-                'Vui lòng đảm bảo hình ảnh hiển thị rõ ràng ký tự các phương án dạng A., B., C., D. hoặc có đúng 4 dòng văn bản.'
+                'Vui lòng đảm bảo hình ảnh hiển thị rõ ràng ký tự các phương án dạng A., B., C., D. hoặc có đúng 4 dòng văn bản.',
+                { autoClose: 8000 }
               );
             }
           } else if (typeof ocrTarget === 'number') {
@@ -153,7 +154,7 @@ export function useQuestionEditModal({
         }
       } catch (error: any) {
         console.error('OCR Error:', error);
-        alert(error.message || 'Có lỗi xảy ra khi xử lý OCR.');
+        toast.error(error.message || 'Có lỗi xảy ra khi xử lý OCR.');
       } finally {
         setIsOcrLoading(false);
       }

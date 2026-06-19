@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { useMyCollectionsQuery } from '../queries/useCollectionsQuery';
 import { useCreateCollectionMutation, useAddQuestionsToCollectionMutation } from '../queries/useCollectionMutation';
 

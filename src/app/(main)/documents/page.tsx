@@ -4,7 +4,9 @@ import React, { useState, useRef } from 'react';
 import DocumentBuilder, { DocumentBuilderRef } from '@/app/(main)/documents/components/DocumentBuilder';
 import QuestionLibrary from '@/app/(main)/documents/components/QuestionLibrary';
 import SavedDocumentsLibrary from '@/app/(main)/documents/components/SavedDocumentsLibrary';
-import { Database, History, Loader2 } from 'lucide-react';
+import { Database, History } from 'lucide-react';
+import { toast } from 'react-toastify';
+import Loading from '@/lib/components/ui/Loading';
 
 export default function DocumentsPage() {
   const [activeTab, setActiveTab] = useState<'library' | 'history'>('library');
@@ -20,11 +22,11 @@ export default function DocumentsPage() {
       if (data.success && data.document && data.questions) {
         builderRef.current?.loadDocument(data.document.title, data.questions, data.document.content_blocks);
       } else {
-        alert('Không thể tải chi tiết tài liệu');
+        toast.error('Không thể tải chi tiết tài liệu');
       }
     } catch (error) {
       console.error('Error loading document detail:', error);
-      alert('Có lỗi xảy ra khi tải dữ liệu');
+      toast.error('Có lỗi xảy ra khi tải dữ liệu');
     } finally {
       setIsLoadingDetail(false);
     }
@@ -34,12 +36,7 @@ export default function DocumentsPage() {
     <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden bg-surface-container-low">
       {/* Loading Overlay when fetching doc details */}
       {isLoadingDetail && (
-        <div className="fixed inset-0 z-200 bg-slate-900/20 backdrop-blur-[2px] flex items-center justify-center">
-          <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <p className="text-sm font-bold">Đang tải tài liệu...</p>
-          </div>
-        </div>
+        <Loading fullscreen text="Đang tải tài liệu..." size="lg" />
       )}
 
       <div className="flex-1 flex overflow-hidden">
@@ -85,7 +82,7 @@ export default function DocumentsPage() {
           {/* Sidebar Content */}
           <div className="flex-1 overflow-hidden">
             {activeTab === 'library' ? (
-              <QuestionLibrary 
+              <QuestionLibrary
                 onSelect={(q) => builderRef.current?.addQuestion(q)}
                 onSelectMany={(qs) => builderRef.current?.addQuestions(qs)}
               />
@@ -98,4 +95,3 @@ export default function DocumentsPage() {
     </div>
   );
 }
-

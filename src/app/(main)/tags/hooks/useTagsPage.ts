@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
+import { useConfirm } from '@/lib/components/providers/ConfirmProvider';
 import { Tag } from '../queries/useTagsQuery';
 import { useTagsQuery } from '../queries/useTagsQuery';
 import { useCreateTagMutation, useUpdateTagMutation, useDeleteTagMutation } from '../queries/useTagMutation';
 
 export function useTagsPage() {
+  const confirm = useConfirm();
   const { data: tags = [], isLoading: loading, refetch } = useTagsQuery();
   const createMutation = useCreateTagMutation();
   const updateMutation = useUpdateTagMutation();
@@ -27,7 +29,14 @@ export function useTagsPage() {
   };
 
   const handleDeleteClick = async (tag: Tag) => {
-    if (confirm(`Bạn có chắc chắn muốn xóa thẻ "${tag.name}"? Thẻ này sẽ được gỡ khỏi tất cả câu hỏi liên quan.`)) {
+    const isConfirmed = await confirm({
+      title: 'Xác nhận xóa thẻ',
+      message: `Bạn có chắc chắn muốn xóa thẻ "${tag.name}"? Thẻ này sẽ được gỡ khỏi tất cả câu hỏi liên quan.`,
+      confirmLabel: 'Xóa thẻ',
+      cancelLabel: 'Quay lại',
+      confirmStyle: 'error'
+    });
+    if (isConfirmed) {
       try {
         await deleteMutation.mutateAsync(tag.id);
         toast.success('Xóa thẻ thành công');

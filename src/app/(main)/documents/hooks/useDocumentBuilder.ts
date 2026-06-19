@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { blocksToMarkdown } from '@/lib/utils/export.utils';
+import { toast } from 'react-toastify';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type BlockType = 'headline' | 'subheadline' | 'textbox' | 'question';
@@ -201,15 +202,15 @@ export function useDocumentBuilder(): UseDocumentBuilderReturn {
   }, [blocks]);
 
   const performExportAndSave = async () => {
-    if (!docTitle.trim()) { alert('Vui lòng nhập tiêu đề tài liệu'); return; }
-    if (blocks.length === 0) { alert('Tài liệu đang trống. Vui lòng thêm nội dung trước khi xuất PDF.'); return; }
+    if (!docTitle.trim()) { toast.warning('Vui lòng nhập tiêu đề tài liệu'); return; }
+    if (blocks.length === 0) { toast.warning('Tài liệu đang trống. Vui lòng thêm nội dung trước khi xuất PDF.'); return; }
 
     const hasValidContent = blocks.some((b) => {
       if (b.type === 'question') return true;
       if (typeof b.content === 'string') return b.content.trim().length > 0;
       return !!b.content;
     });
-    if (!hasValidContent) { alert('Tài liệu chỉ chứa các ô trống. Vui lòng nhập nội dung trước khi xuất PDF.'); return; }
+    if (!hasValidContent) { toast.warning('Tài liệu chỉ chứa các ô trống. Vui lòng nhập nội dung trước khi xuất PDF.'); return; }
 
     setIsExporting(true);
     setSaveStatus('saving');
@@ -245,7 +246,7 @@ export function useDocumentBuilder(): UseDocumentBuilderReturn {
       if (checkResponse.ok) {
         const checkResult = await checkResponse.json();
         if (checkResult.isDuplicate) {
-          alert(`Nội dung tài liệu này trùng hoàn toàn với file "${checkResult.duplicateTitle}" đã lưu trước đó. Vui lòng kiểm tra lại.`);
+          toast.warning(`Nội dung tài liệu này trùng hoàn toàn với file "${checkResult.duplicateTitle}" đã lưu trước đó. Vui lòng kiểm tra lại.`, { autoClose: 6000 });
           setIsExporting(false);
           setSaveStatus('idle');
           return;
@@ -272,7 +273,7 @@ export function useDocumentBuilder(): UseDocumentBuilderReturn {
       const pdfBlob = await exportResponse.blob();
 
       if (pdfBlob.size > 10 * 1024 * 1024) {
-        alert('File PDF quá lớn (vượt quá 10MB). Hãy giảm bớt nội dung.');
+        toast.error('File PDF quá lớn (vượt quá 10MB). Hãy giảm bớt nội dung.');
         setIsExporting(false);
         setSaveStatus('idle');
         return;
@@ -311,7 +312,7 @@ export function useDocumentBuilder(): UseDocumentBuilderReturn {
     } catch (error: any) {
       console.error('[useDocumentBuilder] Lỗi quy trình xuất/lưu:', error);
       setSaveStatus('error');
-      alert(error.message || 'Có lỗi xảy ra trong quá trình xuất hoặc lưu tài liệu.');
+      toast.error(error.message || 'Có lỗi xảy ra trong quá trình xuất hoặc lưu tài liệu.');
       setIsExporting(false);
     }
   };

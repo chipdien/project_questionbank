@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { Check, Upload, Cpu, Tags, Share2 } from 'lucide-react';
 
 import FileUploader from './FileUploader';

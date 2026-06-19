@@ -1,65 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { ChevronDown, Check, X, Tag as TagIcon } from 'lucide-react';
+import { ChevronDown, Check, X, Tag as TagIcon, Settings } from 'lucide-react';
 import AppSelect from '@/lib/components/ui/AppSelect';
 import TopicTreeSelect from '@/lib/components/ui/topic-tree-select';
-
-interface Difficulty {
-  id: number;
-  name: string;
-  color_code: string;
-}
-
-interface Tag {
-  id: number;
-  name: string;
-  category: string;
-}
-
-interface Topic {
-  id: number;
-  title: string;
-  parent_id: number | null;
-  path: string;
-}
-
-interface ClassificationSidebarProps {
-  difficulties: Difficulty[];
-  tags: Tag[];
-  topics: Topic[];
-  selectedGrade: string;
-  setSelectedGrade: (grade: string) => void;
-  selectedDifficulty: string;
-  setSelectedDifficulty: (difficulty: string) => void;
-  selectedTopicIds: number[];
-  setSelectedTopicIds: (ids: number[]) => void;
-  selectedTagIds: number[];
-  setSelectedTagIds: (ids: number[]) => void;
-}
-
-const getTagColorClass = (category: string, isSelected: boolean) => {
-  const cat = category.toUpperCase();
-  if (isSelected) {
-    switch (cat) {
-      case 'SOURCE': return 'bg-orange-500 border-orange-500 text-white';
-      case 'METHOD': return 'bg-blue-500 border-blue-500 text-white';
-      case 'SKILL': return 'bg-purple-500 border-purple-500 text-white';
-      case 'TYPE': return 'bg-emerald-500 border-emerald-500 text-white';
-      case 'EXAM': return 'bg-rose-500 border-rose-500 text-white';
-      default: return 'bg-slate-600 border-slate-600 text-white';
-    }
-  } else {
-    switch (cat) {
-      case 'SOURCE': return 'bg-orange-500/8 border-orange-500/20 text-orange-600 hover:border-orange-500/40';
-      case 'METHOD': return 'bg-blue-500/8 border-blue-500/20 text-blue-600 hover:border-blue-500/40';
-      case 'SKILL': return 'bg-purple-500/8 border-purple-500/20 text-purple-600 hover:border-purple-500/40';
-      case 'TYPE': return 'bg-emerald-500/8 border-emerald-500/20 text-emerald-600 hover:border-emerald-500/40';
-      case 'EXAM': return 'bg-rose-500/8 border-rose-500/20 text-rose-600 hover:border-rose-500/40';
-      default: return 'bg-slate-500/8 border-slate-500/20 text-slate-600 hover:border-slate-500/40';
-    }
-  }
-};
+import { Tag, ClassificationSidebarProps } from '@/lib/types/manual-question.type';
+import { GRADES, TAG_CATEGORIES, getTagColorClass } from '@/lib/constants/classification.constant';
 
 export default function ClassificationSidebar({
   difficulties,
@@ -73,16 +19,17 @@ export default function ClassificationSidebar({
   setSelectedTopicIds,
   selectedTagIds,
   setSelectedTagIds,
+  questionType = 'SINGLE_CHOICE',
+  setQuestionType,
+  isSaving = false,
 }: ClassificationSidebarProps) {
-  const grades = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
-  const tagCategories = ['SOURCE', 'METHOD', 'SKILL', 'TYPE', 'EXAM', 'YEAR'];
   const [isTagsOpen, setIsTagsOpen] = useState(false);
   const tagsRef = useRef<HTMLDivElement>(null);
 
   // Group tags by category
   const groupedTags = useMemo(() => {
     const groups: Record<string, Tag[]> = {};
-    tagCategories.forEach(cat => { groups[cat] = []; });
+    TAG_CATEGORIES.forEach(cat => { groups[cat] = []; });
     groups['OTHER'] = [];
 
     tags.forEach(tag => {
@@ -133,36 +80,55 @@ export default function ClassificationSidebar({
   };
 
   return (
-    <div className="flex flex-col gap-6 p-5 bg-white/70 backdrop-blur-md border border-outline-variant/30 border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-500/5 to-transparent rounded-2xl shadow-md shadow-black/2 h-fit sticky top-20 transition-all duration-300 hover:shadow-lg hover:shadow-black/4">
-      <h2 className="text-base font-bold text-on-surface flex items-center gap-2 border-b border-outline-variant/20 pb-3 font-headline">
-        <span className="material-symbols-outlined text-amber-600 text-xl animate-pulse">label</span>
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-5 bg-white border border-outline-variant/20 rounded-2xl shadow-xs w-full">
+      <h2 className="col-span-1 md:col-span-5 text-sm font-bold text-on-surface flex items-center gap-2 border-b border-outline-variant/10 pb-2 mb-1">
+        <span className="material-symbols-outlined text-primary text-lg animate-pulse">label</span>
         Phân loại & Gắn nhãn
       </h2>
 
+      {/* Loại câu hỏi */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-bold uppercase tracking-widest text-outline">Loại câu hỏi</label>
+        <AppSelect
+          value={questionType}
+          onChange={(e) => setQuestionType && setQuestionType(e.target.value)}
+          className="text-sm py-1.5 pr-7 h-[38px] rounded-xl border-outline-variant/35 bg-white"
+          wrapperClassName="space-y-0"
+          id="select-question-type"
+          disabled={isSaving}
+        >
+          <option value="SINGLE_CHOICE">Trắc nghiệm đơn</option>
+          <option value="MULTIPLE_CHOICE">Trắc nghiệm nhiều</option>
+          <option value="TRUE_FALSE">Đúng / Sai</option>
+          <option value="FILL_IN">Điền ô trống</option>
+          <option value="ESSAY">Tự luận</option>
+        </AppSelect>
+      </div>
+
       {/* Khối lớp */}
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-1.5">
         <label className="text-xs font-bold uppercase tracking-widest text-outline">Khối lớp</label>
         <AppSelect
           value={selectedGrade}
           onChange={(e) => setSelectedGrade(e.target.value)}
-          className="text-sm py-1.5 pr-7 h-[38px] rounded-xl border-outline-variant/35 bg-surface-container-lowest"
+          className="text-sm py-1.5 pr-7 h-[38px] rounded-xl border-outline-variant/35 bg-white"
           wrapperClassName="space-y-0"
           id="select-grade"
         >
           <option value="">Lớp</option>
-          {grades.map((g) => (
+          {GRADES.map((g) => (
             <option key={g} value={g}>Lớp {g}</option>
           ))}
         </AppSelect>
       </div>
 
-      {/* Độ khó */}
-      <div className="flex flex-col gap-2.5">
+      {/* Mức độ khó */}
+      <div className="flex flex-col gap-1.5">
         <label className="text-xs font-bold uppercase tracking-widest text-outline">Mức độ khó</label>
         <AppSelect
           value={selectedDifficulty}
           onChange={(e) => setSelectedDifficulty(e.target.value)}
-          className="text-sm py-1.5 pr-7 h-[38px] rounded-xl border-outline-variant/35 bg-surface-container-lowest"
+          className="text-sm py-1.5 pr-7 h-[38px] rounded-xl border-outline-variant/35 bg-white"
           wrapperClassName="space-y-0"
           id="select-difficulty"
         >
@@ -174,23 +140,23 @@ export default function ClassificationSidebar({
       </div>
 
       {/* Cây chủ đề học thuật */}
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-1.5">
         <label className="text-xs font-bold uppercase tracking-widest text-outline">Chủ đề học thuật</label>
         <TopicTreeSelect
           multiple
           value={stringTopicIds}
           onChange={handleTopicChange}
           placeholder="Chọn chủ đề học thuật..."
-          className="!min-h-[38px] [&>div]:min-h-[38px] [&>div]:py-0.5 [&>div]:rounded-xl text-sm animate-fade-in"
+          className="min-h-[38px]! [&>div]:min-h-[38px] [&>div]:py-0.5 [&>div]:rounded-xl text-sm animate-fade-in"
         />
       </div>
 
       {/* Tags bổ trợ */}
-      <div ref={tagsRef} className="relative flex flex-col gap-2.5">
+      <div ref={tagsRef} className="relative flex flex-col gap-1.5">
         <label className="text-xs font-bold uppercase tracking-widest text-outline">Thẻ Tag bổ trợ</label>
         <div
           onClick={() => setIsTagsOpen((prev) => !prev)}
-          className={`w-full min-h-[38px] flex items-center justify-between gap-1 border border-outline-variant/35 rounded-xl px-2.5 py-1 bg-surface-container-lowest transition-all duration-200 relative cursor-pointer ${isTagsOpen ? 'border-primary ring-2 ring-primary/10 shadow-sm' : 'border-outline-variant/30 hover:border-primary/50'
+          className={`w-full min-h-[38px] flex items-center justify-between gap-1 border border-outline-variant/35 rounded-xl px-2.5 py-1 bg-white transition-all duration-200 relative cursor-pointer ${isTagsOpen ? 'border-primary ring-2 ring-primary/10 shadow-sm' : 'border-outline-variant/30 hover:border-primary/50'
             }`}
         >
           {/* List tag chips */}
@@ -221,7 +187,7 @@ export default function ClassificationSidebar({
         </div>
 
         {isTagsOpen && (
-          <div className="absolute right-0 top-full mt-1.5 w-full bg-surface border border-outline-variant/40 rounded-xl shadow-2xl p-3 z-[110] max-h-[260px] overflow-y-auto space-y-3">
+          <div className="absolute right-0 top-full mt-1.5 w-full bg-white border border-outline-variant/40 rounded-xl shadow-2xl p-3 z-110 max-h-[260px] overflow-y-auto space-y-3">
             {Object.entries(groupedTags).map(([categoryName, tagItems]) => {
               if (tagItems.length === 0) return null;
               return (

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { getDifficultiesAction, Difficulty } from '@/lib/actions/difficulty.action';
 import { classifyQuestionsAction } from '@/lib/actions/question.action';
 import { autoClassifyWithAI } from '@/lib/actions/ai-classify.action';

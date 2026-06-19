@@ -1,5 +1,3 @@
-import React from 'react';
-import { getCurrentUser } from '@/lib/utils/auth.utils';
 import { getCollections } from '@/lib/actions/collection.action';
 import { getDifficultiesAction } from '@/lib/actions/difficulty.action';
 import { fetchTagsByCategory, fetchTopics } from '@/lib/services/question.service';
@@ -8,9 +6,6 @@ import QuestionCreator from './components/QuestionCreator';
 export const dynamic = 'force-dynamic';
 
 export default async function ManualCreatePage() {
-  const user = await getCurrentUser();
-  const isAdmin = (user?.level_rank || 0) >= 5;
-
   const [collectionsResponse, difficultiesResponse, tagsRaw, topics] = await Promise.all([
     getCollections(),
     getDifficultiesAction(),

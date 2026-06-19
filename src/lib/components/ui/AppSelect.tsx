@@ -121,7 +121,7 @@ export default function AppSelect({
           disabled={disabled}
           onClick={() => !disabled && setIsOpen((prev) => !prev)}
           className={cn(
-            "w-full text-left flex items-center justify-between transition-all duration-200 select-none font-semibold text-xs border bg-surface-container-lowest rounded-xl py-1.5 px-3 pr-8 h-[34px]",
+            "w-full text-left flex items-center justify-between transition-all duration-200 select-none font-semibold text-xs border bg-surface-container-lowest rounded-xl py-1.5 px-3 pr-8 h-[34px] relative",
             disabled
               ? "opacity-50 bg-surface-container-low/50 border-outline-variant/30 cursor-not-allowed text-outline"
               : "border-outline-variant/35 hover:border-primary/50 hover:bg-surface-container-lowest",
@@ -149,7 +149,7 @@ export default function AppSelect({
 
         {/* Dropdown Popover - CSS đồng bộ với TopicTreeSelect Popover */}
         {isOpen && (
-          <div className="absolute left-0 right-0 mt-2 bg-surface border border-outline-variant/40 rounded-2xl shadow-2xl overflow-y-auto max-h-[220px] z-[120] p-1.5 space-y-0.5 animate-in fade-in-50 slide-in-from-top-2 duration-150">
+          <div className="absolute left-0 right-0 mt-2 bg-white border border-outline-variant/40 rounded-2xl shadow-2xl overflow-y-auto max-h-[220px] z-120 p-1.5 space-y-0.5 animate-in fade-in-50 slide-in-from-top-2 duration-150">
             {options.map((opt, index) => {
               const isSelected = String(opt.value) === String(value);
               return (
@@ -160,8 +160,8 @@ export default function AppSelect({
                   className={cn(
                     "w-full text-left text-xs font-semibold px-2.5 py-2 rounded-xl transition-all duration-150 flex items-center justify-between cursor-pointer",
                     isSelected
-                      ? "bg-primary/8 text-primary font-bold"
-                      : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+                      ? "bg-zinc-100 text-primary font-bold"
+                      : "text-on-surface-variant hover:bg-zinc-50 hover:text-on-surface"
                   )}
                 >
                   <div className="flex items-center gap-2 truncate">
