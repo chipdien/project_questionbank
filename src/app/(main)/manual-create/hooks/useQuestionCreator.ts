@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 import { useConfirm } from '@/lib/components/providers/ConfirmProvider';
 import { createManualQuestionAction } from '@/lib/actions/question-manual.action';
 import { Option, UseQuestionCreatorProps } from '@/lib/types/manual-question.type';
@@ -31,7 +32,6 @@ export function useQuestionCreator({
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Set default difficulty
   useEffect(() => {
@@ -44,7 +44,7 @@ export function useQuestionCreator({
   // Handle Save (Trigger validation first)
   const handleSave = useCallback((redirectAfterSave: boolean) => {
     if (!statement.trim()) {
-      setMessage({ type: 'error', text: 'Vui lòng nhập nội dung đề bài.' });
+      toast.error('Vui lòng nhập nội dung đề bài.');
       return;
     }
 
@@ -52,34 +52,34 @@ export function useQuestionCreator({
     if (questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE') {
       const emptyOptIdx = options.findIndex(opt => !opt.content.trim());
       if (emptyOptIdx !== -1) {
-        setMessage({ type: 'error', text: `Vui lòng nhập nội dung cho phương án ${String.fromCharCode(65 + emptyOptIdx)}.` });
+        toast.error(`Vui lòng nhập nội dung cho phương án ${String.fromCharCode(65 + emptyOptIdx)}.`);
         return;
       }
 
       const hasCorrect = options.some(opt => opt.weight === 1);
       if (!hasCorrect) {
-        setMessage({ type: 'error', text: 'Vui lòng chọn ít nhất một đáp án đúng cho câu hỏi trắc nghiệm.' });
+        toast.error('Vui lòng chọn ít nhất một đáp án đúng cho câu hỏi trắc nghiệm.');
         return;
       }
     } else if (questionType === 'TRUE_FALSE') {
       const emptyTFIdx = options.findIndex(opt => !opt.content.trim());
       if (emptyTFIdx !== -1) {
-        setMessage({ type: 'error', text: `Vui lòng nhập nội dung cho phát biểu thứ ${emptyTFIdx + 1}.` });
+        toast.error(`Vui lòng nhập nội dung cho phát biểu thứ ${emptyTFIdx + 1}.`);
         return;
       }
     } else if (questionType === 'FILL_IN') {
       if (options.length === 0) {
-        setMessage({ type: 'error', text: 'Vui lòng thêm ít nhất một chỗ trống [blank] và nhập đáp án tương ứng.' });
+        toast.error('Vui lòng thêm ít nhất một chỗ trống [blank] và nhập đáp án tương ứng.');
         return;
       }
       const emptyFillIdx = options.findIndex(opt => !opt.content.trim());
       if (emptyFillIdx !== -1) {
-        setMessage({ type: 'error', text: `Vui lòng điền đáp án cho ô trống thứ ${emptyFillIdx + 1}.` });
+        toast.error(`Vui lòng điền đáp án cho ô trống thứ ${emptyFillIdx + 1}.`);
         return;
       }
     } else if (questionType === 'ESSAY') {
       if (!hint.trim()) {
-        setMessage({ type: 'error', text: 'Vui lòng nhập nội dung đáp án / hướng dẫn giải cho câu hỏi tự luận.' });
+        toast.error('Vui lòng nhập nội dung đáp án / hướng dẫn giải cho câu hỏi tự luận.');
         return;
       }
     }
@@ -91,7 +91,6 @@ export function useQuestionCreator({
   // Perform actual save after collection selected/created in modal
   const handleConfirmSave = useCallback(async (collectionId?: number, newTitle?: string) => {
     setIsSaving(true);
-    setMessage(null);
 
     try {
       const payload = {
@@ -114,12 +113,24 @@ export function useQuestionCreator({
       const res = await createManualQuestionAction(payload);
 
       if (res.success) {
-        setMessage({ type: 'success', text: 'Đã lưu câu hỏi thành công!' });
+        toast.success('Đã lưu câu hỏi thành công!');
+
+        const createdCollId = res.data?.createdCollectionId;
+        const createdCollTitle = res.data?.createdCollectionTitle;
+
+        if (saveRedirectAfterConfirm) {
+          const targetCollectionId = createdCollId || collectionId;
+          if (targetCollectionId) {
+            router.push(`/collection/${targetCollectionId}`);
+          } else {
+            router.push('/question-bank');
+          }
+          return; // Skip resetting form and closing modal, allow router to handle page change
+        }
+
         setIsCollectionModalOpen(false);
 
         // Update local collections list
-        const createdCollId = res.data?.createdCollectionId;
-        const createdCollTitle = res.data?.createdCollectionTitle;
         if (createdCollId && createdCollTitle) {
           setCollections(prev => [
             { id: createdCollId, title: createdCollTitle, question_count: 1 },
@@ -153,23 +164,12 @@ export function useQuestionCreator({
         } else {
           setOptions([]);
         }
-
-        if (saveRedirectAfterConfirm) {
-          const targetCollectionId = createdCollId || collectionId;
-          setTimeout(() => {
-            if (targetCollectionId) {
-              router.push(`/collection/${targetCollectionId}`);
-            } else {
-              router.push('/question-bank');
-            }
-          }, 800);
-        }
       } else {
-        setMessage({ type: 'error', text: res.error || 'Lỗi khi lưu câu hỏi.' });
+        toast.error(res.error || 'Lỗi khi lưu câu hỏi.');
       }
     } catch (err: any) {
       console.error(err);
-      setMessage({ type: 'error', text: 'Đã xảy ra lỗi kết nối hệ thống.' });
+      toast.error('Đã xảy ra lỗi kết nối hệ thống.');
     } finally {
       setIsSaving(false);
     }
@@ -212,7 +212,6 @@ export function useQuestionCreator({
       selectedTopicIds,
       selectedTagIds,
       isSaving,
-      message,
     },
     actions: {
       setQuestionType,

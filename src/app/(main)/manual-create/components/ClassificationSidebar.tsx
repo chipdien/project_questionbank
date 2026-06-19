@@ -80,11 +80,30 @@ export default function ClassificationSidebar({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-5 bg-white border border-outline-variant/20 rounded-2xl shadow-xs w-full">
-      <h2 className="col-span-1 md:col-span-4 text-sm font-bold text-on-surface flex items-center gap-2 border-b border-outline-variant/10 pb-2 mb-1">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-5 bg-white border border-outline-variant/20 rounded-2xl shadow-xs w-full">
+      <h2 className="col-span-1 md:col-span-5 text-sm font-bold text-on-surface flex items-center gap-2 border-b border-outline-variant/10 pb-2 mb-1">
         <span className="material-symbols-outlined text-primary text-lg animate-pulse">label</span>
         Phân loại & Gắn nhãn
       </h2>
+
+      {/* Loại câu hỏi */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-bold uppercase tracking-widest text-outline">Loại câu hỏi</label>
+        <AppSelect
+          value={questionType}
+          onChange={(e) => setQuestionType && setQuestionType(e.target.value)}
+          className="text-sm py-1.5 pr-7 h-[38px] rounded-xl border-outline-variant/35 bg-white"
+          wrapperClassName="space-y-0"
+          id="select-question-type"
+          disabled={isSaving}
+        >
+          <option value="SINGLE_CHOICE">Trắc nghiệm đơn</option>
+          <option value="MULTIPLE_CHOICE">Trắc nghiệm nhiều</option>
+          <option value="TRUE_FALSE">Đúng / Sai</option>
+          <option value="FILL_IN">Điền ô trống</option>
+          <option value="ESSAY">Tự luận</option>
+        </AppSelect>
+      </div>
 
       {/* Khối lớp */}
       <div className="flex flex-col gap-1.5">

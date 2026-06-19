@@ -1,6 +1,7 @@
 'use client';
 
 import { FileText, Save } from 'lucide-react';
+import Loading from '@/lib/components/ui/Loading';
 import VditorEditor from '@/lib/components/ui/VditorEditor';
 import AnswerForm from './AnswerForm';
 import ClassificationSidebar from './ClassificationSidebar';
@@ -31,7 +32,6 @@ export default function QuestionCreator({
     selectedTopicIds,
     selectedTagIds,
     isSaving,
-    message,
   } = state;
 
   const {
@@ -106,17 +106,7 @@ export default function QuestionCreator({
         setHint={setHint}
       />
 
-      {/* Message Banner */}
-      {message && (
-        <div
-          className={`p-4 rounded-xl text-sm font-semibold border transition-all ${message.type === 'success'
-            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-            : 'bg-rose-50 border-rose-200 text-rose-800'
-            }`}
-        >
-          {message.text}
-        </div>
-      )}
+
 
       {/* Action Button */}
       <div className="flex justify-end">
@@ -138,6 +128,8 @@ export default function QuestionCreator({
         onConfirm={handleConfirmSave}
         isSaving={isSaving}
       />
+
+      {isSaving && <Loading fullscreen text="Đang lưu câu hỏi..." />}
     </div>
   );
 }
