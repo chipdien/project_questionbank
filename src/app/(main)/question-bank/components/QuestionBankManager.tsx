@@ -21,14 +21,25 @@ import QuestionModal from './QuestionModal';
 
 const unselectableMarkdownClass = "text-xs text-on-surface line-clamp-6 prose prose-sm max-w-none [&_p]:my-1 pointer-events-none select-none";
 
+const markdownComponents = {
+  img: ({ src, alt, ...props }: any) =>
+    src ? <img src={src} alt={alt || ''} {...props} /> : null,
+};
+
 const DocumentItem = React.memo(({
   doc,
   isActive,
-  onClick
+  onClick,
+  currentUserId,
+  onDuplicate,
+  isDuplicating
 }: {
   doc: Document;
   isActive: boolean;
   onClick: (id: number) => void;
+  currentUserId: number | null;
+  onDuplicate: (id: number) => void;
+  isDuplicating: boolean;
 }) => {
   const isImage = doc.link_s3?.match(/\.(jpeg|jpg|gif|png|webp)$/i);
   const isPdf = doc.link_s3?.toLowerCase().endsWith('.pdf');
@@ -48,11 +59,13 @@ const DocumentItem = React.memo(({
     iconColor = 'text-success';
   }
 
+  const showDuplicateBtn = doc.public === '1' && doc.created_by_id !== currentUserId && doc.teacher_owned !== currentUserId;
+
   return (
-    <button
+    <div
       onClick={() => onClick(doc.id)}
       className={cn(
-        "w-full text-left p-3 rounded-xl transition-all group flex items-center gap-3 border",
+        "w-full text-left p-3 rounded-xl transition-all group flex items-center gap-3 border cursor-pointer",
         isActive
           ? 'bg-primary/5 border-primary/20 shadow-sm'
           : 'bg-transparent border-transparent hover:bg-surface-container-low hover:border-outline-variant/30'
@@ -76,15 +89,43 @@ const DocumentItem = React.memo(({
         )}>
           {doc.title}
         </p>
-        <div className="flex items-center gap-2 mt-0.5">
-          {doc.public === '1' && (
-            <span className="px-1.5 py-0.5 rounded-md bg-green-500/10 text-primary text-[8px] font-black uppercase flex items-center gap-1">
-              Công khai {doc.teacher_name ? `(bởi ${doc.teacher_name})` : ''}
+        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+          {doc.public === '1' ? (
+            <span className="px-1.5 py-0.5 rounded bg-green-500/10 text-green-700 text-[8px] font-black uppercase flex items-center gap-1">
+              Công khai (bởi {doc.teacher_name || '--'})
+            </span>
+          ) : (
+            !doc.copied_from_id && (
+              <span className="px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-700 text-[8px] font-black uppercase flex items-center gap-1">
+                Của tôi
+              </span>
+            )
+          )}
+          {doc.copied_from_id && (
+            <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-700 text-[8px] font-black uppercase flex items-center gap-1">
+              Của bạn (copy từ {doc.original_owner_name || 'không rõ'})
             </span>
           )}
         </div>
       </div>
-    </button>
+      {showDuplicateBtn && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDuplicate(doc.id);
+          }}
+          disabled={isDuplicating}
+          title="Tạo bản sao tài liệu"
+          className="p-1.5 rounded-lg hover:bg-primary/10 text-outline hover:text-primary active:scale-95 transition-all cursor-pointer flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isDuplicating ? (
+            <span className="animate-spin text-[16px] material-symbols-outlined">progress_activity</span>
+          ) : (
+            <span className="material-symbols-outlined text-[18px]">content_copy</span>
+          )}
+        </button>
+      )}
+    </div>
   );
 });
 DocumentItem.displayName = 'DocumentItem';
@@ -113,6 +154,7 @@ const QuestionItem = React.memo(({
       <ReactMarkdown
         remarkPlugins={[remarkMath, remarkGfm]}
         rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
+        components={markdownComponents}
       >
         {cleanMathpixData(getQuestionDisplayContent(question.statement, question.content))}
       </ReactMarkdown>
@@ -185,6 +227,7 @@ interface QuestionBankManagerProps {
   initialTags?: { id: number; name: string; category: string }[];
   initialTopics?: { id: number; title: string; parent_id: number | null; path: string | null }[];
   isAdmin?: boolean;
+  currentUserId?: number | null;
 }
 
 export default function QuestionBankManager({
@@ -193,7 +236,8 @@ export default function QuestionBankManager({
   initialDifficulties = [],
   initialTags = [],
   initialTopics = [],
-  isAdmin = false
+  isAdmin = false,
+  currentUserId = null
 }: QuestionBankManagerProps) {
   const { state, actions } = useQuestionBank();
 
@@ -203,14 +247,15 @@ export default function QuestionBankManager({
   const {
     activeDocId, grades, difficulties, questionTypes, topicIds, tagIds, keyword,
     sourceQuestions, selectedQuestions, isLoading, isModalOpen, selectedSourceIds,
-    page, totalPages, isFiltering
+    page, totalPages, isFiltering, isDuplicating, duplicatingDocId
   } = state;
 
   const {
     setGrades, setDifficulties, setQuestionTypes, setTopicIds, setTagIds, setKeyword,
     setPage, setIsModalOpen, setSelectedQuestions, handleDocClick,
     handleAdvancedFilterChange, handleSaveCollection, handleToggleSelect,
-    handleSelectAllSource, handleAddQuestion, handleAddSelectedList, handleRemoveQuestion
+    handleSelectAllSource, handleAddQuestion, handleAddSelectedList, handleRemoveQuestion,
+    handleDuplicateDoc
   } = actions;
 
   const handleRefreshDifficulties = async () => {
@@ -240,9 +285,42 @@ export default function QuestionBankManager({
     return grouped;
   }, [initialTags]);
 
-  const [activeTab, setActiveTab] = React.useState<'filter' | 'files'>(
-    activeDocId ? 'files' : 'filter'
+  const [activeTab, setActiveTab] = React.useState<'filter' | 'my-files' | 'public-files'>(
+    activeDocId ? 'my-files' : 'filter'
   );
+
+  const myDocuments = React.useMemo(() => {
+    return initialDocuments.filter(doc =>
+      doc.created_by_id === currentUserId ||
+      doc.teacher_owned === currentUserId
+    );
+  }, [initialDocuments, currentUserId]);
+
+  const publicDocuments = React.useMemo(() => {
+    return initialDocuments.filter(doc =>
+      doc.public === '1' &&
+      doc.created_by_id !== currentUserId &&
+      doc.teacher_owned !== currentUserId
+    );
+  }, [initialDocuments, currentUserId]);
+
+  // Tự động chuyển tab dựa trên URL query param hoặc activeDocId
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam === 'my-files') {
+      setActiveTab('my-files');
+    } else if (tabParam === 'public-files') {
+      setActiveTab('public-files');
+    } else if (activeDocId) {
+      const isPublic = publicDocuments.some(doc => doc.id === activeDocId);
+      if (isPublic) {
+        setActiveTab('public-files');
+      } else {
+        setActiveTab('my-files');
+      }
+    }
+  }, [activeDocId, publicDocuments]);
 
   const activeFilterCount = React.useMemo(() => {
     let count = 0;
@@ -261,18 +339,18 @@ export default function QuestionBankManager({
       <div className="col-span-12 lg:col-span-4 flex flex-col bg-surface-container-lowest border border-outline-variant/20 rounded-xl shadow-sm overflow-hidden h-full">
         {/* Tab Selector Header */}
         <div className="p-2 border-b border-outline-variant/10 bg-surface-container-low/40 flex items-center justify-between gap-2">
-          <div className="flex-1 flex bg-surface-container-high/40 p-1 rounded-xl relative">
+          <div className="flex-1 flex bg-surface-container-high/40 p-1 rounded-xl relative overflow-x-auto no-scrollbar">
             <button
               onClick={() => setActiveTab('filter')}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-colors duration-200 relative z-10 select-none cursor-pointer",
+                "flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-[11px] font-bold transition-colors duration-200 relative z-10 select-none cursor-pointer whitespace-nowrap",
                 activeTab === 'filter' ? "text-primary font-black" : "text-outline hover:text-on-surface"
               )}
             >
-              <span className="material-symbols-outlined text-[18px]">filter_alt</span>
-              BỘ LỌC CÂU HỎI
+              <span className="material-symbols-outlined text-[16px]">filter_alt</span>
+              BỘ LỌC
               {activeFilterCount > 0 && (
-                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-black text-on-primary">
+                <span className="flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-1 text-[8px] font-black text-on-primary">
                   {activeFilterCount}
                 </span>
               )}
@@ -285,21 +363,44 @@ export default function QuestionBankManager({
               )}
             </button>
             <button
-              onClick={() => setActiveTab('files')}
+              onClick={() => setActiveTab('my-files')}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-colors duration-200 relative z-10 select-none cursor-pointer",
-                activeTab === 'files' ? "text-primary font-black" : "text-outline hover:text-on-surface"
+                "flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-[11px] font-bold transition-colors duration-200 relative z-10 select-none cursor-pointer whitespace-nowrap",
+                activeTab === 'my-files' ? "text-primary font-black" : "text-outline hover:text-on-surface"
               )}
             >
-              <span className="material-symbols-outlined text-[18px]">layers</span>
-              DANH SÁCH TỆP
+              <span className="material-symbols-outlined text-[16px]">folder_shared</span>
+              TỆP CỦA TÔI
               <span className={cn(
-                "px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase",
-                activeTab === 'files' ? "bg-primary/10 text-primary" : "bg-outline/10 text-outline"
+                "px-1 py-0.5 rounded text-[8px] font-black uppercase",
+                activeTab === 'my-files' ? "bg-primary/10 text-primary" : "bg-outline/10 text-outline"
               )}>
-                {initialDocuments.length}
+                {myDocuments.length}
               </span>
-              {activeTab === 'files' && (
+              {activeTab === 'my-files' && (
+                <motion.div
+                  layoutId="activeTabIndicator"
+                  className="absolute inset-0 bg-surface-container-lowest rounded-lg shadow-xs border border-outline-variant/10 z-[-1]"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('public-files')}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-[11px] font-bold transition-colors duration-200 relative z-10 select-none cursor-pointer whitespace-nowrap",
+                activeTab === 'public-files' ? "text-primary font-black" : "text-outline hover:text-on-surface"
+              )}
+            >
+              <span className="material-symbols-outlined text-[16px]">public</span>
+              TỆP CÔNG KHAI
+              <span className={cn(
+                "px-1 py-0.5 rounded text-[8px] font-black uppercase",
+                activeTab === 'public-files' ? "bg-primary/10 text-primary" : "bg-outline/10 text-outline"
+              )}>
+                {publicDocuments.length}
+              </span>
+              {activeTab === 'public-files' && (
                 <motion.div
                   layoutId="activeTabIndicator"
                   className="absolute inset-0 bg-surface-container-lowest rounded-lg shadow-xs border border-outline-variant/10 z-[-1]"
@@ -359,9 +460,9 @@ export default function QuestionBankManager({
                   />
                 </div>
               </motion.div>
-            ) : (
+            ) : activeTab === 'my-files' ? (
               <motion.div
-                key="files-tab"
+                key="my-files-tab"
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
@@ -369,14 +470,54 @@ export default function QuestionBankManager({
                 className="flex-1 flex flex-col overflow-hidden"
               >
                 <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-linear-to-b from-transparent to-surface-container-low/10">
-                  {initialDocuments.map((doc) => (
-                    <DocumentItem
-                      key={doc.id}
-                      doc={doc}
-                      isActive={activeDocId === doc.id}
-                      onClick={handleDocClick}
-                    />
-                  ))}
+                  {myDocuments.length > 0 ? (
+                    myDocuments.map((doc) => (
+                      <DocumentItem
+                        key={doc.id}
+                        doc={doc}
+                        isActive={activeDocId === doc.id}
+                        onClick={handleDocClick}
+                        currentUserId={currentUserId}
+                        onDuplicate={handleDuplicateDoc}
+                        isDuplicating={isDuplicating}
+                      />
+                    ))
+                  ) : (
+                    <div className="h-48 flex flex-col items-center justify-center text-center p-4 opacity-40">
+                      <span className="material-symbols-outlined text-[36px] mb-2">folder_open</span>
+                      <p className="text-xs">Bạn chưa tải lên hoặc tạo bản sao tài liệu nào.</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="public-files-tab"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.15 }}
+                className="flex-1 flex flex-col overflow-hidden"
+              >
+                <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-linear-to-b from-transparent to-surface-container-low/10">
+                  {publicDocuments.length > 0 ? (
+                    publicDocuments.map((doc) => (
+                      <DocumentItem
+                        key={doc.id}
+                        doc={doc}
+                        isActive={activeDocId === doc.id}
+                        onClick={handleDocClick}
+                        currentUserId={currentUserId}
+                        onDuplicate={handleDuplicateDoc}
+                        isDuplicating={duplicatingDocId === doc.id}
+                      />
+                    ))
+                  ) : (
+                    <div className="h-48 flex flex-col items-center justify-center text-center p-4 opacity-40">
+                      <span className="material-symbols-outlined text-[36px] mb-2">cloud_off</span>
+                      <p className="text-xs">Không có tài liệu công khai nào của người khác.</p>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}

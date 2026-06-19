@@ -38,6 +38,9 @@ export interface Document {
   link_s3?: string | null;
   teacher_name?: string | null;
   created_by_id?: number | null;
+  teacher_owned?: number | null;
+  copied_from_id?: number | null;
+  original_owner_name?: string | null;
 }
 
 export interface Lesson {
@@ -217,7 +220,10 @@ export function useQuestionBank() {
     }));
 
   const totalPages = queryResult?.totalPages || 0;
-  const isLoading = isQueryLoading || isQueryFetching;
+  
+  const [duplicatingDocId, setDuplicatingDocId] = useState<number | null>(null);
+  const isDuplicating = duplicatingDocId !== null;
+  const isLoading = isQueryLoading || isQueryFetching || isDuplicating;
 
   const createCollectionMutation = useCreateCollectionMutation();
 
@@ -232,6 +238,36 @@ export function useQuestionBank() {
       return { success: false, error: error.message };
     }
   };
+
+  const handleDuplicateDoc = useCallback(async (docId: number) => {
+    setDuplicatingDocId(docId);
+    try {
+      const { duplicateDocumentAction } = await import('@/lib/actions/document-library.action');
+      const res = await duplicateDocumentAction(docId);
+      if (res.success) {
+        if (res.alreadyExists) {
+          toast.success('Bạn đã tạo bản sao cho tài liệu này từ trước. Đang chuyển hướng...');
+        } else {
+          toast.success('Tạo bản sao tài liệu thành công!');
+        }
+        
+        // Cập nhật URL thông qua query param, force reload trang và set active tab sang tệp của tôi
+        if (res.docId !== undefined) {
+          const params = new URLSearchParams(window.location.search);
+          params.set('docId', res.docId.toString());
+          params.set('tab', 'my-files');
+          window.location.href = `${window.location.pathname}?${params.toString()}`;
+        }
+      } else {
+        toast.error(res.error || 'Có lỗi xảy ra khi tạo bản sao');
+      }
+    } catch (error: any) {
+      console.error('Error duplicating doc:', error);
+      toast.error('Không thể tạo bản sao tài liệu');
+    } finally {
+      setDuplicatingDocId(null);
+    }
+  }, [router]);
 
   const handleToggleSelect = useCallback((id: number) => {
     setSelectedSourceIds(prev => {
@@ -304,7 +340,9 @@ export function useQuestionBank() {
       selectedSourceIds,
       page,
       totalPages,
-      isFiltering
+      isFiltering,
+      isDuplicating,
+      duplicatingDocId
     },
     actions: {
       setGrades,
@@ -323,7 +361,8 @@ export function useQuestionBank() {
       handleSelectAllSource,
       handleAddQuestion,
       handleAddSelectedList,
-      handleRemoveQuestion
+      handleRemoveQuestion,
+      handleDuplicateDoc
     }
   };
 }

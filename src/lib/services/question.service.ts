@@ -130,25 +130,64 @@ export async function fetchAccessibleDocuments(): Promise<DocumentItem[]> {
     .map((d) => d.created_by_id)
     .filter((id): id is bigint => id !== null);
 
-  const users = await prisma.lms_users.findMany({
-    where: { id: { in: userIds.map((id) => Number(id)) } },
-    select: { id: true, username: true, nickname: true },
-  });
+  const copiedFromIds = docsRaw
+    .map((d) => d.copied_from_id)
+    .filter((id): id is bigint => id !== null);
+
+  const [users, copiedFromDocs] = await Promise.all([
+    prisma.lms_users.findMany({
+      where: { id: { in: userIds.map((id) => Number(id)) } },
+      select: { id: true, username: true, nickname: true },
+    }),
+    copiedFromIds.length > 0
+      ? prisma.lms_documents.findMany({
+          where: { id: { in: copiedFromIds } },
+          select: { id: true, created_by_id: true },
+        })
+      : Promise.resolve([]),
+  ]);
 
   const userMap = new Map(users.map((u) => [u.id, u.nickname || u.username]));
+  
+  // Lấy danh sách user ids của tài liệu gốc
+  const originalCreatorIds = copiedFromDocs
+    .map((d) => d.created_by_id)
+    .filter((id): id is bigint => id !== null);
 
-  return docsRaw.map((d) => ({
-    id: Number(d.id),
-    title: d.title ?? '',
-    created_at: d.created_at?.toISOString() ?? '',
-    public: d.public,
-    link_s3: d.link_s3,
-    link_s3_answer: (d as any).link_s3_answer ?? null,
-    teacher_name: d.created_by_id ? userMap.get(Number(d.created_by_id)) || null : null,
-    created_by_id: d.created_by_id ? Number(d.created_by_id) : null,
-    teacher_owned: (d as any).teacher_owned ? Number((d as any).teacher_owned) : null,
-    is_ai_classified: (d as any).is_ai_classified ?? null,
-  }));
+  const originalCreators = originalCreatorIds.length > 0
+    ? await prisma.lms_users.findMany({
+        where: { id: { in: originalCreatorIds.map((id) => Number(id)) } },
+        select: { id: true, username: true, nickname: true },
+      })
+    : [];
+
+  const originalCreatorMap = new Map(originalCreators.map((u) => [u.id, u.nickname || u.username]));
+  const docOriginalCreatorIdMap = new Map(copiedFromDocs.map((d) => [d.id.toString(), d.created_by_id]));
+
+  return docsRaw.map((d) => {
+    let originalOwnerName: string | null = null;
+    if (d.copied_from_id) {
+      const origCreatorId = docOriginalCreatorIdMap.get(d.copied_from_id.toString());
+      if (origCreatorId) {
+        originalOwnerName = originalCreatorMap.get(Number(origCreatorId)) || null;
+      }
+    }
+
+    return {
+      id: Number(d.id),
+      title: d.title ?? '',
+      created_at: d.created_at?.toISOString() ?? '',
+      public: d.public,
+      link_s3: d.link_s3,
+      link_s3_answer: (d as any).link_s3_answer ?? null,
+      teacher_name: d.created_by_id ? userMap.get(Number(d.created_by_id)) || null : null,
+      created_by_id: d.created_by_id ? Number(d.created_by_id) : null,
+      teacher_owned: (d as any).teacher_owned ? Number((d as any).teacher_owned) : null,
+      is_ai_classified: (d as any).is_ai_classified ?? null,
+      copied_from_id: d.copied_from_id ? Number(d.copied_from_id) : null,
+      original_owner_name: originalOwnerName,
+    };
+  });
 }
 
 /**
