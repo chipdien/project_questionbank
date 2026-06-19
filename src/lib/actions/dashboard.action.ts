@@ -23,6 +23,14 @@ export interface DistributionItem {
   count: number;
 }
 
+export interface TopQuestionItem {
+  id: number;
+  content: string;
+  export_count: number;
+  question_type: string;
+  question_difficulty: string;
+}
+
 export interface DashboardStatsResult {
   stats: {
     questions: number;
@@ -34,6 +42,7 @@ export interface DashboardStatsResult {
   gradesData: GradeItem[];
   difficultiesData: DistributionItem[];
   typesData: DistributionItem[];
+  topQuestions: TopQuestionItem[];
 }
 
 /**
@@ -51,7 +60,8 @@ export async function getDashboardStats(): Promise<DashboardStatsResult | null> 
       recentDocsRaw,
       gradesGroupBy,
       difficultiesGroupBy,
-      typesGroupBy
+      typesGroupBy,
+      topQuestionsRaw
     ] = await Promise.all([
       prisma.lms_questions.count(),
       prisma.lms_documents.count(),
@@ -72,6 +82,18 @@ export async function getDashboardStats(): Promise<DashboardStatsResult | null> 
       prisma.lms_questions.groupBy({
         by: ['question_type'],
         _count: { id: true },
+      }),
+      prisma.lms_questions.findMany({
+        orderBy: { export_count: 'desc' },
+        take: 5,
+        select: {
+          id: true,
+          content: true,
+          statement: true,
+          export_count: true,
+          question_type: true,
+          question_difficulty: true,
+        }
       })
     ]);
 
@@ -159,6 +181,14 @@ export async function getDashboardStats(): Promise<DashboardStatsResult | null> 
       count,
     })).sort((a, b) => b.count - a.count);
 
+    const topQuestions = topQuestionsRaw.map(q => ({
+      id: Number(q.id),
+      content: q.content || q.statement || 'Nội dung câu hỏi rỗng',
+      export_count: q.export_count || 0,
+      question_type: q.question_type ? (typeMap[q.question_type] || q.question_type) : 'Tự luận',
+      question_difficulty: q.question_difficulty ? (difficultyMap[q.question_difficulty] || q.question_difficulty) : 'Chưa phân loại',
+    }));
+
     return {
       stats: {
         questions: questionCount,
@@ -170,6 +200,7 @@ export async function getDashboardStats(): Promise<DashboardStatsResult | null> 
       gradesData,
       difficultiesData,
       typesData,
+      topQuestions,
     };
   } catch (error) {
     console.error('Error fetching dashboard stats action:', error);

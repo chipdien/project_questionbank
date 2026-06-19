@@ -9,15 +9,15 @@
   --font-body: var(--font-inter), sans-serif;
   --font-label: var(--font-inter), sans-serif;
 
-  --color-primary: #048d3b;
+  --color-primary: #348E38;
   --color-on-primary: #ffffff;
-  --color-primary-container: #005322;
-  --color-on-primary-container: #bdffc0;
+  --color-primary-container: #e8f5e9;
+  --color-on-primary-container: #1b5e20;
 
-  --color-secondary: #4f6352;
-  --color-on-secondary: #ffffff;
-  --color-secondary-container: #cce8d1;
-  --color-on-secondary-container: #00210a;
+  --color-secondary: #FFFF00;
+  --color-on-secondary: #191d19;
+  --color-secondary-container: #fffde7;
+  --color-on-secondary-container: #2b2600;
 
   --color-tertiary: #4f6354;
   --color-on-tertiary: #ffffff;

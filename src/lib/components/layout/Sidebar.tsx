@@ -134,7 +134,7 @@ export default function Sidebar({ isCollapsed, user, toggleSidebar }: { isCollap
                     className={`nav-item flex items-center rounded-xl transition-all duration-200 ease-in-out group ${
                       isCollapsed ? 'justify-center w-12 h-12 mx-auto p-0' : 'justify-start gap-3 px-4 py-3 w-full'
                     } ${isChildActive
-                      ? 'bg-secondary-container text-on-secondary-container font-semibold'
+                      ? 'bg-primary/15 text-primary font-semibold'
                       : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-high'
                       }`}
                   >
@@ -182,7 +182,7 @@ export default function Sidebar({ isCollapsed, user, toggleSidebar }: { isCollap
                 className={`nav-item flex items-center rounded-xl transition-all duration-200 ease-in-out group ${
                   isCollapsed ? 'justify-center w-12 h-12 mx-auto p-0' : 'justify-start gap-3 px-4 py-3 w-full'
                 } ${isActive
-                  ? 'bg-secondary-container text-on-secondary-container font-semibold'
+                  ? 'bg-primary/15 text-primary font-semibold'
                   : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-high'
                   }`}
               >

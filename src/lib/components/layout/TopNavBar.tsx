@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { User } from '@/lib/utils/auth.utils';
 import { getPendingRequestCount } from '@/lib/actions/question-request.action';
