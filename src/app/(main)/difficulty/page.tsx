@@ -15,7 +15,7 @@ export default async function DifficultyPage() {
   const difficulties = response.success ? response.data || [] : [];
 
   return (
-    <div className="p-8 min-h-full">
+    <div className="p-8 min-h-full bg-slate-50">
       <DifficultyManager initialDifficulties={difficulties} />
     </div>
   );
