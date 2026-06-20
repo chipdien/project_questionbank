@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getDifficultyStyles as globalGetDifficultyStyles } from '@/lib/constants/classification.constant';
+import { getDifficultyStyles as globalGetDifficultyStyles } from '@/lib/constants/difficulty.constant';
 import { UseQuestionDataListProps } from '@/lib/types/import.type';
 
 export function useQuestionDataList({

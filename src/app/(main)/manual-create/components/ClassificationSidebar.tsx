@@ -5,7 +5,8 @@ import { ChevronDown, Check, X, Tag as TagIcon, Settings } from 'lucide-react';
 import AppSelect from '@/lib/components/ui/AppSelect';
 import TopicTreeSelect from '@/lib/components/ui/topic-tree-select';
 import { Tag, ClassificationSidebarProps } from '@/lib/types/manual-question.type';
-import { GRADES, TAG_CATEGORIES, getTagColorClass } from '@/lib/constants/classification.constant';
+import { GRADES, TAG_CATEGORIES } from '@/lib/constants/classification.constant';
+import { getTagStyles } from '@/lib/constants/tag.constant';
 
 export default function ClassificationSidebar({
   difficulties,
@@ -203,7 +204,8 @@ export default function ClassificationSidebar({
                           key={tag.id}
                           type="button"
                           onClick={() => handleTagToggle(tag.id)}
-                          className={`px-2.5 py-1 text-xs font-bold rounded-md border transition-all cursor-pointer ${getTagColorClass(tag.category, isSelected)}`}
+                          style={getTagStyles(tag.category, (tag as any).color_code, isSelected)}
+                          className="px-2.5 py-1 text-xs font-bold rounded-md transition-all cursor-pointer"
                         >
                           {tag.name}
                         </button>

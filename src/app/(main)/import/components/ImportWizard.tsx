@@ -8,7 +8,9 @@ import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 
-import { getTagBadgeClass, getDifficultyStyles as globalGetDifficultyStyles } from '@/lib/constants/classification.constant';
+import { getTagBadgeClass } from '@/lib/constants/classification.constant';
+import { getDifficultyStyles as globalGetDifficultyStyles } from '@/lib/constants/difficulty.constant';
+import AppTag from '@/lib/components/ui/AppTag';
 import { ImportWizardProps } from '@/lib/types/import.type';
 import { useImportWizard } from '../hooks/useImportWizard';
 import AIClassifyOverlay from './AIClassifyOverlay';
@@ -159,15 +161,16 @@ export default function ImportWizard({
                               </span>
                             ))}
                             {q.tags?.map((tagRel: any, tgIdx: number) => {
-                              const tagName = tagRel.tag?.name || tagRel.name;
-                              const cat = tagRel.tag?.category || tagRel.category;
+                              const tag = tagRel.tag || tagRel;
                               return (
-                                <span
-                                  key={tagRel.tag_id || tgIdx}
-                                  className={`px-1.5 py-0.5 text-[8px] font-bold rounded border ${getTagBadgeClass(cat)}`}
-                                >
-                                  #{tagName}
-                                </span>
+                                <AppTag
+                                  key={tagRel.tag_id || tagRel.id || tgIdx}
+                                  tag={{
+                                    name: tag.name,
+                                    category: tag.category,
+                                    color_code: tag.color_code
+                                  }}
+                                />
                               );
                             })}
                           </div>
@@ -289,15 +292,16 @@ export default function ImportWizard({
                       </span>
                     ))}
                     {activePreviewQuestion.tags?.map((tagRel: any, tgIdx: number) => {
-                      const tagName = tagRel.tag?.name || tagRel.name;
-                      const cat = tagRel.tag?.category || tagRel.category;
+                      const tag = tagRel.tag || tagRel;
                       return (
-                        <span
-                          key={tgIdx}
-                          className={`px-2 py-0.5 text-[9px] font-bold rounded border ${getTagBadgeClass(cat)}`}
-                        >
-                          #{tagName || `Tag ID: ${tagRel.tag_id || tagRel.id}`}
-                        </span>
+                        <AppTag
+                          key={tagRel.tag_id || tagRel.id || tgIdx}
+                          tag={{
+                            name: tag.name,
+                            category: tag.category,
+                            color_code: tag.color_code
+                          }}
+                        />
                       );
                     })}
                   </div>

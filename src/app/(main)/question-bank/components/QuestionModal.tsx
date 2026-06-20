@@ -11,6 +11,8 @@ import { useRouter } from 'next/navigation';
 
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
+import AppBadge from '@/lib/components/ui/AppBadge';
+import AppTag from '@/lib/components/ui/AppTag';
 
 const markdownComponents = {
   img: ({ src, alt, ...props }: any) =>
@@ -108,9 +110,7 @@ export default function QuestionModal({
                     <span className="px-2 py-0.5 rounded bg-outline-variant/10 text-outline-variant text-[10px] font-bold uppercase tracking-wider">
                       {question.grade}
                     </span>
-                    <span className="px-2 py-0.5 rounded bg-error/10 text-error text-[10px] font-bold uppercase tracking-wider">
-                      {question.question_difficulty}
-                    </span>
+                    <AppBadge difficultyName={question.question_difficulty} />
                   </div>
                   {question.topics && question.topics.length > 0 ? (
                     <div className="flex items-center gap-1.5 mt-1.5 text-xs text-outline font-semibold flex-wrap">
@@ -136,9 +136,7 @@ export default function QuestionModal({
                       <span className="shrink-0">Tags:</span>
                       <div className="flex flex-wrap gap-1">
                         {question.tags.map(tag => (
-                          <span key={tag.id} className="px-1.5 py-0.5 rounded bg-surface-container-high border border-outline-variant/30 text-[9px] font-bold text-on-surface-variant uppercase">
-                            #{tag.name}
-                          </span>
+                          <AppTag key={tag.id} tag={tag} />
                         ))}
                       </div>
                     </div>

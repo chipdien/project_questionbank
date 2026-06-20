@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 import QuestionDetailModal from './QuestionDetailModal';
 import AppBadge from '@/lib/components/ui/AppBadge';
+import AppTag from '@/lib/components/ui/AppTag';
 import Loading from '@/lib/components/ui/Loading';
 import { getTagBadgeClass, QUESTION_TYPE_LABELS } from '@/lib/constants/classification.constant';
 import { getQuestionDisplayContent, cleanMathpixData } from '@/lib/utils/math.utils';
@@ -94,7 +95,7 @@ export default function QuestionListTable({
                 <td className="px-3 py-3">
                   <div className="flex flex-wrap gap-1 max-w-[180px]">
                     {(q.tags || []).slice(0, 3).map((t: any) => (
-                      <span key={t.id} className={`px-1.5 py-0.5 rounded border text-[10px] font-bold ${getTagBadgeClass(t.category)}`}>#{t.name}</span>
+                      <AppTag key={t.id} tag={t} />
                     ))}
                     {(q.tags || []).length > 3 && <span className="text-[10px] text-outline">+{q.tags.length - 3}</span>}
                     {(q.tags || []).length === 0 && <span className="text-[10px] text-outline">—</span>}

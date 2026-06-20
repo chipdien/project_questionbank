@@ -13,6 +13,7 @@ import { RequestType, getRequestsForQuestion, cancelQuestionRequest } from '@/li
 import RequestSubmitModal from './RequestSubmitModal';
 import AddToCollectionModal from '@/app/(main)/collection/components/AddToCollectionModal';
 import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
+import AppBadge from '@/lib/components/ui/AppBadge';
 import { typeMeta, statusMeta } from '@/lib/constants/requests.constant';
 
 interface Tag { id: number; name: string; category: string }
@@ -65,7 +66,7 @@ export default function QuestionDetailModal({ question, isAdmin, currentUserId, 
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase">{q.question_type || '—'}</span>
               <span className="px-2 py-0.5 rounded bg-outline-variant/10 text-outline-variant text-[10px] font-bold uppercase">{q.grade ? `Lớp ${q.grade}` : '—'}</span>
-              <span className="px-2 py-0.5 rounded bg-error/10 text-error text-[10px] font-bold uppercase">{q.question_difficulty || '—'}</span>
+              <AppBadge difficultyName={q.question_difficulty} />
               <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-bold uppercase">Đã dùng: {q.export_count || 0} lần</span>
             </div>
           </div>

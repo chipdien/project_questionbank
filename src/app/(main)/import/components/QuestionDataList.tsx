@@ -1,6 +1,7 @@
 'use client';
 
 import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
+import AppTag from '@/lib/components/ui/AppTag';
 import { getTagBadgeClass } from '@/lib/constants/classification.constant';
 import { QuestionDataListProps } from '@/lib/types/import.type';
 import { cleanMathpixData } from '@/lib/utils/math.utils';
@@ -127,15 +128,16 @@ export default function QuestionDataList({
                         </span>
                       ))}
                       {q.tags?.map((tagRel: any, tgIdx: number) => {
-                        const tagName = tagRel.tag?.name || tagRel.name;
-                        const cat = tagRel.tag?.category || tagRel.category;
+                        const tag = tagRel.tag || tagRel;
                         return (
-                          <span
-                            key={tagRel.tag_id || tgIdx}
-                            className={`px-1.5 py-0.5 text-[8.5px] font-bold rounded border ${getTagBadgeClass(cat)}`}
-                          >
-                            #{tagName}
-                          </span>
+                          <AppTag
+                            key={tagRel.tag_id || tagRel.id || tgIdx}
+                            tag={{
+                              name: tag.name,
+                              category: tag.category,
+                              color_code: tag.color_code
+                            }}
+                          />
                         );
                       })}
                     </div>

@@ -14,6 +14,7 @@ import { getTopicsAction, fetchTopicQuestionsAction, bulkMoveQuestionsAction } f
 import { Topic } from '@/app/(main)/topics/queries/useTopicsQuery';
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
+import AppBadge from '@/lib/components/ui/AppBadge';
 
 // Shared img renderer: skip images with empty src to prevent React warning
 const markdownComponents = {
@@ -293,9 +294,7 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
                         <span className="px-2 py-0.5 rounded bg-outline-variant/20 text-on-surface-variant text-[10px] font-bold">
                           Khối {q.grade}
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-warning/10 text-warning text-[10px] font-bold">
-                          {q.question_difficulty}
-                        </span>
+                        <AppBadge difficultyName={q.question_difficulty} />
                       </div>
 
                       {/* Statement text render */}

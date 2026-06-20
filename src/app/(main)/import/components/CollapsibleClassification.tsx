@@ -3,7 +3,7 @@
 import { Tag, ChevronDown, RotateCcw, X, Check } from 'lucide-react';
 import TopicTreeSelect from '@/lib/components/ui/topic-tree-select';
 import AppSelect from '@/lib/components/ui/AppSelect';
-import { getTagColorClass, getTagChipColorClass } from '@/lib/constants/classification.constant';
+import { getTagStyles } from '@/lib/constants/tag.constant';
 import { CollapsibleClassificationProps } from '@/lib/types/import.type';
 import { useCollapsibleClassification } from '../hooks/useCollapsibleClassification';
 
@@ -108,7 +108,8 @@ export default function CollapsibleClassification({
               selectedTagsList.map((tag) => (
                 <span
                   key={tag.id}
-                  className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded border ${getTagChipColorClass(tag.category)}`}
+                  style={getTagStyles(tag.category, (tag as any).color_code, false)}
+                  className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded"
                 >
                   <span className="truncate max-w-[80px]">{tag.name}</span>
                   <button
@@ -145,7 +146,8 @@ export default function CollapsibleClassification({
                           type="button"
                           disabled={!hasSelection}
                           onClick={() => toggleTagSelect(tag.id)}
-                          className={`px-2.5 py-1 text-xs font-bold rounded-md border transition-all cursor-pointer ${getTagColorClass(tag.category, isSelected)}`}
+                          style={getTagStyles(tag.category, (tag as any).color_code, isSelected)}
+                          className="px-2.5 py-1 text-xs font-bold rounded-md transition-all cursor-pointer"
                         >
                           {tag.name}
                         </button>

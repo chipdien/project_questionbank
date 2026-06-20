@@ -5,7 +5,9 @@ import { Search, X, Tag as TagIcon, RotateCcw } from 'lucide-react';
 import AppSelect from '@/lib/components/ui/AppSelect';
 import Loading from '@/lib/components/ui/Loading';
 import TopicTreeSelect from '@/lib/components/ui/topic-tree-select';
-import { getTagColorClass, getTagBadgeClass, getDifficultyStyles, QUESTION_TYPE_LABELS } from '@/lib/constants/classification.constant';
+import { QUESTION_TYPE_LABELS } from '@/lib/constants/classification.constant';
+import { getDifficultyStyles } from '@/lib/constants/difficulty.constant';
+import { getTagStyles } from '@/lib/constants/tag.constant';
 
 interface Tag { id: number; name: string; category: string }
 
@@ -182,7 +184,8 @@ export default function QuestionListFilterHeader({
                             <button
                               key={tag.id}
                               onClick={() => toggleTag(tag.id)}
-                              className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition-all duration-150 ${getTagColorClass(tag.category, active)}`}
+                              style={getTagStyles(tag.category, (tag as any).color_code, active)}
+                              className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all duration-150 cursor-pointer"
                             >
                               #{tag.name}
                             </button>
@@ -237,7 +240,8 @@ export default function QuestionListFilterHeader({
               <button
                 key={`tag${id}`}
                 onClick={() => toggleTag(id)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all duration-150 border ${getTagBadgeClass(tag.category)}`}
+                style={getTagStyles(tag.category, (tag as any).color_code, false)}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer"
               >
                 <span>#{tag.name}</span>
                 <X className="w-3.5 h-3.5" />

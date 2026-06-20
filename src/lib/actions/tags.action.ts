@@ -32,7 +32,8 @@ export async function getTagsAction(category?: string): Promise<ActionResponse<a
  */
 export async function createTagAction(
   name: string,
-  category: string
+  category: string,
+  colorCode?: string | null
 ): Promise<ActionResponse<any>> {
   if (!name || name.trim() === '') {
     return errorResponse('Tên thẻ tag không được để trống.');
@@ -48,7 +49,7 @@ export async function createTagAction(
       return errorResponse('Bạn cần đăng nhập để thực hiện chức năng này.');
     }
 
-    const newTag = await TagsService.createTag({ name, category });
+    const newTag = await TagsService.createTag({ name, category, color_code: colorCode });
 
     revalidatePath('/tags');
     // Also revalidate pages that show lists of tags, e.g. question bank
@@ -68,7 +69,8 @@ export async function createTagAction(
 export async function updateTagAction(
   id: number,
   name?: string,
-  category?: string
+  category?: string,
+  colorCode?: string | null
 ): Promise<ActionResponse<any>> {
   if (!id) {
     return errorResponse('Thiếu Tag ID.');
@@ -80,7 +82,7 @@ export async function updateTagAction(
       return errorResponse('Bạn cần đăng nhập để thực hiện chức năng này.');
     }
 
-    const updatedTag = await TagsService.updateTag(id, { name, category });
+    const updatedTag = await TagsService.updateTag(id, { name, category, color_code: colorCode });
 
     revalidatePath('/tags');
     revalidatePath('/question-bank');

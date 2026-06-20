@@ -67,15 +67,3 @@ export const getTagChipColorClass = (category: string): string => {
     default: return 'bg-slate-500/10 text-slate-600 border-slate-500/25';
   }
 };
-
-export const getDifficultyStyles = (diffName: string, difficulties: any[]) => {
-  const diff = difficulties?.find(
-    (d) => d.name.toLowerCase() === diffName.toLowerCase()
-  );
-  const color = diff?.color_code || '#f97316';
-  return {
-    backgroundColor: `${color}15`, // ~8% opacity
-    color: color,
-    borderColor: `${color}30`, // ~18% opacity
-  };
-};

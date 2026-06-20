@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createTagAction, updateTagAction, deleteTagAction } from '@/lib/actions/tags.action';
-import { Tag } from './useTagsQuery';
+import { Tag, TagFormData } from '@/lib/types/tag.type';
 
 export function useCreateTagMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { name: string; category: string }) => {
-      const response = await createTagAction(data.name, data.category);
+    mutationFn: async (data: TagFormData) => {
+      const response = await createTagAction(data.name, data.category, data.color_code);
       if (!response.success) {
         throw new Error(response.error || 'Có lỗi xảy ra khi tạo thẻ tag.');
       }
@@ -24,7 +24,7 @@ export function useUpdateTagMutation() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string | number; data: Partial<Tag> }) => {
-      const response = await updateTagAction(Number(id), data.name, data.category);
+      const response = await updateTagAction(Number(id), data.name, data.category, data.color_code);
       if (!response.success) {
         throw new Error(response.error || 'Có lỗi xảy ra khi cập nhật thẻ tag.');
       }

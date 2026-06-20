@@ -1,13 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getTagsAction } from '@/lib/actions/tags.action';
-
-export interface Tag {
-  id: string;
-  name: string;
-  category: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import { Tag } from '@/lib/types/tag.type';
 
 export function useTagsQuery(params?: { category?: string }) {
   return useQuery<Tag[]>({

@@ -4,11 +4,13 @@ import { serializeBigInt } from '@/lib/utils/serialization.utils';
 export interface CreateTagInput {
   name: string;
   category: string;
+  color_code?: string | null;
 }
 
 export interface UpdateTagInput {
   name?: string;
   category?: string;
+  color_code?: string | null;
 }
 
 export class TagsService {
@@ -35,7 +37,7 @@ export class TagsService {
    * Tạo mới một thẻ tag (chuẩn hóa tên tag viết thường)
    */
   static async createTag(input: CreateTagInput): Promise<any> {
-    const { name, category } = input;
+    const { name, category, color_code } = input;
     const normalizedName = name.trim().toLowerCase();
     const normalizedCategory = category.trim().toUpperCase();
 
@@ -52,6 +54,7 @@ export class TagsService {
       data: {
         name: normalizedName,
         category: normalizedCategory,
+        color_code: color_code ?? null,
       },
     });
 
@@ -63,7 +66,7 @@ export class TagsService {
    */
   static async updateTag(id: number, input: UpdateTagInput): Promise<any> {
     const tagId = BigInt(id);
-    const { name, category } = input;
+    const { name, category, color_code } = input;
 
     const currentTag = await prisma.lms_tags.findUnique({
       where: { id: tagId },
@@ -92,6 +95,10 @@ export class TagsService {
 
     if (category !== undefined) {
       updateData.category = category.trim().toUpperCase();
+    }
+
+    if (color_code !== undefined) {
+      updateData.color_code = color_code;
     }
 
     const updated = await prisma.lms_tags.update({
