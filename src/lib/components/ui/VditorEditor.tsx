@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Vditor from 'vditor';
+import { VDITOR_MINIMAL_TOOLBAR } from '@/lib/constants/vditor.constant';
 import 'vditor/dist/index.css';
 
 interface VditorEditorProps {
@@ -13,6 +14,7 @@ interface VditorEditorProps {
   placeholder?: string;
   className?: string;
   mode?: 'ir' | 'wysiwyg' | 'sv';
+  minimalToolbar?: boolean;
 }
 
 /**
@@ -27,6 +29,7 @@ const VditorEditor: React.FC<VditorEditorProps> = ({
   placeholder = 'Nhập nội dung...',
   className = '',
   mode = 'ir',
+  minimalToolbar = true,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const vditorRef = useRef<Vditor | null>(null);
@@ -43,6 +46,17 @@ const VditorEditor: React.FC<VditorEditorProps> = ({
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const toolbarConfig = minimalToolbar 
+      ? VDITOR_MINIMAL_TOOLBAR 
+      : [
+          'headings', 'bold', 'italic', 'strike', 'link', '|',
+          'list', 'ordered-list', 'check', 'outdent', 'indent', '|',
+          'quote', 'line', 'code', 'inline-code', 'insert-before', 'insert-after', '|',
+          'upload', 'table', '|',
+          'undo', 'redo', '|',
+          'fullscreen', 'edit-mode', 'math'
+        ];
+
     const vditor = new Vditor(containerRef.current, {
       height: 'auto',
       minHeight: 0,
@@ -50,14 +64,7 @@ const VditorEditor: React.FC<VditorEditorProps> = ({
       value: value,
       lang: lang as any,
       placeholder,
-      toolbar: [
-        'headings', 'bold', 'italic', 'strike', 'link', '|',
-        'list', 'ordered-list', 'check', 'outdent', 'indent', '|',
-        'quote', 'line', 'code', 'inline-code', 'insert-before', 'insert-after', '|',
-        'upload', 'table', '|',
-        'undo', 'redo', '|',
-        'fullscreen', 'edit-mode', 'math'
-      ],
+      toolbar: toolbarConfig as any,
       cache: { enable: false },
       preview: {
         math: { 
