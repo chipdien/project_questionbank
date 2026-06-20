@@ -1,19 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2, CheckCircle2 } from 'lucide-react';
-
-interface ProcessingOverlayProps {
-  isProcessing: boolean;
-  currentStepIndex: number; // -1 to 3
-}
-
-const STEPS = [
-  'Phân tích định dạng và đẩy tập tin lên máy chủ...',
-  'Đang gửi dữ liệu phân tích OCR qua Mathpix...',
-  'AI cấu trúc hóa dữ liệu câu hỏi và đáp án...',
-  'Hoàn tất, đang chuẩn bị không gian làm việc...'
-];
+import { ProcessingOverlayProps } from '@/lib/types/import.type';
+import { CONVERT_STEPS as STEPS } from '@/lib/constants/import.constant';
 
 export default function ProcessingOverlay({ isProcessing, currentStepIndex }: ProcessingOverlayProps) {
   const [dots, setDots] = useState('');
@@ -52,9 +42,8 @@ export default function ProcessingOverlay({ isProcessing, currentStepIndex }: Pr
             return (
               <div
                 key={idx}
-                className={`flex items-center gap-3 transition-opacity duration-300 ${
-                  isCompleted || isActive ? 'opacity-100' : 'opacity-30'
-                }`}
+                className={`flex items-center gap-3 transition-opacity duration-300 ${isCompleted || isActive ? 'opacity-100' : 'opacity-30'
+                  }`}
               >
                 {isCompleted ? (
                   <CheckCircle2 className="w-5 h-5 text-[#00A651] shrink-0" />
@@ -63,11 +52,10 @@ export default function ProcessingOverlay({ isProcessing, currentStepIndex }: Pr
                 ) : (
                   <div className="w-5 h-5 rounded-full border border-outline-variant/50 shrink-0" />
                 )}
-                
+
                 <span
-                  className={`text-xs font-medium ${
-                    isActive ? 'text-primary font-semibold' : 'text-on-surface-variant'
-                  }`}
+                  className={`text-xs font-medium ${isActive ? 'text-primary font-semibold' : 'text-on-surface-variant'
+                    }`}
                 >
                   {step}
                   {isActive && dots}

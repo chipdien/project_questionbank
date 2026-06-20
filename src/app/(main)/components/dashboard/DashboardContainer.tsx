@@ -128,7 +128,7 @@ export default function DashboardContainer({
   ];
 
   return (
-    <div className="h-[calc(100vh-64px)] w-full overflow-hidden flex flex-col p-4 md:p-6 gap-4 bg-linear-to-br from-primary/5 to-white/50">
+    <div className="h-[calc(100vh-64px)] w-full overflow-hidden flex flex-col p-4 md:p-6 gap-4 bg-slate-50">
       {/* KPI Cards row (Super Compact) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
         {kpis.map((kpi, idx) => (

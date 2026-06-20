@@ -1,53 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Tag, FolderTree, ChevronDown, RotateCcw, X, Check } from 'lucide-react';
+import { Tag, ChevronDown, RotateCcw, X, Check } from 'lucide-react';
 import TopicTreeSelect from '@/lib/components/ui/topic-tree-select';
 import AppSelect from '@/lib/components/ui/AppSelect';
-
-interface TagItem {
-  id: number;
-  name: string;
-  category: string;
-}
-
-interface CollapsibleClassificationProps {
-  selectedIds: Set<number>;
-  activeQuestion: any | null;
-  difficulties: any[];
-  tagsByCategory: Record<string, TagItem[]>;
-  onApply: (classification: {
-    grade?: string | null;
-    difficulty?: string | null;
-    topicIds?: string[] | null;
-    tagIds?: number[] | null;
-  }) => Promise<void>;
-  className?: string;
-}
-
-// Hàm lấy màu cho tag dựa trên category
-const getTagColorClass = (category: string, isSelected: boolean) => {
-  const cat = category.toUpperCase();
-  if (isSelected) {
-    switch (cat) {
-      case 'SOURCE': return 'bg-orange-500 border-orange-500 text-white';
-      case 'METHOD': return 'bg-blue-500 border-blue-500 text-white';
-      case 'SKILL': return 'bg-purple-500 border-purple-500 text-white';
-      case 'TYPE': return 'bg-emerald-500 border-emerald-500 text-white';
-      case 'EXAM': return 'bg-rose-500 border-rose-500 text-white';
-      default: return 'bg-slate-600 border-slate-600 text-white';
-    }
-  } else {
-    switch (cat) {
-      case 'SOURCE': return 'bg-orange-500/8 border-orange-500/20 text-orange-600 hover:border-orange-500/40';
-      case 'METHOD': return 'bg-blue-500/8 border-blue-500/20 text-blue-600 hover:border-blue-500/40';
-      case 'SKILL': return 'bg-purple-500/8 border-purple-500/20 text-purple-600 hover:border-purple-500/40';
-      case 'TYPE': return 'bg-emerald-500/8 border-emerald-500/20 text-emerald-600 hover:border-emerald-500/40';
-      case 'EXAM': return 'bg-rose-500/8 border-rose-500/20 text-rose-600 hover:border-rose-500/40';
-      default: return 'bg-slate-500/8 border-slate-500/20 text-slate-600 hover:border-slate-500/40';
-    }
-  }
-};
+import { getTagColorClass, getTagChipColorClass } from '@/lib/constants/classification.constant';
+import { CollapsibleClassificationProps } from '@/lib/types/import.type';
+import { useCollapsibleClassification } from '../hooks/useCollapsibleClassification';
 
 export default function CollapsibleClassification({
   selectedIds,
@@ -57,117 +15,31 @@ export default function CollapsibleClassification({
   onApply,
   className = '',
 }: CollapsibleClassificationProps) {
-  // Form State
-  const [grade, setGrade] = useState<string>('');
-  const [difficulty, setDifficulty] = useState<string>('');
-  const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([]);
-  const [selectedTagIds, setSelectedTagIds] = useState<Set<number>>(new Set());
-  const [isTagsOpen, setIsTagsOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const tagsRef = useRef<HTMLDivElement>(null);
-
-  const hasSelection = selectedIds.size > 0;
-  const isBulkMode = selectedIds.size > 1; // Thực sự là bulk mode khi chọn từ 2 câu trở lên
-
-  // Lấy danh sách tag detail tương ứng với selectedTagIds
-  const selectedTagsList = useMemo(() => {
-    const list: TagItem[] = [];
-    Object.values(tagsByCategory).forEach(categoryTags => {
-      categoryTags.forEach(tag => {
-        if (selectedTagIds.has(tag.id)) {
-          list.push(tag);
-        }
-      });
-    });
-    return list;
-  }, [tagsByCategory, selectedTagIds]);
-
-  // Đóng tags dropdown khi click ra ngoài
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (tagsRef.current && !tagsRef.current.contains(event.target as Node)) {
-        setIsTagsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Load classification khi activeQuestion thay đổi (nếu không ở chế độ bulk)
-  useEffect(() => {
-    if (isBulkMode) return;
-
-    if (activeQuestion) {
-      setGrade(activeQuestion.grade ? String(activeQuestion.grade) : '');
-      setDifficulty(activeQuestion.question_difficulty || '');
-
-      const topicIds: string[] = [];
-      if (activeQuestion.topics) {
-        activeQuestion.topics.forEach((t: any) => topicIds.push(String(t.topic_id)));
-      }
-      setSelectedTopicIds(topicIds);
-
-      const tagIds = new Set<number>();
-      if (activeQuestion.tags) {
-        activeQuestion.tags.forEach((t: any) => tagIds.add(Number(t.tag_id || t.id)));
-      }
-      setSelectedTagIds(tagIds);
-    } else {
-      setGrade('');
-      setDifficulty('');
-      setSelectedTopicIds([]);
-      setSelectedTagIds(new Set());
-    }
-  }, [activeQuestion, isBulkMode]);
-
-  // Toggle tag nội bộ (không tự động lưu lên server)
-  const toggleTagSelect = (id: number) => {
-    if (!hasSelection) return;
-    const next = new Set(selectedTagIds);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    setSelectedTagIds(next);
-  };
-
-  // Hàm xoá nhanh một tag cụ thể bằng nút X trên chip
-  const removeSingleTag = (id: number, e: React.MouseEvent) => {
-    e.stopPropagation(); // Ngăn chặn sự kiện click mở dropdown
-    toggleTagSelect(id);
-  };
-
-  // Hàm áp dụng (lưu) phân loại lên server
-  const handleApply = async () => {
-    if (!hasSelection) return;
-    setSaving(true);
-    try {
-      await onApply({
-        grade: grade || null,
-        difficulty: difficulty || null,
-        topicIds: selectedTopicIds.length > 0 ? selectedTopicIds : null,
-        tagIds: Array.from(selectedTagIds),
-      });
-      if (isBulkMode) {
-        setSelectedTopicIds([]);
-        setSelectedTagIds(new Set());
-      }
-    } catch (e) {
-      console.error('Lưu phân loại thất bại:', e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Hàm reset toàn bộ bộ phân loại về trống
-  const handleReset = () => {
-    if (!hasSelection) return;
-    setGrade('');
-    setDifficulty('');
-    setSelectedTopicIds([]);
-    setSelectedTagIds(new Set());
-  };
+  const {
+    grade,
+    setGrade,
+    difficulty,
+    setDifficulty,
+    selectedTopicIds,
+    setSelectedTopicIds,
+    selectedTagIds,
+    isTagsOpen,
+    setIsTagsOpen,
+    saving,
+    tagsRef,
+    hasSelection,
+    isBulkMode,
+    selectedTagsList,
+    toggleTagSelect,
+    removeSingleTag,
+    handleReset,
+    handleApply,
+  } = useCollapsibleClassification({
+    selectedIds,
+    activeQuestion,
+    tagsByCategory,
+    onApply,
+  });
 
   return (
     <div className={`flex items-center gap-2 ${className} ${!hasSelection ? 'opacity-65' : ''}`}>
@@ -177,7 +49,7 @@ export default function CollapsibleClassification({
           value={grade}
           disabled={!hasSelection}
           onChange={(e) => setGrade(e.target.value)}
-          className="text-sm py-1.5 pr-7 h-[34px] rounded-lg border-outline-variant/35 bg-surface-container-lowest"
+          className="text-sm py-1.5 pr-7 h-[34px] rounded-lg border-outline-variant/35 bg-white disabled:bg-white"
           wrapperClassName="space-y-0"
           id="select-grade"
         >
@@ -194,7 +66,7 @@ export default function CollapsibleClassification({
           value={difficulty}
           disabled={!hasSelection}
           onChange={(e) => setDifficulty(e.target.value)}
-          className="text-sm py-1.5 pr-7 h-[34px] rounded-lg border-outline-variant/35 bg-surface-container-lowest"
+          className="text-sm py-1.5 pr-7 h-[34px] rounded-lg border-outline-variant/35 bg-white disabled:bg-white"
           wrapperClassName="space-y-0"
           id="select-difficulty"
         >
@@ -225,7 +97,7 @@ export default function CollapsibleClassification({
       <div ref={tagsRef} className="relative flex-1 min-w-[180px] max-w-[320px]">
         <div
           onClick={() => hasSelection && setIsTagsOpen((prev) => !prev)}
-          className={`w-full min-h-[34px] flex items-center justify-between gap-1 border border-outline-variant/35 rounded-lg px-2.5 py-1 bg-surface-container-lowest transition-all duration-200 relative cursor-pointer ${!hasSelection ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary/50'
+          className={`w-full min-h-[34px] flex items-center justify-between gap-1 border border-outline-variant/35 rounded-lg px-2.5 py-1 bg-white disabled:bg-white transition-all duration-200 relative cursor-pointer ${!hasSelection ? 'opacity-50 cursor-not-allowed bg-white' : 'hover:border-primary/50'
             } ${isTagsOpen ? 'border-primary ring-2 ring-primary/10 shadow-sm' : ''}`}
         >
           {/* List tag chips */}
@@ -236,13 +108,13 @@ export default function CollapsibleClassification({
               selectedTagsList.map((tag) => (
                 <span
                   key={tag.id}
-                  className="inline-flex items-center gap-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold px-1.5 py-0.5 rounded"
+                  className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded border ${getTagChipColorClass(tag.category)}`}
                 >
                   <span className="truncate max-w-[80px]">{tag.name}</span>
                   <button
                     type="button"
                     onClick={(e) => removeSingleTag(tag.id, e)}
-                    className="ml-0.5 p-0.5 rounded hover:bg-on-secondary-container/20 transition-colors cursor-pointer"
+                    className="ml-0.5 p-0.5 rounded hover:bg-black/5 transition-colors cursor-pointer text-current flex items-center justify-center"
                   >
                     <X className="w-2.5 h-2.5" />
                   </button>

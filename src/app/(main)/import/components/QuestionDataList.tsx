@@ -1,25 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
+import { getTagBadgeClass } from '@/lib/constants/classification.constant';
+import { QuestionDataListProps } from '@/lib/types/import.type';
+import { cleanMathpixData } from '@/lib/utils/math.utils';
+import { CheckSquare, Edit3, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
-import { cleanMathpixData } from '@/lib/utils/math.utils';
-import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
-import { Edit3, CheckSquare, Square } from 'lucide-react';
-
-interface QuestionDataListProps {
-  questions: any[];
-  selectedIds: Set<number>;
-  onSelectionChange: (ids: Set<number>) => void;
-  activeId: number | null;
-  onActiveChange: (id: number | null) => void;
-  onQuestionUpdate: (updatedQuestion: any) => void;
-  currentUserId: number | null;
-  isAdmin?: boolean;
-}
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import { useQuestionDataList } from '../hooks/useQuestionDataList';
 
 export default function QuestionDataList({
   questions,
@@ -30,52 +21,32 @@ export default function QuestionDataList({
   onQuestionUpdate,
   currentUserId,
   isAdmin = false,
+  difficulties,
 }: QuestionDataListProps) {
-  const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
-
-  const handleSelectAll = () => {
-    if (selectedIds.size === questions.length) {
-      onSelectionChange(new Set());
-    } else {
-      onSelectionChange(new Set(questions.map((q) => q.id)));
-    }
-  };
-
-  const handleToggleSelect = (id: number) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    onSelectionChange(next);
-  };
-
-  const handleCardClick = (id: number) => {
-    onActiveChange(id);
-    // Tự động tích chọn checkbox của câu hỏi này khi click
-    const next = new Set(selectedIds);
-    if (!next.has(id)) {
-      next.add(id);
-      onSelectionChange(next);
-    }
-  };
-
-  const handleCardDoubleClick = (q: any) => {
-    setEditingQuestion(q);
-  };
-
-  const handleSaveEditedQuestion = (updated: any) => {
-    onQuestionUpdate(updated);
-    setEditingQuestion(null);
-  };
-
-  const isAllSelected = questions.length > 0 && selectedIds.size === questions.length;
+  const {
+    editingQuestion,
+    setEditingQuestion,
+    getDifficultyStyles,
+    handleSelectAll,
+    handleToggleSelect,
+    handleCardClick,
+    handleCardDoubleClick,
+    handleSaveEditedQuestion,
+    isAllSelected,
+  } = useQuestionDataList({
+    questions,
+    selectedIds,
+    onSelectionChange,
+    activeId,
+    onActiveChange,
+    onQuestionUpdate,
+    difficulties,
+  });
 
   return (
     <div className="h-full flex flex-col gap-3">
       {/* Header Controls */}
-      <div className="flex justify-between items-center bg-surface-container-low px-4 py-2.5 rounded-t-xl border-b border-outline-variant/20 shrink-0 select-none">
+      <div className="flex justify-between items-center bg-white px-4 py-2.5 rounded-t-xl border-b border-outline-variant/20 shrink-0 select-none">
         <button
           onClick={handleSelectAll}
           className="flex items-center gap-2 text-xs font-bold text-outline hover:text-primary transition-colors cursor-pointer"
@@ -109,13 +80,13 @@ export default function QuestionDataList({
               className={`group flex flex-col p-4 rounded-xl border transition-all cursor-pointer relative ${isActive
                 ? 'bg-primary/5 border-primary shadow-sm'
                 : isSelected
-                  ? 'border-primary/40 bg-surface-container-lowest shadow-sm'
-                  : 'bg-surface-container-lowest border-outline-variant/20 hover:border-outline-variant/60 shadow-sm'
+                  ? 'border-primary/40 bg-white shadow-sm'
+                  : 'bg-white border-outline-variant/20 hover:border-outline-variant/60 shadow-sm'
                 }`}
             >
-              {/* Top Row: Checkbox, Index & Action */}
-              <div className="flex justify-between items-center mb-3">
-                <div className="flex items-center gap-3">
+              {/* Top Row: Checkbox, Index, Badges & Action */}
+              <div className="flex justify-between items-start gap-3 mb-3 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap flex-1 min-w-0">
                   <input
                     type="checkbox"
                     checked={isSelected}
@@ -123,11 +94,52 @@ export default function QuestionDataList({
                       e.stopPropagation();
                       handleToggleSelect(q.id);
                     }}
-                    className="w-4 h-4 rounded accent-primary border-outline-variant/60 cursor-pointer"
+                    className="w-4 h-4 rounded accent-primary border-outline-variant/60 cursor-pointer shrink-0"
                   />
-                  <span className={`text-xs font-bold uppercase tracking-wider ${isActive ? 'text-primary' : 'text-outline-variant'}`}>
+                  <span className={`text-xs font-bold uppercase tracking-wider shrink-0 ${isActive ? 'text-primary' : 'text-outline-variant'}`}>
                     Câu {idx + 1}
                   </span>
+
+                  {/* Badges hiển thị phân loại đã gán */}
+                  {(q.grade || q.question_difficulty || q.lesson_name || q.topics?.length > 0 || q.tags?.length > 0) && (
+                    <div className="flex flex-wrap gap-1 items-center">
+                      {q.grade && (
+                        <span className="px-1.5 py-0.5 text-[8.5px] font-bold rounded bg-indigo-500/10 text-indigo-700 border border-indigo-500/15">
+                          Khối {q.grade}
+                        </span>
+                      )}
+                      {q.question_difficulty && (
+                        <span
+                          style={getDifficultyStyles(q.question_difficulty)}
+                          className="px-1.5 py-0.5 text-[8.5px] font-bold rounded border"
+                        >
+                          {q.question_difficulty}
+                        </span>
+                      )}
+                      {q.lesson_name && (
+                        <span className="px-1.5 py-0.5 text-[8.5px] font-bold rounded bg-primary/10 text-primary border border-primary/15">
+                          Chủ đề: {q.lesson_name}
+                        </span>
+                      )}
+                      {q.topics?.map((topicRel: any, tIdx: number) => (
+                        <span key={topicRel.topic_id || tIdx} className="px-1.5 py-0.5 text-[8.5px] font-bold rounded bg-teal-500/10 text-teal-700 border border-teal-500/15">
+                          {topicRel.topic?.title || `Topic ID: ${topicRel.topic_id}`}
+                        </span>
+                      ))}
+                      {q.tags?.map((tagRel: any, tgIdx: number) => {
+                        const tagName = tagRel.tag?.name || tagRel.name;
+                        const cat = tagRel.tag?.category || tagRel.category;
+                        return (
+                          <span
+                            key={tagRel.tag_id || tgIdx}
+                            className={`px-1.5 py-0.5 text-[8.5px] font-bold rounded border ${getTagBadgeClass(cat)}`}
+                          >
+                            #{tagName}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -135,7 +147,7 @@ export default function QuestionDataList({
                     e.stopPropagation();
                     handleCardDoubleClick(q);
                   }}
-                  className="p-1.5 rounded-lg text-outline hover:text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                  className="p-1.5 rounded-lg text-outline hover:text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-all cursor-pointer shrink-0"
                   title="Sửa nội dung câu hỏi"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
@@ -182,30 +194,6 @@ export default function QuestionDataList({
                   })}
                 </div>
               )}
-
-              {/* Tag / Topic Badge Indicators */}
-              {(q.lesson_name || q.topics?.length > 0 || q.tags?.length > 0) && (
-                <div className="flex flex-wrap gap-1.5 mt-3 pt-2.5 border-t border-outline-variant/10">
-                  {q.lesson_name && (
-                    <span className="px-2 py-0.5 text-[9px] font-bold rounded bg-primary/10 text-primary border border-primary/25">
-                      Chủ đề: {q.lesson_name}
-                    </span>
-                  )}
-                  {q.topics?.map((topicRel: any, tIdx: number) => (
-                    <span key={tIdx} className="px-2 py-0.5 text-[9px] font-bold rounded bg-teal-500/10 text-teal-700 border border-teal-500/25">
-                      {topicRel.topic?.title || `Topic ID: ${topicRel.topic_id}`}
-                    </span>
-                  ))}
-                  {q.tags?.map((tagRel: any, tgIdx: number) => {
-                    const tagName = tagRel.tag?.name || tagRel.name;
-                    return (
-                      <span key={tgIdx} className="px-2 py-0.5 text-[9px] font-bold rounded bg-surface-container-highest text-on-surface-variant border border-outline-variant/30">
-                        #{tagName || `Tag ID: ${tagRel.tag_id || tagRel.id}`}
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           );
         })}
@@ -225,7 +213,7 @@ export default function QuestionDataList({
           question={editingQuestion}
           onSave={handleSaveEditedQuestion}
           currentUserId={currentUserId}
-          isAdmin={true}
+          isAdmin={isAdmin}
         />
       )}
     </div>

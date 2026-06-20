@@ -31,7 +31,7 @@ export default async function ManualCreatePage() {
   }));
 
   return (
-    <div className="p-6 min-h-full flex flex-col bg-surface-container-lowest text-on-surface">
+    <div className="p-6 min-h-full flex flex-col bg-slate-50 text-on-surface">
       <h1 className="text-2xl font-bold text-on-surface font-headline flex items-center gap-2 mb-5">
         <span className="material-symbols-outlined text-primary text-3xl">edit_note</span>
         Tạo câu hỏi thủ công

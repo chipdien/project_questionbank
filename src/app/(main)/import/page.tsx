@@ -16,7 +16,7 @@ export default async function ImportPage() {
 
   // Load dữ liệu phân loại song song
   const [recentDocuments, lessons, difficultiesResponse, topics, tagsByCategory] = await Promise.all([
-    getRecentDocuments(8),
+    getRecentDocuments(50),
     fetchLessons(),
     getDifficultiesAction(),
     fetchTopics(),
@@ -25,9 +25,7 @@ export default async function ImportPage() {
   const difficulties = difficultiesResponse.success ? difficultiesResponse.data || [] : [];
 
   return (
-    <div className="p-6 min-h-full flex flex-col gap-4">
-      <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">Phân loại câu hỏi</h1>
-
+    <div className="p-6 h-[calc(100vh-80px)] flex flex-col gap-4 overflow-hidden bg-slate-50">
       {/* 4-Step Wizard */}
       <ImportWizard
         recentDocuments={recentDocuments}

@@ -1,13 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
 import { Eye, FileText } from 'lucide-react';
-
-interface OriginalPreviewProps {
-  files: File[];
-  linkS3: string | null;
-  documentTitle?: string;
-}
+import { useEffect, useState } from 'react';
+import { OriginalPreviewProps } from '@/lib/types/import.type';
 
 export default function OriginalPreview({ files, linkS3, documentTitle }: OriginalPreviewProps) {
   const [docxHtml, setDocxHtml] = useState<string | null>(null);
@@ -15,8 +10,8 @@ export default function OriginalPreview({ files, linkS3, documentTitle }: Origin
   const [objectUrls, setObjectUrls] = useState<string[]>([]);
 
   const mainFile = files[0];
-  const isLocalPdf   = mainFile && (mainFile.type === 'application/pdf' || mainFile.name.endsWith('.pdf'));
-  const isLocalDocx  = mainFile && (
+  const isLocalPdf = mainFile && (mainFile.type === 'application/pdf' || mainFile.name.endsWith('.pdf'));
+  const isLocalDocx = mainFile && (
     mainFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     || mainFile.name.endsWith('.docx')
   );
@@ -24,7 +19,7 @@ export default function OriginalPreview({ files, linkS3, documentTitle }: Origin
     f => f.type.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(f.name)
   );
 
-  const isRemotePdf   = linkS3 && linkS3.toLowerCase().endsWith('.pdf');
+  const isRemotePdf = linkS3 && linkS3.toLowerCase().endsWith('.pdf');
   const isRemoteImage = linkS3 && linkS3.match(/\.(jpeg|jpg|gif|png|webp)$/i);
 
   // Build object-URLs for local files (revoke on cleanup)
@@ -162,7 +157,7 @@ export default function OriginalPreview({ files, linkS3, documentTitle }: Origin
 
   return (
     <div className="h-full flex flex-col gap-3">
-      <div className="flex justify-between items-center bg-surface-container-low px-4 py-3 rounded-t-xl border-b border-outline-variant/20">
+      <div className="flex justify-between items-center bg-white px-4 py-3 rounded-t-xl border-b border-outline-variant/20">
         <h4 className="font-bold text-sm text-on-surface truncate font-headline flex items-center gap-2">
           <Eye className="w-4 h-4 text-primary" />
           Bản gốc đối chiếu
@@ -172,7 +167,7 @@ export default function OriginalPreview({ files, linkS3, documentTitle }: Origin
         </span>
       </div>
 
-      <div className="flex-1 min-h-0 bg-surface-container-lowest p-2 rounded-b-xl border border-t-0 border-outline-variant/20 shadow-sm relative overflow-hidden">
+      <div className="flex-1 min-h-0 bg-white p-2 rounded-b-xl border border-t-0 border-outline-variant/20 shadow-sm relative overflow-hidden">
         {renderContent()}
       </div>
     </div>

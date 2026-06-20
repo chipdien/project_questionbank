@@ -306,7 +306,7 @@ export default function TopicTreeSelect({
       <div
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
         className={`min-h-[42px] w-full flex items-center justify-between gap-2 border rounded-xl px-3 py-1.5 cursor-pointer bg-white transition-all duration-200 ${disabled
-          ? 'opacity-50 cursor-not-allowed bg-surface-container-low'
+          ? 'opacity-50 cursor-not-allowed bg-white'
           : 'hover:border-primary/50'
           } ${isOpen ? 'border-primary ring-2 ring-primary/10 shadow-sm' : 'border-outline-variant'}`}
       >
