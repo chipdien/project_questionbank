@@ -1,16 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, Lock, Globe, ArrowRight, Loader2 } from 'lucide-react';
-
-interface CompletionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  documentTitle: string;
-  questionsCount: number;
-  onComplete: (isPublic: boolean) => Promise<void>;
-}
+import { CompletionModalProps } from '@/lib/types/import.type';
 
 export default function CompletionModal({
   isOpen,
@@ -78,11 +71,10 @@ export default function CompletionModal({
               {/* Option: Private */}
               <div
                 onClick={() => setIsPublic(false)}
-                className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all select-none ${
-                  !isPublic
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-outline-variant/20 bg-surface-container-lowest hover:border-outline-variant/40'
-                }`}
+                className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all select-none ${!isPublic
+                  ? 'border-primary bg-primary/5 shadow-sm'
+                  : 'border-outline-variant/20 bg-surface-container-lowest hover:border-outline-variant/40'
+                  }`}
               >
                 <div className={`p-2.5 rounded-lg shrink-0 ${!isPublic ? 'bg-primary/15 text-primary' : 'bg-surface-container text-outline'}`}>
                   <Lock className="w-4.5 h-4.5" />
@@ -98,11 +90,10 @@ export default function CompletionModal({
               {/* Option: Public */}
               <div
                 onClick={() => setIsPublic(true)}
-                className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all select-none ${
-                  isPublic
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-outline-variant/20 bg-surface-container-lowest hover:border-outline-variant/40'
-                }`}
+                className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all select-none ${isPublic
+                  ? 'border-primary bg-primary/5 shadow-sm'
+                  : 'border-outline-variant/20 bg-surface-container-lowest hover:border-outline-variant/40'
+                  }`}
               >
                 <div className={`p-2.5 rounded-lg shrink-0 ${isPublic ? 'bg-primary/15 text-primary' : 'bg-surface-container text-outline'}`}>
                   <Globe className="w-4.5 h-4.5" />
@@ -125,7 +116,7 @@ export default function CompletionModal({
               >
                 Quay lại
               </button>
-              
+
               <button
                 onClick={handleSubmit}
                 disabled={submitting}

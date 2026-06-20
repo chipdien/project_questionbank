@@ -15,6 +15,7 @@ export interface QuestionListFilters {
   tagIds?: number[];
   keyword?: string;
   unclassified?: boolean;
+  difficulties?: string[];
 }
 
 export async function getAllQuestions(
@@ -30,6 +31,7 @@ export async function getAllQuestions(
     tagIds = [],
     keyword = '',
     unclassified = false,
+    difficulties = [],
   } = filters;
 
   try {
@@ -60,9 +62,10 @@ export async function getAllQuestions(
     // 2. Ẩn câu con chùm 'sub'
     whereClause.AND.push({ OR: [{ complex: { not: 'sub' } }, { complex: null }] });
 
-    // 3. Lọc grade / question_type / keyword
+    // 3. Lọc grade / question_type / keyword / difficulty
     if (grades.length > 0) whereClause.grade = { in: grades.map(Number) };
     if (questionTypes.length > 0) whereClause.question_type = { in: questionTypes };
+    if (difficulties.length > 0) whereClause.question_difficulty = { in: difficulties };
     if (keyword) {
       whereClause.AND.push({
         OR: [{ statement: { contains: keyword } }, { content: { contains: keyword } }],
@@ -170,7 +173,7 @@ export async function getAllQuestions(
     const creatorMap = new Map(creators.map(u => [u.id, u.nickname || u.username]));
 
     // 8. Độ khó (màu badge)
-    const difficulties = await prisma.lms_difficulties.findMany({
+    const dbDifficulties = await prisma.lms_difficulties.findMany({
       select: { name: true, color_code: true },
     });
 
@@ -285,7 +288,7 @@ export async function getAllQuestions(
       page: safePage,
       pageSize: safePageSize,
       totalPages: Math.ceil(total / safePageSize),
-      difficulties: difficulties.map(d => ({ name: d.name, color_code: d.color_code ?? '#888888' })),
+      difficulties: dbDifficulties.map(d => ({ name: d.name, color_code: d.color_code ?? '#888888' })),
     });
   } catch (error: any) {
     console.error('Error in getAllQuestions:', error?.message);

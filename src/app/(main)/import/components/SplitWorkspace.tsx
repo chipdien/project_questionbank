@@ -1,24 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { Sparkles, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import OriginalPreview from './OriginalPreview';
 import QuestionDataList from './QuestionDataList';
 import CollapsibleClassification from './CollapsibleClassification';
 
-interface SplitWorkspaceProps {
-  files: File[];
-  linkS3: string | null;
-  documentTitle: string;
-  questions: any[];
-  onQuestionUpdate: (updatedQuestion: any) => void;
-  difficulties: any[];
-  tagsByCategory: Record<string, any[]>;
-  onApplyClassification: (classification: any) => Promise<void>;
-  currentUserId: number | null;
-  isAdmin?: boolean;
-  onNextStep: () => void;
-}
+import { SplitWorkspaceProps } from '@/lib/types/import.type';
 
 export default function SplitWorkspace({
   files,
@@ -32,9 +21,13 @@ export default function SplitWorkspace({
   currentUserId,
   isAdmin = false,
   onNextStep,
+  onBack,
+  onAIClassify,
+  isAIClassified,
 }: SplitWorkspaceProps) {
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<number>>(new Set());
   const [activeQuestionId, setActiveQuestionId] = useState<number | null>(null);
+  const [isAIClassifying, setIsAIClassifying] = useState(false);
 
   // Lấy câu hỏi đang được active để prefill sidebar phân loại
   const activeQuestion = questions.find((q) => q.id === activeQuestionId) || null;
@@ -51,10 +44,26 @@ export default function SplitWorkspace({
     }
   };
 
+  const handleAIClassifyClick = async () => {
+    setIsAIClassifying(true);
+    try {
+      const res = await onAIClassify();
+      if (res.success) {
+        toast.success(`AI đã tự động phân loại thành công ${res.count} câu hỏi!`);
+      } else {
+        toast.error(res.error || 'Phân loại bằng AI thất bại.');
+      }
+    } catch (err: any) {
+      toast.error('Lỗi khi gọi AI phân loại: ' + (err.message || err));
+    } finally {
+      setIsAIClassifying(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)] bg-surface/30 rounded-2xl border border-outline-variant/10 shadow-inner overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-120px)] bg-white rounded-2xl border border-outline-variant/10 shadow-inner overflow-hidden">
       {/* Top Gộp: Header & Phân loại chung 1 hàng */}
-      <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-2.5 bg-surface-container-lowest border-b border-outline-variant/20 shrink-0 z-50">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-2.5 bg-white border-b border-outline-variant/20 shrink-0 z-50">
         <CollapsibleClassification
           selectedIds={selectedQuestionIds}
           activeQuestion={activeQuestion}
@@ -63,14 +72,44 @@ export default function SplitWorkspace({
           onApply={handleApplyClassification}
         />
 
-        {/* Right: Hoàn tất & Chia sẻ */}
-        <button
-          onClick={onNextStep}
-          disabled={questions.length === 0}
-          className="px-4 py-1.5 text-xs font-extrabold uppercase tracking-wider bg-[#00A651] text-white hover:bg-[#00A651]/90 rounded-lg shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:pointer-events-none cursor-pointer h-[34px] shrink-0"
-        >
-          Hoàn tất &amp; Chia sẻ
-        </button>
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={onBack}
+            className="px-4 py-1.5 text-xs font-bold text-outline hover:text-on-surface border border-outline-variant/20 rounded-lg hover:bg-slate-50 transition-all cursor-pointer h-[34px]"
+            disabled={isAIClassifying}
+          >
+            Quay lại
+          </button>
+
+          <div title={isAIClassified ? "Tài liệu này đã được phân loại bằng AI rồi, không thể chạy lại." : undefined}>
+            <button
+              onClick={handleAIClassifyClick}
+              disabled={isAIClassifying || isAIClassified || questions.length === 0}
+              className="px-4 py-1.5 text-xs font-bold uppercase tracking-wider bg-primary-container text-on-primary-container hover:bg-primary-container/80 border border-primary/15 rounded-lg transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:bg-slate-200 disabled:text-slate-400 disabled:border-slate-300/30 disabled:pointer-events-none cursor-pointer h-[34px]"
+            >
+              {isAIClassifying ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Đang phân loại...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 text-primary fill-primary animate-pulse" />
+                  <span>Phân loại bằng AI</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          <button
+            onClick={onNextStep}
+            disabled={questions.length === 0 || isAIClassifying}
+            className="px-4 py-1.5 text-xs font-extrabold uppercase tracking-wider bg-primary text-white hover:bg-primary/90 rounded-lg shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:pointer-events-none cursor-pointer h-[34px]"
+          >
+            Hoàn tất &amp; Chia sẻ
+          </button>
+        </div>
       </div>
 
       {/* 2-Column Layout Workspace - Scroll độc lập hoàn toàn */}
@@ -95,6 +134,7 @@ export default function SplitWorkspace({
             onQuestionUpdate={onQuestionUpdate}
             currentUserId={currentUserId}
             isAdmin={isAdmin}
+            difficulties={difficulties}
           />
         </div>
       </div>

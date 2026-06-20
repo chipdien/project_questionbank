@@ -102,14 +102,14 @@ export default function Sidebar({ isCollapsed, user, toggleSidebar }: { isCollap
 
   return (
     <aside
-      className={`fixed left-0 top-0 bottom-0 h-screen border-r border-outline-variant/30 bg-surface-container-low flex flex-col gap-2 z-40 transition-all duration-300 ${
+      className={`fixed left-0 top-0 bottom-0 h-screen border-r border-outline-variant/30 bg-white flex flex-col gap-2 z-40 transition-all duration-300 ${
         isCollapsed ? 'w-20 p-2' : 'w-64 p-4'
       }`}
       id="sidebar"
     >
       <div
         onClick={toggleSidebar}
-        className={`h-16 flex items-center border-b border-outline-variant/15 mb-4 select-none shrink-0 transition-colors cursor-pointer bg-surface-container-lowest/60 hover:bg-surface-container-lowest/90 ${
+        className={`h-16 flex items-center border-b border-outline-variant/15 mb-4 select-none shrink-0 transition-colors cursor-pointer bg-white hover:bg-slate-50/50 ${
           isCollapsed ? '-mx-2 -mt-2 w-[calc(100%+1rem)] justify-center px-4' : '-mx-4 -mt-4 w-[calc(100%+2rem)] justify-start px-6'
         }`}
       >

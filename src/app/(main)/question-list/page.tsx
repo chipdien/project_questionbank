@@ -18,7 +18,7 @@ export default async function QuestionListPage() {
   const difficulties = difficultiesResponse.success ? difficultiesResponse.data || [] : [];
 
   return (
-    <div className="p-6 h-full flex flex-col overflow-hidden pb-4">
+    <div className="p-6 h-full flex flex-col overflow-hidden pb-4 bg-slate-50">
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-on-surface font-headline">Danh sách câu hỏi</h1>
       </div>

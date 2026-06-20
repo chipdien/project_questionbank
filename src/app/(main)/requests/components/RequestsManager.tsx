@@ -4,14 +4,11 @@ import React from 'react';
 import { RequestType, RequestStatus } from '@/lib/actions/question-request.action';
 import RequestList from './RequestList';
 import RequestReviewModal from './RequestReviewModal';
-import { typeMeta, statusMeta } from '@/lib/constants/requests.constant';
+import { typeMeta, statusMeta, REQUEST_TYPES, REQUEST_STATUSES } from '@/lib/constants/requests.constant';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRequestsManager } from '../hooks/useRequestsManager';
 
 interface Props { isAdmin: boolean; currentUserId: number | null }
-
-const TYPES: RequestType[] = ['EDIT', 'CLASSIFY', 'REPORT'];
-const STATUSES: RequestStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
 
 export default function RequestsManager({ isAdmin, currentUserId }: Props) {
   const queryClient = useQueryClient();
@@ -40,25 +37,29 @@ export default function RequestsManager({ isAdmin, currentUserId }: Props) {
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">
-      <div className="flex flex-wrap gap-2 items-center">
-        {TYPES.map(t => {
-          const tm = typeMeta(t);
-          const TIcon = tm.icon;
-          return (
-            <button key={t} onClick={() => toggleType(t)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold ${types.includes(t) ? `${tm.badge} border-transparent` : `border-outline-variant/30 ${tm.text}`}`}>
-              <TIcon className="w-3.5 h-3.5" />{tm.short}
-            </button>
-          );
-        })}
-        <span className="mx-2 text-outline">|</span>
-        {STATUSES.map(s => {
-          const sm = statusMeta(s);
-          return (
-            <button key={s} onClick={() => toggleStatus(s)}
-              className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${statuses.includes(s) ? `${sm.badge} border-transparent` : 'border-outline-variant/30'}`}>{sm.label}</button>
-          );
-        })}
+      <div className="flex flex-wrap gap-4 items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="flex flex-wrap gap-2 items-center">
+          {REQUEST_TYPES.map(t => {
+            const tm = typeMeta(t);
+            const TIcon = tm.icon;
+            return (
+              <button key={t} onClick={() => toggleType(t)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all duration-150 cursor-pointer ${types.includes(t) ? `${tm.badge} border-transparent` : `border-slate-200 hover:border-primary/30 ${tm.text}`}`}>
+                <TIcon className="w-3.5 h-3.5" />{tm.short}
+              </button>
+            );
+          })}
+        </div>
+        <span className="hidden md:inline h-4 w-px bg-slate-200" />
+        <div className="flex flex-wrap gap-2 items-center">
+          {REQUEST_STATUSES.map(s => {
+            const sm = statusMeta(s);
+            return (
+              <button key={s} onClick={() => toggleStatus(s)}
+                className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all duration-150 cursor-pointer ${statuses.includes(s) ? `${sm.badge} border-transparent` : 'border-slate-200 hover:border-slate-350 bg-slate-50/50'}`}>{sm.label}</button>
+            );
+          })}
+        </div>
       </div>
 
       <RequestList

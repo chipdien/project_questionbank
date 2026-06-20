@@ -11,6 +11,7 @@ import rehypeRaw from 'rehype-raw';
 
 import { useQuestionLibrary } from '../hooks/useQuestionLibrary';
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
+import AppBadge from '@/lib/components/ui/AppBadge';
 
 interface QuestionLibraryProps {
   onSelect?: (question: any) => void;
@@ -114,13 +115,7 @@ export default function QuestionLibrary({ onSelect, onSelectMany }: QuestionLibr
                       )}
                     </div>
 
-                    {q.question_difficulty && (
-                      <span className={`text-[9px] font-bold uppercase ${q.question_difficulty === 'Khó' ? 'text-error' :
-                        q.question_difficulty === 'Trung Bình' ? 'text-warning' : 'text-success'
-                        }`}>
-                        {q.question_difficulty}
-                      </span>
-                    )}
+                    <AppBadge difficultyName={q.question_difficulty} />
                     <span className="text-[9px] font-bold uppercase text-slate-500 bg-slate-100 px-1 py-0.5 rounded">
                       đã dùng {q.export_count || 0}
                     </span>

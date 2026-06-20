@@ -37,21 +37,50 @@ jobs:
             cd /www/wwwroot/qb.vietelite.edu.vn
 
             # 3. ÉP BUỘC XÓA BỎ THAY ĐỔI LOCAL ĐỂ ĐÓN CODE MỚI
-            # Lệnh này sẽ đưa các file .env.example, package.json về trạng thái sạch của commit cũ
             git reset --hard HEAD
+            
+            # Ghi nhớ hash commit trước khi pull để check thay đổi
+            PREV_COMMIT=$(git rev-parse HEAD)
             
             # 4. Kéo mã nguồn mới nhất
             git pull origin main
 
             # 5. ÉP QUYỀN TOÀN BỘ SANG USER WWW TRƯỚC KHI BUILD/INSTALL
-            # Bước này cực kỳ quan trọng để tránh tạo ra file thuộc quyền root
             chown -R www:www /www/wwwroot/qb.vietelite.edu.vn
 
-            # 6. Cài đặt dependencies bằng user www và đúng Node của aaPanel
-            sudo -u www /www/server/nodejs/v24.16.0/bin/npm install
+            # Xác định đường dẫn npm, npx, pm2 chính xác trên VPS aaPanel
+            NPM_BIN="/www/server/nodejs/v24.16.0/bin/npm"
+            NPX_BIN="/www/server/nodejs/v24.16.0/bin/npx"
+            PM2_BIN="/www/server/nodejs/v24.16.0/bin/pm2"
 
-            # 7. Build dự án Next.js bằng user www
-            sudo -u www /www/server/nodejs/v24.16.0/bin/npm run build
+            # 6. Kiểm tra xem package.json hoặc package-lock.json có thay đổi không
+            if git diff --name-only $PREV_COMMIT HEAD | grep -q 'package.*\.json'; then
+              echo "==> Phát hiện thay đổi trong dependencies. Đang cài đặt thư viện..."
+              sudo -u www $NPM_BIN ci || sudo -u www $NPM_BIN install
+            else
+              echo "==> Không có thay đổi về dependencies. Bỏ qua npm install để tăng tốc."
+            fi
 
-            # 8. Khởi động lại PM2 của aaPanel (User www)
-            sudo -u www /www/server/nodejs/v24.16.0/bin/pm2 reload vietelite-questionbank || sudo -u www /www/server/nodejs/v24.16.0/bin/pm2 start npm --name "vietelite-questionbank" -- run start -- -p 5002
+            # 7. Tự động cập nhật Database schema nếu có thay đổi trong prisma/schema.prisma
+            if git diff --name-only $PREV_COMMIT HEAD | grep -q 'prisma/.*\.prisma'; then
+              echo "==> Phát hiện thay đổi schema database. Đang sinh Prisma Client..."
+              sudo -u www $NPX_BIN prisma generate
+            else
+              # Đảm bảo Client luôn khớp trong môi trường Production
+              sudo -u www $NPX_BIN prisma generate
+            fi
+
+            # Chạy migration áp dụng các thay đổi database lên Production (thêm cột, bảng mới an toàn)
+            if [ -d "prisma/migrations" ]; then
+              echo "==> Đang kiểm tra và áp dụng database migrations mới..."
+              sudo -u www $NPX_BIN prisma migrate deploy
+            fi
+
+            # 8. Build dự án Next.js bằng user www
+            echo "==> Đang build dự án Next.js..."
+            sudo -u www $NPM_BIN run build
+
+            # 9. Khởi động lại PM2 của aaPanel (User www)
+            echo "==> Đang khởi động lại dịch vụ..."
+            sudo -u www $PM2_BIN reload vietelite-questionbank || sudo -u www $PM2_BIN start npm --name "vietelite-questionbank" -- run start -- -p 5002
+            echo "==> Deploy hoàn thành thành công!"

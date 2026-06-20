@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Database, FileText, LibraryBig, BookOpen, Clock, ArrowRight, CheckCircle2, AlertCircle, HelpCircle, Flame, GraduationCap, Gauge } from 'lucide-react';
+import AppBadge from '@/lib/components/ui/AppBadge';
 import Link from 'next/link';
 
 interface DocumentItem {
@@ -60,23 +61,7 @@ export default function DashboardContainer({
   const maxDiffCount = Math.max(...difficultiesData.map((d) => d.count), 1);
   const maxTypeCount = Math.max(...typesData.map((t) => t.count), 1);
 
-  // Difficulty color mapping
-  const getDifficultyBadge = (label: string) => {
-    switch (label) {
-      case 'Dễ':
-      case 'Cơ bản':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'Trung bình':
-        return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'Khó':
-      case 'Nâng cao':
-        return 'bg-rose-50 text-rose-700 border-rose-200';
-      case 'Chuyên sâu':
-        return 'bg-violet-50 text-violet-700 border-violet-200';
-      default:
-        return 'bg-slate-50 text-slate-700 border-slate-200';
-    }
-  };
+
 
   const getDifficultyColor = (label: string) => {
     switch (label) {
@@ -128,7 +113,7 @@ export default function DashboardContainer({
   ];
 
   return (
-    <div className="h-[calc(100vh-64px)] w-full overflow-hidden flex flex-col p-4 md:p-6 gap-4 bg-linear-to-br from-primary/5 to-white/50">
+    <div className="h-[calc(100vh-64px)] w-full overflow-hidden flex flex-col p-4 md:p-6 gap-4 bg-slate-50">
       {/* KPI Cards row (Super Compact) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
         {kpis.map((kpi, idx) => (
@@ -267,9 +252,7 @@ export default function DashboardContainer({
                           {q.question_type}
                         </td>
                         <td className="px-3 py-2.5 text-center">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] border font-medium ${getDifficultyBadge(q.question_difficulty)}`}>
-                            {q.question_difficulty}
-                          </span>
+                          <AppBadge difficultyName={q.question_difficulty} />
                         </td>
                         <td className="px-3 py-2.5 text-right font-semibold text-primary font-body">
                           {q.export_count}

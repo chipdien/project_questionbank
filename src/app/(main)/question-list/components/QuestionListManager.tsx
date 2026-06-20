@@ -24,6 +24,7 @@ export default function QuestionListManager({ difficulties, tagsByCategory, isAd
   const {
     grades,
     questionTypes,
+    difficulties: selectedDifficulties,
     topicIds,
     tagIds,
     keyword,
@@ -46,6 +47,8 @@ export default function QuestionListManager({ difficulties, tagsByCategory, isAd
       <QuestionListFilterHeader
         grades={grades}
         questionTypes={questionTypes}
+        difficulties={selectedDifficulties}
+        difficultiesList={difficulties}
         topicIds={topicIds}
         tagIds={tagIds}
         keyword={keyword}
@@ -53,6 +56,7 @@ export default function QuestionListManager({ difficulties, tagsByCategory, isAd
         tagsByCategory={tagsByCategory}
         onChange={onFilterChange}
         onReset={onReset}
+        isLoading={isLoading}
       />
       <QuestionListTable
         questions={questions}

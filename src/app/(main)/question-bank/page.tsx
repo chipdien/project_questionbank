@@ -36,7 +36,7 @@ export default async function QuestionBankPage() {
   }));
 
   return (
-    <div className="p-6 h-full flex flex-col overflow-hidden pb-4">
+    <div className="p-6 h-full flex flex-col overflow-hidden pb-4 bg-slate-50">
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-on-surface font-headline">Ngân hàng câu hỏi</h1>
       </div>

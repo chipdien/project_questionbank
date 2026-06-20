@@ -49,7 +49,7 @@ export default function TopicsPage() {
   } = useTopicsPage();
 
   return (
-    <div className="flex flex-col gap-6 p-6 h-[calc(100vh-80px)] overflow-hidden">
+    <div className="flex flex-col gap-6 p-6 h-[calc(100vh-80px)] overflow-hidden bg-slate-50">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
           <h1 className="text-2xl font-bold text-on-surface font-title">Quản lý Chủ đề Học thuật</h1>
