@@ -48,7 +48,7 @@ export default function AddToCollectionModal({ selectedIds, onClose, onSuccess }
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-md bg-surface-container-lowest rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[85vh]"
+          className="relative w-full max-w-4xl bg-surface-container-lowest rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[70vh]"
         >
           {isSuccess ? (
             <div className="p-8 flex flex-col items-center text-center">

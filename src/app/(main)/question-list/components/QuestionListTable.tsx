@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 import QuestionDetailModal from './QuestionDetailModal';
 import AppBadge from '@/lib/components/ui/AppBadge';
+import Loading from '@/lib/components/ui/Loading';
+import { getTagBadgeClass, QUESTION_TYPE_LABELS } from '@/lib/constants/classification.constant';
 import { getQuestionDisplayContent, cleanMathpixData } from '@/lib/utils/math.utils';
 
 interface Difficulty { id: number; name: string; color_code: string; display_order: number }
@@ -21,14 +23,6 @@ interface Props {
   currentUserId: number | null;
   tagsByCategory: Record<string, { id: number; name: string; category: string }[]>;
 }
-
-const TYPE_LABELS: Record<string, string> = {
-  single_choice: 'TN 1 đáp án',
-  multiple_choice: 'TN nhiều đáp án',
-  true_false: 'Đúng/Sai',
-  fill_in: 'Điền khuyết',
-  essay: 'Tự luận',
-};
 
 function snippet(q: any): string {
   const display = getQuestionDisplayContent(q.statement, q.content);
@@ -55,11 +49,18 @@ export default function QuestionListTable({
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex-1 overflow-auto rounded-2xl border border-outline-variant/20">
+    <div className="flex flex-col flex-1 min-h-0 relative">
+      {/* Centered Loading overlay for the whole table container */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-2xs z-30 flex items-center justify-center rounded-2xl">
+          <Loading text="Đang tải danh sách câu hỏi..." size="md" />
+        </div>
+      )}
+
+      <div className="flex-1 overflow-auto rounded-2xl border border-outline-variant/20 bg-white">
         <table className="w-full text-sm border-collapse">
-          <thead className="sticky top-0 bg-surface-container-low z-10">
-            <tr className="text-left text-xs uppercase tracking-wider text-outline">
+          <thead className="sticky top-0 bg-slate-100/90 backdrop-blur-xs z-10">
+            <tr className="text-left text-xs uppercase tracking-wider text-slate-500">
               <th className="px-3 py-3 font-extrabold">ID</th>
               <th className="px-3 py-3 font-extrabold min-w-[280px]">Nội dung</th>
               <th className="px-3 py-3 font-extrabold">Khối</th>
@@ -74,15 +75,13 @@ export default function QuestionListTable({
             </tr>
           </thead>
           <tbody>
-            {isLoading ? (
-              <tr><td colSpan={11} className="px-3 py-10 text-center text-on-surface-variant">Đang tải...</td></tr>
-            ) : questions.map((q) => (
-              <tr key={q.id} onClick={() => setSelected(q)} className="border-t border-outline-variant/10 hover:bg-surface-container-low/40 align-top cursor-pointer">
+            {questions.map((q) => (
+              <tr key={q.id} onClick={() => setSelected(q)} className="border-t border-slate-100 hover:bg-slate-50/80 transition-colors duration-150 align-top cursor-pointer bg-white">
                 <td className="px-3 py-3 font-mono text-xs text-outline">{q.code || q.id}</td>
                 <td className="px-3 py-3 text-on-surface max-w-[400px]">{snippet(q)}</td>
                 <td className="px-3 py-3 whitespace-nowrap">{q.grade ? `Lớp ${q.grade}` : '—'}</td>
                 <td className="px-3 py-3"><AppBadge difficultyName={q.question_difficulty} difficulties={difficulties as any} /></td>
-                <td className="px-3 py-3 whitespace-nowrap text-xs">{TYPE_LABELS[q.question_type] || q.question_type || '—'}</td>
+                <td className="px-3 py-3 whitespace-nowrap text-xs">{QUESTION_TYPE_LABELS[q.question_type] || q.question_type || '—'}</td>
                 <td className="px-3 py-3">
                   <div className="flex flex-wrap gap-1 max-w-[180px]">
                     {(q.topics || []).slice(0, 3).map((t: any) => (
@@ -95,7 +94,7 @@ export default function QuestionListTable({
                 <td className="px-3 py-3">
                   <div className="flex flex-wrap gap-1 max-w-[180px]">
                     {(q.tags || []).slice(0, 3).map((t: any) => (
-                      <span key={t.id} className="px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container text-[10px] font-bold">#{t.name}</span>
+                      <span key={t.id} className={`px-1.5 py-0.5 rounded border text-[10px] font-bold ${getTagBadgeClass(t.category)}`}>#{t.name}</span>
                     ))}
                     {(q.tags || []).length > 3 && <span className="text-[10px] text-outline">+{q.tags.length - 3}</span>}
                     {(q.tags || []).length === 0 && <span className="text-[10px] text-outline">—</span>}

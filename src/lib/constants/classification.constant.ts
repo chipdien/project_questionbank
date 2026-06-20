@@ -2,6 +2,14 @@ export const GRADES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', 
 
 export const TAG_CATEGORIES = ['SOURCE', 'METHOD', 'SKILL', 'TYPE', 'EXAM', 'YEAR'];
 
+export const QUESTION_TYPE_LABELS: Record<string, string> = {
+  single_choice: 'Trắc nghiệm 1 đáp án',
+  multiple_choice: 'Trắc nghiệm nhiều đáp án',
+  true_false: 'Đúng / Sai',
+  fill_in: 'Điền khuyết',
+  essay: 'Tự luận',
+};
+
 export const getTagColorClass = (category: string, isSelected: boolean): string => {
   const cat = category.toUpperCase();
   if (isSelected) {
