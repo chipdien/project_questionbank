@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, ArrowRightLeft, Search } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { Topic } from '@/app/(main)/topics/queries/useTopicsQuery';
 import { useBulkMoveTopicsMutation } from '@/app/(main)/topics/queries/useTopicMutation';
 

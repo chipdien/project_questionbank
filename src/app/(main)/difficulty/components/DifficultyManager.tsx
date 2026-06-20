@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit3, Check, AlertTriangle, Loader2, Palette, ArrowUpDown } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { Difficulty } from '@/lib/actions/difficulty.action';
 import { useDifficultiesQuery } from '../queries/useDifficultiesQuery';
 import {
@@ -189,8 +189,8 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
                   <div
                     key={diff.id}
                     className={`flex items-center justify-between p-4 bg-surface-container-low border rounded-2xl transition-all group ${isSelected
-                        ? 'border-primary shadow-sm bg-primary/5'
-                        : 'border-outline-variant/20 hover:border-primary/30'
+                      ? 'border-primary shadow-sm bg-primary/5'
+                      : 'border-outline-variant/20 hover:border-primary/30'
                       }`}
                   >
                     <div className="flex items-center gap-4">
@@ -213,8 +213,8 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
                           setMode('edit');
                         }}
                         className={`p-2 rounded-xl transition-colors ${isSelected && mode === 'edit'
-                            ? 'text-primary bg-primary/10'
-                            : 'text-on-surface-variant hover:text-primary hover:bg-primary/10'
+                          ? 'text-primary bg-primary/10'
+                          : 'text-on-surface-variant hover:text-primary hover:bg-primary/10'
                           }`}
                         title="Sửa"
                       >
@@ -227,8 +227,8 @@ export default function DifficultyManager({ initialDifficulties }: DifficultyMan
                             setMode('delete');
                           }}
                           className={`p-2 rounded-xl transition-colors ${isSelected && mode === 'delete'
-                              ? 'text-error bg-error/10'
-                              : 'text-on-surface-variant hover:text-error hover:bg-error/10'
+                            ? 'text-error bg-error/10'
+                            : 'text-on-surface-variant hover:text-error hover:bg-error/10'
                             }`}
                           title="Xóa"
                         >

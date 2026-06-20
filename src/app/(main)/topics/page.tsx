@@ -8,6 +8,7 @@ import TopicDetailsPanel from '@/lib/components/ui/topic-details-panel';
 import TopicDeleteTransferModal from '@/lib/components/ui/topic-delete-transfer-modal';
 import TopicBulkMoveModal from '@/lib/components/ui/topic-bulk-move-modal';
 import { useTopicsPage } from './hooks/useTopicsPage';
+import Loading from '@/lib/components/ui/Loading';
 
 export default function TopicsPage() {
   const {
@@ -48,7 +49,7 @@ export default function TopicsPage() {
   } = useTopicsPage();
 
   return (
-    <div className="flex flex-col gap-6 p-6 h-[calc(100vh-80px)] overflow-hidden">
+    <div className="flex flex-col gap-6 p-6 h-[calc(100vh-80px)] overflow-hidden bg-slate-50">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
           <h1 className="text-2xl font-bold text-on-surface font-title">Quản lý Chủ đề Học thuật</h1>
@@ -120,10 +121,7 @@ export default function TopicsPage() {
 
           <div className="flex-1 overflow-y-auto pr-1 min-h-0 space-y-1">
             {loading ? (
-              <div className="flex flex-col items-center justify-center h-48 gap-2 text-on-surface-variant/60">
-                <RefreshCw className="w-6 h-6 animate-spin text-primary" />
-                <span className="text-sm font-medium">Đang tải cây chủ đề...</span>
-              </div>
+              <Loading size="md" text="Đang tải cây chủ đề..." />
             ) : rootTopics.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-48 text-center text-on-surface-variant/60">
                 <FolderPlus className="w-8 h-8 text-outline mb-2" />

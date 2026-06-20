@@ -73,7 +73,20 @@ export async function getRecentDocuments(limit: number = 8) {
       take: limit,
     });
 
-    return serializeBigInt(docs);
+    const createdByIds = Array.from(new Set(docs.map(d => d.created_by_id ? Number(d.created_by_id) : null).filter((id): id is number => id !== null)));
+    const users = await prisma.lms_users.findMany({
+      where: { id: { in: createdByIds } },
+      select: { id: true, username: true, nickname: true, email: true }
+    });
+
+    const userMap = new Map(users.map(u => [u.id, u]));
+
+    const serializedDocs = serializeBigInt(docs).map((d: any) => ({
+      ...d,
+      owner: d.created_by_id ? userMap.get(Number(d.created_by_id)) || null : null
+    }));
+
+    return serializedDocs;
   } catch (error) {
     console.error('Error in getRecentDocuments:', error);
     return [];
@@ -109,7 +122,31 @@ export async function getDocumentById(docId: number) {
       return { success: false, error: 'Bạn không có quyền xem tài liệu này.' };
     }
 
-    return { success: true, data: serializeBigInt(doc) };
+    const serializedDoc = serializeBigInt(doc);
+
+    // Fetch owner details
+    let ownerInfo = null;
+    if (doc.created_by_id) {
+      const owner = await prisma.lms_users.findFirst({
+        where: { id: Number(doc.created_by_id) },
+      });
+      if (owner) {
+        ownerInfo = {
+          id: owner.id,
+          username: owner.username,
+          nickname: owner.nickname,
+          email: owner.email,
+        };
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        ...serializedDoc,
+        owner: ownerInfo,
+      },
+    };
   } catch (error: any) {
     console.error('Error in getDocumentById:', error);
     return { success: false, error: error.message };

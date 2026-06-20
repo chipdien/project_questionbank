@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, use } from 'react';
 import { ArrowLeft, ArrowRightLeft, Edit, Save, X, Search, ChevronRight, CheckSquare, Square, RefreshCw, Eye } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -14,6 +14,7 @@ import { getTopicsAction, fetchTopicQuestionsAction, bulkMoveQuestionsAction } f
 import { Topic } from '@/app/(main)/topics/queries/useTopicsQuery';
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
+import AppBadge from '@/lib/components/ui/AppBadge';
 
 // Shared img renderer: skip images with empty src to prevent React warning
 const markdownComponents = {
@@ -123,14 +124,14 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
       if (!res.success) {
         throw new Error(res.error || 'Di chuyển thất bại.');
       }
-      toast.success('Di chuyển câu hỏi thành công', { id: toastId });
+      toast.update(toastId, { render: 'Di chuyển câu hỏi thành công', type: 'success', isLoading: false, autoClose: 3000 });
       setSelectedIds(new Set());
       setBulkMoveOpen(false);
       setTargetTopicId('');
       setTargetSearch('');
       await loadData();
     } catch (err: any) {
-      toast.error('Di chuyển thất bại: ' + err.message, { id: toastId });
+      toast.update(toastId, { render: 'Di chuyển thất bại: ' + err.message, type: 'error', isLoading: false, autoClose: 3000 });
     } finally {
       setIsMoving(false);
     }
@@ -293,9 +294,7 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
                         <span className="px-2 py-0.5 rounded bg-outline-variant/20 text-on-surface-variant text-[10px] font-bold">
                           Khối {q.grade}
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-warning/10 text-warning text-[10px] font-bold">
-                          {q.question_difficulty}
-                        </span>
+                        <AppBadge difficultyName={q.question_difficulty} />
                       </div>
 
                       {/* Statement text render */}

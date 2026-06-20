@@ -9,15 +9,15 @@
   --font-body: var(--font-inter), sans-serif;
   --font-label: var(--font-inter), sans-serif;
 
-  --color-primary: #048d3b;
+  --color-primary: #348E38;
   --color-on-primary: #ffffff;
-  --color-primary-container: #005322;
-  --color-on-primary-container: #bdffc0;
+  --color-primary-container: #e8f5e9;
+  --color-on-primary-container: #1b5e20;
 
-  --color-secondary: #4f6352;
-  --color-on-secondary: #ffffff;
-  --color-secondary-container: #cce8d1;
-  --color-on-secondary-container: #00210a;
+  --color-secondary: #FFFF00;
+  --color-on-secondary: #191d19;
+  --color-secondary-container: #fffde7;
+  --color-on-secondary-container: #2b2600;
 
   --color-tertiary: #4f6354;
   --color-on-tertiary: #ffffff;
@@ -242,4 +242,79 @@
   margin-bottom: 0.2em;
   display: block !important;
   /* Đảm bảo p luôn là block để chứa được katex-display */
+}
+
+/* --- VDITOR PREMIUM CUSTOMIZATION --- */
+.vditor {
+  border: 1px solid var(--color-outline-variant) !important;
+  border-radius: 0.75rem !important;
+  background-color: #ffffff !important;
+  overflow: visible !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.vditor:focus-within {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px var(--color-primary-container) !important;
+}
+
+.vditor-toolbar {
+  background-color: var(--color-surface-container) !important;
+  border-bottom: 1px solid var(--color-outline-variant) !important;
+  border-top-left-radius: 0.75rem !important;
+  border-top-right-radius: 0.75rem !important;
+  padding: 6px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  overflow: visible !important;
+  flex-wrap: wrap !important;
+}
+
+.vditor-toolbar__item {
+  color: var(--color-on-surface-variant) !important;
+  border-radius: 0.375rem !important;
+  transition: all 0.2s ease !important;
+  overflow: visible !important;
+}
+
+.vditor-toolbar__item:hover {
+  color: var(--color-primary) !important;
+  background-color: var(--color-primary-container) !important;
+}
+
+.vditor-toolbar__item--active {
+  color: var(--color-primary) !important;
+  background-color: var(--color-primary-container) !important;
+}
+
+.vditor-content {
+  background-color: #ffffff !important;
+  border-bottom-left-radius: 0.75rem !important;
+  border-bottom-right-radius: 0.75rem !important;
+}
+
+.vditor-reset {
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  color: var(--color-on-background) !important;
+  text-align: left !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 10px 12px !important;
+  border-bottom-left-radius: 0.75rem !important;
+  border-bottom-right-radius: 0.75rem !important;
+}
+
+.vditor-sv,
+.vditor-ir,
+.vditor-wysiwyg {
+  padding: 0 !important;
+  text-align: left !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  border-bottom-left-radius: 0.75rem !important;
+  border-bottom-right-radius: 0.75rem !important;
 }

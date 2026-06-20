@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import AppSelect from '@/lib/components/ui/AppSelect';
 import TopicTreeSelect from '@/lib/components/ui/topic-tree-select';
 import VditorEditor from '@/lib/components/ui/VditorEditor';

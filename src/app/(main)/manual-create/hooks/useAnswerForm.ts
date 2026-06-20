@@ -2,18 +2,7 @@
 
 import { useEffect, useCallback } from 'react';
 
-export interface Option {
-  content: string;
-  order: number;
-  weight: number;
-}
-
-export interface UseAnswerFormProps {
-  questionType: string;
-  statement: string;
-  options: Option[];
-  setOptions: React.Dispatch<React.SetStateAction<Option[]>>;
-}
+import { UseAnswerFormProps } from '@/lib/types/manual-question.type';
 
 export function useAnswerForm({
   questionType,

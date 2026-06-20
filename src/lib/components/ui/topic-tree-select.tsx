@@ -305,8 +305,8 @@ export default function TopicTreeSelect({
       {/* ── Trigger ── */}
       <div
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
-        className={`min-h-[42px] w-full flex items-center justify-between gap-2 border rounded-xl px-3 py-1.5 cursor-pointer bg-surface transition-all duration-200 ${disabled
-          ? 'opacity-50 cursor-not-allowed bg-surface-container-low'
+        className={`min-h-[42px] w-full flex items-center justify-between gap-2 border rounded-xl px-3 py-1.5 cursor-pointer bg-white transition-all duration-200 ${disabled
+          ? 'opacity-50 cursor-not-allowed bg-white'
           : 'hover:border-primary/50'
           } ${isOpen ? 'border-primary ring-2 ring-primary/10 shadow-sm' : 'border-outline-variant'}`}
       >
@@ -374,7 +374,7 @@ export default function TopicTreeSelect({
 
       {/* ── Dropdown Popover ── */}
       {isOpen && (
-        <div className="absolute left-0 right-0 mt-2 bg-surface border border-outline-variant/40 rounded-2xl shadow-2xl z-100 flex flex-col overflow-hidden min-w-[500px]">
+        <div className="absolute left-0 right-0 mt-2 bg-white border border-outline-variant/40 rounded-2xl shadow-2xl z-100 flex flex-col overflow-hidden min-w-[500px]">
           {/* Ô tìm kiếm */}
           <div className="p-3 border-b border-outline-variant/20 shrink-0">
             <div className="relative">

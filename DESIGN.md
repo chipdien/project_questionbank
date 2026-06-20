@@ -9,14 +9,14 @@ Tài liệu này tóm tắt hệ thống thiết kế giao diện (Design System
 Hệ màu của hệ thống tuân theo bảng màu được định nghĩa trong `@theme` tại [globals.css](file:///Volumes/DATA/workspace/vietelite_questionbank/src/app/globals.css):
 
 ### 1. Hệ màu chính (Brand & Primary Colors)
-* **Primary (Màu chủ đạo):** `#048d3b` (Xanh lá VietElite)
+* **Primary (Màu chủ đạo):** `#348E38` (Xanh lá VietElite)
   * `on-primary`: `#ffffff` (Chữ trên nền primary)
-  * `primary-container`: `#005322`
-  * `on-primary-container`: `#bdffc0`
-* **Secondary (Màu phụ):** `#4f6352`
-  * `on-secondary`: `#ffffff`
-  * `secondary-container`: `#cce8d1`
-  * `on-secondary-container`: `#00210a`
+  * `primary-container`: `#e8f5e9`
+  * `on-primary-container`: `#1b5e20`
+* **Secondary (Màu phụ/Nhấn):** `#FFFF00` (Vàng)
+  * `on-secondary`: `#191d19`
+  * `secondary-container`: `#fffde7`
+  * `on-secondary-container`: `#2b2600`
 * **Tertiary:** `#4f6354`
   * `on-tertiary`: `#ffffff`
   * `tertiary-container`: `#dce5dd`

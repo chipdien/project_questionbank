@@ -27,6 +27,7 @@ export default async function DashboardPage() {
       gradesData={data.gradesData}
       difficultiesData={data.difficultiesData}
       typesData={data.typesData}
+      topQuestions={data.topQuestions}
     />
   );
 }

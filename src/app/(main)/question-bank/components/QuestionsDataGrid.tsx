@@ -1,21 +1,21 @@
 'use client';
 
-import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
-import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 
-import QuestionModal from '@/app/(main)/question-bank/components/QuestionModal';
 import AddToCollectionModal from '@/app/(main)/collection/components/AddToCollectionModal';
+import QuestionModal from '@/app/(main)/question-bank/components/QuestionModal';
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 
-import { Question, Pagination } from '@/lib/types';
 import { Difficulty } from '@/lib/actions/difficulty.action';
 import AppBadge from '@/lib/components/ui/AppBadge';
-import AppCheckbox from '@/lib/components/ui/AppCheckbox';
 import AppButton from '@/lib/components/ui/AppButton';
+import AppCheckbox from '@/lib/components/ui/AppCheckbox';
+import AppTag from '@/lib/components/ui/AppTag';
+import { Pagination, Question } from '@/lib/types';
 import { useQuestionsDataGrid } from '../hooks/useQuestionsDataGrid';
 
 interface QuestionsDataGridProps {
@@ -68,9 +68,9 @@ export default function QuestionsDataGrid({
   } = actions;
 
   return (
-    <>
+    <div className="flex flex-col flex-1 min-h-0 w-full">
       {showSelection && (
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 shrink-0">
           <h2 className="text-lg font-bold text-on-surface font-headline">Câu hỏi trong tệp</h2>
           <AppButton
             onClick={() => setIsCollectionModalOpen(true)}
@@ -81,10 +81,10 @@ export default function QuestionsDataGrid({
           </AppButton>
         </div>
       )}
-      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden mb-4">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-3xl border border-outline-variant/20 shadow-sm overflow-hidden flex flex-col flex-1 min-h-0 mb-4">
+        <div className="flex-1 overflow-y-auto overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-collapse min-w-[800px]">
-            <thead className="bg-surface-container-low text-[11px] font-bold text-outline uppercase tracking-wider">
+            <thead className="bg-slate-100/90 border-b border-outline-variant/15 text-xs font-extrabold text-slate-500 uppercase tracking-wider sticky top-0 z-10">
               <tr>
                 {showSelection && (
                   <th className="px-6 py-4 w-4">
@@ -94,113 +94,131 @@ export default function QuestionsDataGrid({
                     />
                   </th>
                 )}
-                <th className="px-6 py-4">STT</th>
-                <th className="px-6 py-4">Nội dung</th>
-                <th className="px-6 py-4">Chủ đề</th>
-                <th className="px-6 py-4">Lớp</th>
-                <th className="px-6 py-4">Độ khó</th>
-                <th className="px-6 py-4">Ngày tạo</th>
+                <th className="px-6 py-4 w-20 text-center">ID</th>
+                <th className="px-6 py-4">Nội dung câu hỏi</th>
+                <th className="px-6 py-4 w-32">Độ khó</th>
+                <th className="px-6 py-4 w-44">Chủ đề</th>
+                <th className="px-6 py-4 w-44">Thẻ</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-outline-variant/10">
-              {questions.map((q, index) => (
-                <tr
-                  key={q.id}
-                  onClick={() => setSelectedQuestion(q)}
-                  className="hover:bg-slate-50 transition-colors group cursor-pointer"
-                >
-                  {showSelection && (
-                    <td className="px-6 py-4 w-4">
-                      <AppCheckbox
-                        checked={selectedIds.has(q.id)}
-                        onChange={() => toggleId(q.id)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </td>
-                  )}
-                  <td className="px-6 py-4 text-sm font-medium text-primary">
-                    {(currentPage - 1) * pagination.pageSize + index + 1}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-semibold text-on-surface">
-                    <div className="line-clamp-2 prose prose-slate prose-sm max-w-none text-sm [&_p]:my-0 [&_img]:hidden">
-                      <ReactMarkdown
-                        key={q.statement}
-                        remarkPlugins={[remarkMath, remarkGfm]}
-                        rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                      >
-                        {cleanMathpixData(getQuestionDisplayContent(q.statement, q.content))}
-                      </ReactMarkdown>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-on-surface-variant max-w-[200px]">
-                    {q.topics && q.topics.length > 0 ? (
-                      <div className="flex flex-wrap gap-1 max-w-full">
-                        {q.topics.map((t) => (
-                          <span
-                            key={t.topic_id}
-                            className="inline-block bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded truncate max-w-[150px]"
-                            title={t.topic?.title || ''}
+            <tbody className="divide-y divide-outline-variant/10 bg-white">
+              {questions.length > 0 ? (
+                questions.map((question) => {
+                  const displayText = getQuestionDisplayContent(question.statement, question.content);
+                  const cleanedText = cleanMathpixData(displayText);
+
+                  return (
+                    <tr
+                      key={question.id}
+                      onClick={() => setSelectedQuestion(question)}
+                      className="hover:bg-slate-50/80 cursor-pointer transition-colors"
+                    >
+                      {showSelection && (
+                        <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                          <AppCheckbox
+                            checked={selectedIds.has(question.id)}
+                            onChange={() => toggleId(question.id)}
+                          />
+                        </td>
+                      )}
+                      <td className="px-6 py-4 text-center font-bold text-slate-500 text-sm">
+                        #{question.id}
+                      </td>
+                      <td className="px-6 py-4 max-w-md">
+                        <div className="text-sm font-semibold text-on-surface line-clamp-2 leading-relaxed">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkMath, remarkGfm]}
+                            rehypePlugins={[rehypeKatex, rehypeRaw]}
                           >
-                            {t.topic?.title || ''}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="truncate" title={q.lesson_name}>
-                        {q.lesson_name || '---'}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-on-surface-variant">
-                    {q.grade ? `Lớp ${q.grade}` : '---'}
-                  </td>
-                  <td className="px-6 py-4">
-                    <AppBadge difficultyName={q.question_difficulty} difficulties={difficulties} />
-                  </td>
-                  <td className="px-6 py-4 text-sm text-outline" suppressHydrationWarning>
-                    {new Date(q.created_at || Date.now()).toLocaleDateString('vi-VN', { month: 'short', day: '2-digit', year: 'numeric' })}
-                  </td>
-                </tr>
-              ))}
-              {questions.length === 0 && (
+                            {cleanedText}
+                          </ReactMarkdown>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <AppBadge difficultyName={question.question_difficulty} difficulties={difficulties} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {question.topics && question.topics.length > 0 ? (
+                            question.topics.slice(0, 2).map((topic) => (
+                              <span
+                                key={topic.topic_id}
+                                className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200"
+                              >
+                                {topic.topic?.title}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-xs text-outline font-medium">-</span>
+                          )}
+                          {question.topics && question.topics.length > 2 && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-50 text-slate-400 border border-slate-200">
+                              +{question.topics.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1.5 max-w-[200px]">
+                          {question.tags && question.tags.length > 0 ? (
+                            question.tags.slice(0, 2).map((tag) => (
+                              <AppTag
+                                key={tag.id}
+                                tag={tag}
+                              />
+                            ))
+                          ) : (
+                            <span className="text-xs text-outline font-medium">-</span>
+                          )}
+                          {question.tags && question.tags.length > 2 && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-50 text-slate-400 border border-slate-200">
+                              +{question.tags.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
                 <tr>
-                  <td colSpan={showSelection ? 7 : 6} className="px-6 py-10 text-center text-on-surface-variant">
-                    Không có câu hỏi nào trong tài liệu này.
+                  <td colSpan={showSelection ? 8 : 7} className="text-center py-12 text-sm text-outline font-medium">
+                    Không tìm thấy câu hỏi nào
                   </td>
                 </tr>
               )}
             </tbody>
+            {totalPages > 1 && (
+              <tfoot className="bg-slate-50 border-t border-slate-100 sticky bottom-0 z-10">
+                <tr>
+                  <td colSpan={showSelection ? 8 : 7} className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-on-surface-variant font-semibold">
+                        Hiển thị&nbsp;<strong className="text-on-surface">{startIdx}-{endIdx}</strong>&nbsp;trong tổng số&nbsp;<strong className="text-on-surface">{totalItems}</strong>&nbsp;câu hỏi
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handlePageChange(currentPage - 1); }}
+                          disabled={currentPage <= 1}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-bold disabled:opacity-40 hover:border-primary/40 bg-white"
+                        >
+                          <span className="material-symbols-outlined text-base leading-none">chevron_left</span> Trước
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handlePageChange(currentPage + 1); }}
+                          disabled={currentPage >= totalPages}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-outline-variant/30 text-xs font-bold disabled:opacity-40 hover:border-primary/40 bg-white"
+                        >
+                          Sau <span className="material-symbols-outlined text-base leading-none">chevron_right</span>
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 border-outline-variant/10">
-        <div className="text-sm text-on-surface-variant font-medium">
-          Hiển thị&nbsp;<span className="font-bold text-on-surface">{startIdx}-{endIdx}</span>&nbsp;trong tổng số&nbsp;<span className="font-bold text-on-surface">{totalItems}</span>&nbsp;câu hỏi
-        </div>
-        <nav className="flex items-center gap-1 justify-between w-full sm:w-auto sm:gap-4">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage <= 1}
-            className="px-3 py-2 rounded-lg text-sm font-semibold text-outline hover:text-primary hover:bg-primary/5 transition-all flex items-center gap-1 disabled:opacity-50 disabled:pointer-events-none"
-          >
-            <span className="material-symbols-outlined text-lg">chevron_left</span>
-            Trước
-          </button>
-
-          <div className="flex items-center px-4 text-sm font-bold text-on-surface-variant bg-surface-container-low py-2 rounded-lg border border-outline-variant/10">
-            Trang {currentPage} / {totalPages}
-          </div>
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages}
-            className="px-3 py-2 rounded-lg text-sm font-semibold text-outline hover:text-primary hover:bg-primary/5 transition-all flex items-center gap-1 disabled:opacity-50 disabled:pointer-events-none"
-          >
-            Sau
-            <span className="material-symbols-outlined text-lg">chevron_right</span>
-          </button>
-        </nav>
       </div>
 
       {selectedQuestion && (
@@ -222,6 +240,6 @@ export default function QuestionsDataGrid({
           }}
         />
       )}
-    </>
+    </div>
   );
 }

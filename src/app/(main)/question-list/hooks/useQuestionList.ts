@@ -19,6 +19,7 @@ export function useQuestionList({
 
   const [grades, setGrades] = useState<number[]>(() => parseNums(searchParams.get('grades')));
   const [questionTypes, setQuestionTypes] = useState<string[]>(() => parseStrs(searchParams.get('questionTypes')));
+  const [difficulties, setDifficulties] = useState<string[]>(() => parseStrs(searchParams.get('difficulties')));
   const [topicIds, setTopicIds] = useState<number[]>(() => parseNums(searchParams.get('topicIds')));
   const [tagIds, setTagIds] = useState<number[]>(() => parseNums(searchParams.get('tagIds')));
   const [keyword, setKeyword] = useState<string>(() => searchParams.get('keyword') || '');
@@ -52,6 +53,9 @@ export function useQuestionList({
     } else if (key === 'questionTypes') {
       setQuestionTypes(value as string[]);
       updates.questionTypes = (value as string[]).length ? (value as string[]).join(',') : null;
+    } else if (key === 'difficulties') {
+      setDifficulties(value as string[]);
+      updates.difficulties = (value as string[]).length ? (value as string[]).join(',') : null;
     } else if (key === 'topicIds') {
       setTopicIds(value as number[]);
       updates.topicIds = (value as number[]).length ? (value as number[]).join(',') : null;
@@ -69,12 +73,14 @@ export function useQuestionList({
       if (checked) {
         setGrades([]);
         setQuestionTypes([]);
+        setDifficulties([]);
         setTopicIds([]);
         setTagIds([]);
         setKeyword('');
         setDebouncedKeyword('');
         updates.grades = null;
         updates.questionTypes = null;
+        updates.difficulties = null;
         updates.topicIds = null;
         updates.tagIds = null;
         updates.keyword = null;
@@ -86,6 +92,7 @@ export function useQuestionList({
   const onReset = useCallback(() => {
     setGrades([]);
     setQuestionTypes([]);
+    setDifficulties([]);
     setTopicIds([]);
     setTagIds([]);
     setKeyword('');
@@ -94,6 +101,7 @@ export function useQuestionList({
     syncUrl({
       grades: null,
       questionTypes: null,
+      difficulties: null,
       topicIds: null,
       tagIds: null,
       keyword: null,
@@ -113,6 +121,7 @@ export function useQuestionList({
     pageSize,
     grades,
     questionTypes,
+    difficulties,
     topicIds,
     tagIds,
     keyword: debouncedKeyword,
@@ -129,6 +138,7 @@ export function useQuestionList({
     state: {
       grades,
       questionTypes,
+      difficulties,
       topicIds,
       tagIds,
       keyword,

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getCollectionByIdAction, getCollectionQuestionsAction } from '@/lib/actions/collection.action';
+import { getDifficultiesAction } from '@/lib/actions/difficulty.action';
 import QuestionsDataGrid from '@/app/(main)/question-bank/components/QuestionsDataGrid';
 
 export const dynamic = 'force-dynamic';
@@ -14,8 +15,14 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
     notFound();
   }
 
-  const collectionResponse = await getCollectionByIdAction(collectionId);
+  // Chạy song song các action để tối ưu performance
+  const [collectionResponse, difficultiesResponse] = await Promise.all([
+    getCollectionByIdAction(collectionId),
+    getDifficultiesAction(),
+  ]);
+
   const collection = collectionResponse.success ? collectionResponse.data : null;
+  const difficulties = difficultiesResponse.success ? difficultiesResponse.data : [];
 
   if (!collection) {
     notFound();
@@ -41,18 +48,18 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
   const paginatedQuestions = qData.data;
 
   return (
-    <div className="p-8 min-h-full">
-      <div className="flex justify-between items-start mb-8">
+    <div className="p-8 h-[calc(100vh-80px)] flex flex-col overflow-hidden bg-slate-50">
+      <div className="flex justify-between items-start mb-6 shrink-0">
         <div className="flex items-center gap-4">
-          <Link href="/collection" className="w-10 h-10 group bg-surface-container hover:bg-surface-container-high rounded-full flex items-center justify-center transition-colors text-on-surface">
+          <Link href="/collection" className="w-10 h-10 group bg-white hover:bg-slate-100 rounded-full flex items-center justify-center transition-colors text-on-surface border border-outline-variant/10 shadow-sm">
             <span className="material-symbols-outlined transition-transform group-hover:-translate-x-1">arrow_back</span>
           </Link>
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-3xl font-extrabold text-on-surface tracking-tight font-headline">{collection.title}</h1>
+              <h1 className="text-3xl font-black text-on-surface tracking-tight font-headline">{collection.title}</h1>
               <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider">ID: {collection.id}</span>
             </div>
-            <p className="text-on-surface-variant font-body text-sm flex items-center gap-4">
+            <p className="text-on-surface-variant/80 font-body text-sm flex items-center gap-4">
               <span>Được tạo ngày: {new Date(collection.created_at).toLocaleDateString('vi-VN')}</span>
               <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">quiz</span>{totalItems} câu hỏi</span>
             </p>
@@ -60,15 +67,16 @@ export default async function CollectionDetailPage({ params, searchParams }: { p
         </div>
       </div>
 
-      <div className="mt-8">
+      <div className="flex-1 flex flex-col min-h-0 mt-4">
         {totalItems > 0 ? (
           <QuestionsDataGrid
             questions={paginatedQuestions}
             pagination={pagination}
             showSelection={false}
+            difficulties={difficulties}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-outline-variant/20 shadow-sm">
             <div className="w-20 h-20 bg-surface-container-low rounded-full flex items-center justify-center mb-4">
               <span className="material-symbols-outlined text-4xl text-outline-variant">quiz</span>
             </div>

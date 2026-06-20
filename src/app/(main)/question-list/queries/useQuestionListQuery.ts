@@ -11,6 +11,7 @@ export interface QuestionListQueryParams {
   keyword: string;
   unclassified: boolean;
   prioritizeRequests?: boolean;
+  difficulties: string[];
 }
 
 export function useQuestionListQuery(params: QuestionListQueryParams) {
@@ -24,6 +25,7 @@ export function useQuestionListQuery(params: QuestionListQueryParams) {
     keyword,
     unclassified,
     prioritizeRequests = false,
+    difficulties,
   } = params;
 
   return useQuery({
@@ -38,13 +40,14 @@ export function useQuestionListQuery(params: QuestionListQueryParams) {
         keyword,
         unclassified,
         prioritizeRequests,
+        difficulties,
       },
     ],
     queryFn: async () => {
       const res = await getAllQuestionsAction(
         page,
         pageSize,
-        { grades, questionTypes, topicIds, tagIds, keyword, unclassified },
+        { grades, questionTypes, topicIds, tagIds, keyword, unclassified, difficulties },
         { prioritizeRequests }
       );
       return res.success

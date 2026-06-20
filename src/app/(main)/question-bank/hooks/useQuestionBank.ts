@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useCreateCollectionMutation } from '@/app/(main)/collection/queries/useCollectionMutation';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useQuestionsQuery } from '../queries/useQuestionsQuery';
 
