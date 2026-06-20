@@ -56,6 +56,9 @@ export const REQUEST_STATUS_META: Record<RequestStatus, RequestStatusMeta> = {
   CANCELLED: { label: 'Đã hủy', badge: 'bg-slate-100 text-slate-600' },
 };
 
+export const REQUEST_TYPES: RequestType[] = ['EDIT', 'CLASSIFY', 'REPORT'];
+export const REQUEST_STATUSES: RequestStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
+
 /** Helper an toàn: trả về meta loại yêu cầu, fallback khi không khớp. */
 export function typeMeta(type: string): RequestTypeMeta {
   return REQUEST_TYPE_META[type as RequestType] ?? {
