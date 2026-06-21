@@ -1,17 +1,22 @@
 'use client';
 
-import React from 'react';
-import { RequestType, RequestStatus } from '@/lib/actions/question-request.action';
+import React, { useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { RequestType, RequestStatus, getRequestById } from '@/lib/actions/question-request.action';
 import RequestList from './RequestList';
 import RequestReviewModal from './RequestReviewModal';
 import { typeMeta, statusMeta, REQUEST_TYPES, REQUEST_STATUSES } from '@/lib/constants/requests.constant';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRequestsManager } from '../hooks/useRequestsManager';
+import { toast } from 'react-toastify';
 
 interface Props { isAdmin: boolean; currentUserId: number | null }
 
 export default function RequestsManager({ isAdmin, currentUserId }: Props) {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const { state, actions } = useRequestsManager({
     pageSize: 30,
   });
@@ -34,6 +39,35 @@ export default function RequestsManager({ isAdmin, currentUserId }: Props) {
     toggleStatus,
     onCancel,
   } = actions;
+
+  // Auto-open modal if requestId is present in URL
+  useEffect(() => {
+    const requestIdParam = searchParams.get('requestId');
+    if (requestIdParam && !reviewing) {
+      const id = parseInt(requestIdParam, 10);
+      if (!isNaN(id)) {
+        // Try to find it in current data first
+        const found = data.find((r: any) => Number(r.id) === id);
+        if (found) {
+          setReviewing(found);
+          // remove from URL so it doesn't reopen if closed
+          router.replace('/requests');
+        } else {
+          // Fetch from server
+          getRequestById(id).then(req => {
+            if (req) {
+              setReviewing(req);
+            } else {
+              toast.error('Không tìm thấy yêu cầu từ thông báo.');
+            }
+            router.replace('/requests');
+          }).catch(() => {
+            router.replace('/requests');
+          });
+        }
+      }
+    }
+  }, [searchParams, reviewing, data, router, setReviewing]);
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">
@@ -82,6 +116,7 @@ export default function RequestsManager({ isAdmin, currentUserId }: Props) {
       {reviewing && (
         <RequestReviewModal
           request={reviewing}
+          isAdmin={isAdmin}
           currentUserId={currentUserId}
           onClose={() => setReviewing(null)}
           onDone={() => {

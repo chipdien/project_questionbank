@@ -7,6 +7,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { User } from '@/lib/utils/auth.utils';
 import { ConfirmProvider } from '@/lib/components/providers/ConfirmProvider';
+import { NotificationProvider } from '@/lib/components/providers/NotificationProvider';
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
@@ -16,8 +17,8 @@ interface LayoutWrapperProps {
 export default function LayoutWrapper({ children, user }: LayoutWrapperProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  return (
-    <ConfirmProvider>
+  const content = (
+    <>
       <ToastContainer position="top-right" autoClose={3000} />
       <TopNavBar user={user} isCollapsed={isCollapsed} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
       <Sidebar isCollapsed={isCollapsed} user={user} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
@@ -28,6 +29,18 @@ export default function LayoutWrapper({ children, user }: LayoutWrapperProps) {
       >
         {children}
       </main>
+    </>
+  );
+
+  return (
+    <ConfirmProvider>
+      {user ? (
+        <NotificationProvider>
+          {content}
+        </NotificationProvider>
+      ) : (
+        content
+      )}
     </ConfirmProvider>
   );
 }

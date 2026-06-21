@@ -318,3 +318,8 @@
   border-bottom-left-radius: 0.75rem !important;
   border-bottom-right-radius: 0.75rem !important;
 }
+
+/* Toastify Stack Notification Pointer */
+.Toastify__toast {
+  cursor: pointer !important;
+}
