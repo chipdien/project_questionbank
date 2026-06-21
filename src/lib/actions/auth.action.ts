@@ -9,10 +9,54 @@ export async function loginAction(prevState: any, formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
-  if (!email || !password) {
-    return { error: 'Vui lòng nhập đầy đủ Email và Mật khẩu.' };
+  if (!email) {
+    return { 
+      error: 'Vui lòng nhập tài khoản.', 
+      email,
+      errorField: 'email'
+    };
   }
 
+  // Kiểm tra định dạng email đầy đủ (như @gmail.com hay @vietelite.edu.vn)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return {
+      error: 'Email không đúng định dạng (ví dụ: name@vietelite.edu.vn).',
+      email,
+      errorField: 'email'
+    };
+  }
+
+  // BƯỚC 1: Kiểm tra xem Email có tồn tại trong hệ thống (DB local lms_users) hay không
+  let isEmailExist = false;
+  try {
+    const localUser = await prisma.lms_users.findFirst({
+      where: { email }
+    });
+    isEmailExist = !!localUser;
+  } catch (e) {
+    console.error('Check local email existence failed:', e);
+  }
+
+  // Nếu Email KHÔNG tồn tại, dừng lại và báo lỗi tài khoản không tồn tại ngay lập tức
+  if (!isEmailExist) {
+    return {
+      error: 'Tài khoản không tồn tại.',
+      email,
+      errorField: 'email'
+    };
+  }
+
+  // BƯỚC 2: Khi email đã tồn tại, kiểm tra xem mật khẩu có bị trống hay không
+  if (!password) {
+    return { 
+      error: 'Vui lòng nhập mật khẩu.', 
+      email,
+      errorField: 'password'
+    };
+  }
+
+  // BƯỚC 3: Gọi API để xác thực mật khẩu
   const response = await signInAPI(email, password);
 
   if (response?.data?.token) {
@@ -57,7 +101,12 @@ export async function loginAction(prevState: any, formData: FormData) {
     cookieStore.set('user', '', { ...cookieOptions, maxAge: 0 });
 
   } else {
-    return { error: response?.message || 'Đăng nhập thất bại.' };
+    // Vì Email đã được kiểm tra tồn tại ở bước 1, nếu API đăng nhập lỗi thì chắc chắn là do sai mật khẩu
+    return { 
+      error: 'Mật khẩu không chính xác.', 
+      email, 
+      errorField: 'password' 
+    };
   }
 
   // 3. Redirect PHẢI nằm ngoài mọi block logic xử lý dữ liệu
