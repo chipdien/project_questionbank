@@ -66,6 +66,7 @@ if (typeof window === 'undefined') {
         } catch (e: any) {
           console.error('--- [REDIS] Publish error:', e.message);
         }
+        return; // Prevent duplicate local emission, wait for Redis to broadcast it back
       }
       return originalEmit(eventName, ...args);
     };
