@@ -1,5 +1,6 @@
 import { cookies, headers } from 'next/headers';
 import { prisma } from '@/lib/db';
+import { isAdminRank } from '@/lib/constants/auth.constant';
 
 export interface User {
   id: number;
@@ -44,9 +45,6 @@ export async function getCurrentUser(): Promise<User | null> {
         level_rank: user.level_rank,
       };
 
-      if (formattedUser.level_rank === 0 || formattedUser.level_rank === null) {
-        formattedUser.level_rank = 5; // Virtualize 0 (SSO Super Admin) as 5 for consistent permission checking
-      }
       return formattedUser;
     }
 
@@ -82,5 +80,5 @@ export async function getCurrentUserId(): Promise<number | null> {
  */
 export async function isUserAdmin(): Promise<boolean> {
   const user = await getCurrentUser();
-  return (user?.level_rank || 0) >= 5;
+  return isAdminRank(user?.level_rank);
 }
