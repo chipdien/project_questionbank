@@ -3,11 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Block } from './DocumentBuilder';
 import { GripVertical, X, Edit2, Check, Eye } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
+import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
 
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 import VditorEditor from '@/lib/components/ui/VditorEditor';
@@ -102,12 +98,9 @@ export default function BlockEditor({
       >
         <div className="prose prose-sm prose-slate max-w-none pointer-events-none">
           {content.trim() ? (
-            <ReactMarkdown
-              remarkPlugins={[remarkMath, remarkGfm]}
-              rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-            >
+            <SafeMarkdown>
               {cleanMathpixData(content)}
-            </ReactMarkdown>
+            </SafeMarkdown>
 
           ) : (
             <span className="text-on-surface-variant/30 italic">{placeholder}</span>
@@ -189,12 +182,9 @@ export default function BlockEditor({
           <div className="flex items-start gap-2">
             <span className="font-bold shrink-0 text-primary pt-0.5">Câu {displayNum}:</span>
             <div className="flex-1 min-w-0 prose prose-sm prose-slate max-w-none pointer-events-none">
-              <ReactMarkdown
-                remarkPlugins={[remarkMath, remarkGfm]}
-                rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-              >
+              <SafeMarkdown>
                 {cleanMathpixData(rawStatement)}
-              </ReactMarkdown>
+              </SafeMarkdown>
             </div>
           </div>
 
@@ -210,12 +200,9 @@ export default function BlockEditor({
                       {String.fromCharCode(65 + idx)}.{isCorrect && ' ✓'}
                     </span>
                     <div className={`flex-1 min-w-0 prose prose-sm prose-slate max-w-none pointer-events-none ${isCorrect ? 'font-medium text-green-950' : ''}`}>
-                      <ReactMarkdown
-                        remarkPlugins={[remarkMath, remarkGfm]}
-                        rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                      >
+                      <SafeMarkdown>
                         {cleanMathpixData(optContent)}
-                      </ReactMarkdown>
+                      </SafeMarkdown>
                     </div>
                   </div>
                 );

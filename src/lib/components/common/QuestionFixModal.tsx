@@ -10,6 +10,7 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import { cleanMathpixData } from '@/lib/utils/math.utils';
 import { useQuestionEditModal } from './hooks/useQuestionEditModal';
+import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
 
 /**
  * Modal sửa câu hỏi dành riêng cho luồng xử lý "Báo lỗi".
@@ -66,6 +67,8 @@ export default function QuestionFixModal({
     isReadOnly: false,
   });
 
+  const statement = localQuestion ? (localQuestion.statement || localQuestion.content || '') : '';
+
   return (
     <AnimatePresence mode="wait">
       {isOpen && localQuestion && (
@@ -81,7 +84,7 @@ export default function QuestionFixModal({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative bg-surface rounded-2xl shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col z-10 border border-outline-variant/20 overflow-hidden"
+            className={`relative bg-surface rounded-2xl shadow-xl w-full ${statement.includes('```bbt') ? 'max-w-7xl' : 'max-w-5xl'} max-h-[90vh] flex flex-col z-10 border border-outline-variant/20 overflow-hidden`}
           >
             {/* Header */}
             <div className="flex justify-between items-center p-4 border-b border-outline-variant/20 bg-surface-container-lowest shrink-0">
@@ -116,30 +119,83 @@ export default function QuestionFixModal({
               <div className="flex-1 min-w-0 overflow-y-auto p-6 space-y-8 bg-surface-container-lowest/30">
                 {/* Statement */}
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <label className="text-sm font-bold text-primary flex items-center gap-2">
-                      <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary">Q</div>
-                      Nội dung câu hỏi
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setOcrTarget('statement')}
-                      className="px-3 py-1 text-xs font-bold bg-primary/10 hover:bg-primary/20 text-primary rounded-lg flex items-center gap-1 transition-all"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      Quét ảnh Mathpix (OCR)
-                    </button>
-                  </div>
-                  <div className="border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm bg-white">
-                    <VditorEditor
-                      value={localQuestion.statement || localQuestion.content || ''}
-                      onChange={handleStatementChange}
-                      isStickyToolbar={false}
-                      mode="ir"
-                      placeholder="Nhập nội dung câu hỏi..."
-                      className="w-full min-h-[150px]"
-                    />
-                  </div>
+                  {statement.includes('```bbt') ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[550px] items-stretch">
+                      {/* Cột 1: Biên tập */}
+                      <div className="flex flex-col h-full space-y-3 min-h-0">
+                        <div className="flex justify-between items-center shrink-0">
+                          <label className="text-sm font-bold text-primary flex items-center gap-2">
+                            <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary">Q</div>
+                            Nội dung câu hỏi (Biên tập)
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setOcrTarget('statement')}
+                            className="px-3 py-1 text-xs font-bold bg-primary/10 hover:bg-primary/20 text-primary rounded-lg flex items-center gap-1 transition-all"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Quét ảnh Mathpix (OCR)
+                          </button>
+                        </div>
+                        <div className="border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm bg-white flex-1 min-h-0 flex flex-col">
+                          <VditorEditor
+                            value={cleanMathpixData(localQuestion.statement || localQuestion.content || '')}
+                            onChange={handleStatementChange}
+                            isStickyToolbar={false}
+                            mode="ir"
+                            placeholder="Nhập nội dung câu hỏi..."
+                            className="w-full flex-1 min-h-0 h-full overflow-y-auto"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Cột 2: Preview trực quan */}
+                      <div className="flex flex-col h-full space-y-3 min-h-0">
+                        <label className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 shrink-0">
+                          <div className="w-6 h-6 rounded bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">P</div>
+                          Xem trước hiển thị (Live Preview)
+                        </label>
+                        <div className="border border-emerald-200 dark:border-emerald-900/50 rounded-xl p-5 shadow-sm bg-white dark:bg-slate-900 prose prose-sm max-w-none flex-1 min-h-0 overflow-y-auto flex flex-col justify-start">
+                          <div className="text-xs uppercase tracking-wider font-extrabold text-emerald-500 mb-3 select-none flex items-center gap-1.5 border-b border-slate-100 pb-2 shrink-0">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Bản hiển thị thực tế
+                          </div>
+                          <div className="flex-1 min-h-0">
+                            <SafeMarkdown>
+                              {cleanMathpixData(statement)}
+                            </SafeMarkdown>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <label className="text-sm font-bold text-primary flex items-center gap-2">
+                          <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-primary">Q</div>
+                          Nội dung câu hỏi
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setOcrTarget('statement')}
+                          className="px-3 py-1 text-xs font-bold bg-primary/10 hover:bg-primary/20 text-primary rounded-lg flex items-center gap-1 transition-all"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Quét ảnh Mathpix (OCR)
+                        </button>
+                      </div>
+                      <div className="border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm bg-white">
+                        <VditorEditor
+                          value={cleanMathpixData(localQuestion.statement || localQuestion.content || '')}
+                          onChange={handleStatementChange}
+                          isStickyToolbar={false}
+                          mode="ir"
+                          placeholder="Nhập nội dung câu hỏi..."
+                          className="w-full min-h-[150px]"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Lời giải / Đáp án câu tự luận */}

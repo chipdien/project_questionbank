@@ -3,11 +3,7 @@
 import React from 'react';
 import { Search, Loader2, ChevronLeft, ChevronRight, Bookmark } from 'lucide-react';
 import { ReactSortable } from 'react-sortablejs';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
+import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
 
 import { useQuestionLibrary } from '../hooks/useQuestionLibrary';
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
@@ -129,15 +125,17 @@ export default function QuestionLibrary({ onSelect, onSelectMany }: QuestionLibr
                   </div>
                 </div>
 
-                <div className="text-xs text-on-surface line-clamp-4 prose prose-sm max-w-none [&_p]:my-1 pointer-events-none">
-                  <ReactMarkdown
-                    key={q.id}
-                    remarkPlugins={[remarkMath, remarkGfm]}
-                    rehypePlugins={[rehypeKatex, rehypeRaw]}
-                  >
-                    {cleanMathpixData(getQuestionDisplayContent(q.statement, q.content))}
-                  </ReactMarkdown>
-                </div>
+                {(() => {
+                  const displayContent = cleanMathpixData(getQuestionDisplayContent(q.statement, q.content));
+                  const hasBBT = displayContent.includes('```bbt');
+                  return (
+                    <div className={`text-xs text-on-surface prose prose-sm max-w-none [&_p]:my-1 pointer-events-none ${
+                      hasBBT ? 'overflow-x-hidden' : 'line-clamp-4'
+                    }`}>
+                      <SafeMarkdown>{displayContent}</SafeMarkdown>
+                    </div>
+                  );
+                })()}
               </div>
             ))}
           </ReactSortable>

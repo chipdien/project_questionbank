@@ -2,11 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
+import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
 import { useRouter } from 'next/navigation';
 
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
@@ -157,14 +153,9 @@ export default function QuestionModal({
               <div className="mb-8">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-outline mb-4">Mô tả (Statement)</h3>
                 <div className="prose prose-slate max-w-none text-base [&_img]:max-w-full [&_img]:rounded-md [&_img]:border [&_img]:border-outline-variant/30 [&_img]:my-4">
-                  <ReactMarkdown
-                    key={question.statement}
-                    remarkPlugins={[remarkMath, remarkGfm]}
-                    rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                    components={markdownComponents}
-                  >
+                  <SafeMarkdown>
                     {cleanMathpixData(getQuestionDisplayContent(question.statement, question.content))}
-                  </ReactMarkdown>
+                  </SafeMarkdown>
                 </div>
               </div>
 
@@ -193,13 +184,9 @@ export default function QuestionModal({
                             {charLabel}
                           </div>
                           <div className={`pt-1 prose prose-slate max-w-none text-sm [&_img]:max-w-full [&_img]:rounded-md [&_img]:border [&_img]:border-outline-variant/30 [&_img]:my-2 ${isCorrect ? 'text-green-900 font-medium' : 'text-on-surface'}`}>
-                            <ReactMarkdown
-                              remarkPlugins={[remarkMath, remarkGfm]}
-                              rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                              components={markdownComponents}
-                            >
+                            <SafeMarkdown>
                               {cleanMathpixData(opt.content)}
-                            </ReactMarkdown>
+                            </SafeMarkdown>
                           </div>
                           {isCorrect && (
                             <div className="ml-auto text-green-600 self-center">
@@ -221,13 +208,9 @@ export default function QuestionModal({
                   </h3>
                   {question.hint ? (
                     <div className="p-4 rounded-xl border-2 bg-green-50 border-green-500/50 shadow-sm text-green-900 prose prose-slate max-w-none text-sm [&_img]:max-w-full [&_img]:rounded-md [&_img]:border [&_img]:border-outline-variant/30 [&_img]:my-2">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkMath, remarkGfm]}
-                        rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                        components={markdownComponents}
-                      >
+                      <SafeMarkdown>
                         {cleanMathpixData(question.hint)}
-                      </ReactMarkdown>
+                      </SafeMarkdown>
                     </div>
                   ) : (
                     <div className="p-4 rounded-lg bg-surface-container-low text-on-surface-variant text-center text-sm">

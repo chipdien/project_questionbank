@@ -3,11 +3,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, FileText, CheckCircle2, LibraryBig } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
+import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
 
 import { useCollectionSaveModal } from '../hooks/useCollectionSaveModal';
 import { cleanMathpixData } from '@/lib/utils/math.utils';
@@ -166,13 +162,9 @@ export default function CollectionSaveModal({
                               {index + 1}
                             </div>
                             <div className="flex-1 text-xs leading-relaxed text-on-surface-variant prose prose-sm max-w-none overflow-x-auto">
-                              <ReactMarkdown
-                                key={question.statement}
-                                remarkPlugins={[remarkMath, remarkGfm]}
-                                rehypePlugins={[rehypeKatex, rehypeRaw]}
-                              >
+                              <SafeMarkdown>
                                 {cleanMathpixData(question.statement)}
-                              </ReactMarkdown>
+                              </SafeMarkdown>
                             </div>
                           </div>
                         </div>
