@@ -11,7 +11,7 @@ declare global {
 const eventEmitter = global.globalEventEmitter || new EventEmitter();
 eventEmitter.setMaxListeners(100);
 
-if (process.env.NODE_ENV !== 'production') {
+if (!global.globalEventEmitter) {
   global.globalEventEmitter = eventEmitter;
 }
 
