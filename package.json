@@ -28,6 +28,7 @@
     "axios": "^1.7.2",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
+    "ioredis": "^5.11.1",
     "katex": "^0.16.45",
     "lucide-react": "^1.7.0",
     "mammoth": "^1.12.0",
