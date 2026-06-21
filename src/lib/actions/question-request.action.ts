@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/db';
 import { getCurrentUser } from '@/lib/utils/auth.utils';
 import { serializeBigInt } from '@/lib/utils/serialization.utils';
+import eventEmitter from '@/lib/eventEmitter';
 
 export type RequestType = 'EDIT' | 'CLASSIFY' | 'REPORT';
 export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
@@ -48,6 +49,32 @@ export async function createQuestionRequest(input: {
         updated_at: new Date(),
       },
     });
+
+    // Bắn thông báo cho các admin
+    try {
+      const admins = await prisma.lms_users.findMany({
+        where: { level_rank: { gte: 5 } },
+        select: { id: true }
+      });
+      
+      for (const admin of admins) {
+        const notif = await prisma.lms_notifications.create({
+          data: {
+            user_id: BigInt(admin.id),
+            type: 'REQUEST_CREATED',
+            title: 'Yêu cầu mới',
+            content: `Giáo viên ${user.nickname || user.username} vừa gửi yêu cầu ${input.type}.`,
+            reference_id: created.id,
+            is_read: false,
+            created_at: new Date()
+          }
+        });
+        eventEmitter.emit('NEW_NOTIFICATION', notif);
+      }
+    } catch (err) {
+      console.error('Failed to send notifications to admins', err);
+    }
+
     return { success: true, id: Number(created.id) };
   } catch (e: any) {
     console.error('createQuestionRequest:', e?.message);
@@ -178,10 +205,31 @@ export async function approveQuestionRequest(id: number) {
     const req = await prisma.lms_requests.findUnique({ where: { id: BigInt(id) } });
     if (!req) return { success: false, error: 'Không tìm thấy yêu cầu.' };
     if (req.status !== 'PENDING') return { success: false, error: 'Yêu cầu đã được xử lý.' };
-    await prisma.lms_requests.update({
+    const updated = await prisma.lms_requests.update({
       where: { id: BigInt(id) },
       data: { status: 'APPROVED', updated_by_id: BigInt(auth.userId), updated_at: new Date() },
     });
+
+    // Thông báo cho giáo viên
+    if (updated.created_by_id) {
+      try {
+        const notif = await prisma.lms_notifications.create({
+          data: {
+            user_id: updated.created_by_id,
+            type: 'REQUEST_APPROVED',
+            title: 'Yêu cầu được phê duyệt',
+            content: 'Admin đã duyệt yêu cầu câu hỏi của bạn.',
+            reference_id: updated.id,
+            is_read: false,
+            created_at: new Date()
+          }
+        });
+        eventEmitter.emit('NEW_NOTIFICATION', notif);
+      } catch (err) {
+        console.error('Failed to notify user', err);
+      }
+    }
+
     return { success: true };
   } catch (e: any) {
     console.error('approveQuestionRequest:', e?.message);
@@ -196,10 +244,31 @@ export async function rejectQuestionRequest(id: number, reason: string) {
     const req = await prisma.lms_requests.findUnique({ where: { id: BigInt(id) } });
     if (!req) return { success: false, error: 'Không tìm thấy yêu cầu.' };
     if (req.status !== 'PENDING') return { success: false, error: 'Yêu cầu đã được xử lý.' };
-    await prisma.lms_requests.update({
+    const updated = await prisma.lms_requests.update({
       where: { id: BigInt(id) },
       data: { status: 'REJECTED', admin_note: reason || null, updated_by_id: BigInt(auth.userId), updated_at: new Date() },
     });
+
+    // Thông báo cho giáo viên
+    if (updated.created_by_id) {
+      try {
+        const notif = await prisma.lms_notifications.create({
+          data: {
+            user_id: updated.created_by_id,
+            type: 'REQUEST_REJECTED',
+            title: 'Yêu cầu bị từ chối',
+            content: `Admin đã từ chối yêu cầu của bạn. Lý do: ${reason}`,
+            reference_id: updated.id,
+            is_read: false,
+            created_at: new Date()
+          }
+        });
+        eventEmitter.emit('NEW_NOTIFICATION', notif);
+      } catch (err) {
+        console.error('Failed to notify user', err);
+      }
+    }
+
     return { success: true };
   } catch (e: any) {
     console.error('rejectQuestionRequest:', e?.message);
@@ -217,5 +286,18 @@ export async function getPendingRequestCount(): Promise<number> {
     return await prisma.lms_requests.count({ where });
   } catch {
     return 0;
+  }
+}
+
+export async function getRequestById(id: number) {
+  try {
+    const req = await prisma.lms_requests.findUnique({
+      where: { id: BigInt(id) },
+    });
+    if (!req) return null;
+    const enriched = await enrichRequests([req]);
+    return serializeBigInt(enriched[0]);
+  } catch {
+    return null;
   }
 }
