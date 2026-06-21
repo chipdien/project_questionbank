@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import Redis from 'ioredis';
+import { serializeBigInt } from '@/lib/utils/serialization.utils';
 
 declare global {
   var globalEventEmitter: EventEmitter | undefined;
@@ -32,7 +33,7 @@ if (typeof window === 'undefined') {
     global.redisSubscriber.on('error', (err: any) => {
       console.error('--- [REDIS] Subscriber Error:', err.message);
     });
-    
+
     global.redisSubscriber.subscribe('lms_notifications', (err) => {
       if (err) {
         console.error('--- [REDIS] Failed to subscribe to lms_notifications channel:', err.message);
@@ -59,7 +60,9 @@ if (typeof window === 'undefined') {
 
       if (eventName === 'NEW_NOTIFICATION' && !fromRedis) {
         try {
-          global.redisPublisher?.publish('lms_notifications', JSON.stringify(payload));
+          const serialized = serializeBigInt(payload);
+          console.log('--- [REDIS] Publishing new notification to Redis:', serialized.id);
+          global.redisPublisher?.publish('lms_notifications', JSON.stringify(serialized));
         } catch (e: any) {
           console.error('--- [REDIS] Publish error:', e.message);
         }
