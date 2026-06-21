@@ -201,13 +201,13 @@ export default function Sidebar({ isCollapsed, user, toggleSidebar }: { isCollap
           type="button"
           onClick={handleLogout}
           disabled={isPending}
-          className={`nav-item flex items-center text-error hover:bg-error-container/20 transition-all duration-200 ease-in-out rounded-xl disabled:opacity-50 disabled:cursor-wait cursor-pointer ${
+          className={`nav-item flex items-center text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-200 ease-in-out rounded-xl disabled:opacity-50 disabled:cursor-wait cursor-pointer ${
             isCollapsed ? 'justify-center w-12 h-12 mx-auto p-0' : 'justify-start gap-3 px-4 py-3 w-full'
           }`}
         >
-          <LogOut className={`w-5 h-5 shrink-0 ${isPending ? 'animate-pulse' : ''}`} />
+          <LogOut className={`w-5 h-5 shrink-0 text-red-600 group-hover:text-red-700 ${isPending ? 'animate-pulse' : ''}`} />
           {!isCollapsed && (
-            <span className="nav-label text-[0.875rem] font-body">
+            <span className="nav-label text-[0.875rem] font-body font-semibold">
               {isPending ? 'Đang đăng xuất...' : 'Đăng xuất'}
             </span>
           )}

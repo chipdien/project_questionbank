@@ -17,6 +17,7 @@ import { typeMeta, statusMeta } from '@/lib/constants/requests.constant';
 
 interface Props {
   request: any;
+  isAdmin?: boolean;
   currentUserId?: number | null;
   onClose: () => void;
   onDone: () => void;
@@ -46,7 +47,7 @@ function parseClassify(raw: string | null): { grade: number | null; topicIds: nu
   } catch { return null; }
 }
 
-export default function RequestReviewModal({ request, currentUserId = null, onClose, onDone }: Props) {
+export default function RequestReviewModal({ request, isAdmin = false, currentUserId = null, onClose, onDone }: Props) {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
@@ -271,14 +272,14 @@ export default function RequestReviewModal({ request, currentUserId = null, onCl
           {!isPending && (
             <>
               <span className="text-sm text-on-surface-variant self-center mr-auto">Yêu cầu đã được xử lý ({request.status}).</span>
-              {request.question_id && (
+              {request.question_id && isAdmin && (
                 <button onClick={openEdit} disabled={loadingEdit} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold border border-primary/40 text-primary hover:bg-primary/5 disabled:opacity-50">
                   <Pencil className="w-4 h-4" /> {loadingEdit ? 'Đang tải...' : 'Sửa câu hỏi'}
                 </button>
               )}
             </>
           )}
-          {isPending && !rejecting && (
+          {isPending && !rejecting && isAdmin && (
             <>
               {request.type === 'CLASSIFY' && <button onClick={applyClassify} disabled={busy} className="px-4 py-2 rounded-lg text-sm font-bold bg-primary text-on-primary disabled:opacity-50">Áp dụng & duyệt</button>}
               {request.type === 'EDIT' && <button onClick={applyEdit} disabled={busy} className="px-4 py-2 rounded-lg text-sm font-bold bg-primary text-on-primary disabled:opacity-50">Áp dụng & duyệt</button>}
@@ -291,11 +292,19 @@ export default function RequestReviewModal({ request, currentUserId = null, onCl
               <button onClick={() => { setRejecting(true); setTab('detail'); }} disabled={busy} className="px-4 py-2 rounded-lg text-sm font-bold border border-error/40 text-error">Từ chối</button>
             </>
           )}
-          {isPending && rejecting && (
+          {isPending && rejecting && isAdmin && (
             <>
               <button onClick={() => setRejecting(false)} className="px-4 py-2 rounded-lg text-sm font-bold hover:bg-surface-container-low">Quay lại</button>
               <button onClick={doReject} disabled={busy || !reason.trim()} className="px-4 py-2 rounded-lg text-sm font-bold bg-error text-white disabled:opacity-50">Xác nhận từ chối</button>
             </>
+          )}
+          {isPending && !isAdmin && (
+            <span className="text-sm text-on-surface-variant self-center mr-auto">Yêu cầu đang chờ admin phê duyệt.</span>
+          )}
+          {!isAdmin && (
+            <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-bold border border-outline-variant/30 text-on-surface hover:bg-surface-container-low">
+              Đóng
+            </button>
           )}
         </div>
       </div>
