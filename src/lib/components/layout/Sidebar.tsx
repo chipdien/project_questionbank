@@ -24,6 +24,7 @@ import { usePathname } from 'next/navigation';
 import { logoutAction } from '@/lib/actions/auth.action';
 import { User } from '@/lib/utils/auth.utils';
 import { useConfirm } from '@/lib/components/providers/ConfirmProvider';
+import { isAdminRank } from '@/lib/constants/auth.constant';
 import logo from '@/app/logo.png';
 import icon from '@/app/icon.png';
 
@@ -36,7 +37,7 @@ export default function Sidebar({ isCollapsed, user, toggleSidebar }: { isCollap
     'Cấu hình': true,
   });
 
-  const isAdmin = typeof user?.level_rank === 'number' && (user.level_rank === 0 || user.level_rank >= 5);
+  const isAdmin = isAdminRank(user?.level_rank);
 
   // Tự động mở rộng khi ở trang con của tài liệu hoặc cấu hình
   useEffect(() => {

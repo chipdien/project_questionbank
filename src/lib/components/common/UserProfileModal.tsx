@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useTransition } from 'react';
-import { LogOut, User as UserIcon, Mail, Shield } from 'lucide-react';
-import { Modal } from './Modal';
-import { User } from '@/lib/utils/auth.utils';
 import { logoutAction } from '@/lib/actions/auth.action';
 import { useConfirm } from '@/lib/components/providers/ConfirmProvider';
+import { getRoleBadgeClass, getRoleLabelEn } from '@/lib/constants/auth.constant';
+import { User } from '@/lib/utils/auth.utils';
+import { LogOut, Mail, Shield, User as UserIcon } from 'lucide-react';
+import { useTransition } from 'react';
+import { Modal } from '../ui/Modal';
 
 interface UserProfileModalProps {
   user: User | null;
@@ -33,20 +34,6 @@ export default function UserProfileModal({ user, isOpen, onClose }: UserProfileM
   };
 
   if (!user) return null;
-
-  const getRoleLabel = (rank: number | undefined | null) => {
-    if (typeof rank !== 'number') return 'User';
-    if (rank === 0 || rank >= 5) return 'Admin';
-    if (rank === 1) return 'Teacher';
-    return 'User';
-  };
-
-  const getRoleBadgeClass = (rank: number | undefined | null) => {
-    if (typeof rank !== 'number') return 'bg-blue-50/80 text-blue-600 border border-blue-200/50';
-    if (rank === 0 || rank >= 5) return 'bg-rose-50/80 text-rose-600 border border-rose-200/50';
-    if (rank === 1) return 'bg-emerald-50/80 text-emerald-600 border border-emerald-200/50';
-    return 'bg-blue-50/80 text-blue-600 border border-blue-200/50';
-  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={null} maxWidth="xl">
@@ -77,7 +64,7 @@ export default function UserProfileModal({ user, isOpen, onClose }: UserProfileM
             {user.nickname || user.username}
           </span>
           <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${getRoleBadgeClass(user.level_rank)}`}>
-            {getRoleLabel(user.level_rank)}
+            {getRoleLabelEn(user.level_rank)}
           </span>
         </div>
 
@@ -106,7 +93,7 @@ export default function UserProfileModal({ user, isOpen, onClose }: UserProfileM
               <Shield className="w-3.5 h-3.5" /> Phân quyền
             </span>
             <span className="text-xs font-bold text-on-surface-variant">
-              {getRoleLabel(user.level_rank)}
+              {getRoleLabelEn(user.level_rank)}
             </span>
           </div>
         </div>

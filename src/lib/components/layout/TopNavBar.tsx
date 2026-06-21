@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from '@/lib/utils/auth.utils';
-import UserProfileModal from '@/lib/components/ui/UserProfileModal';
+import UserProfileModal from '@/lib/components/common/UserProfileModal';
+import { getRoleLabelVi } from '@/lib/constants/auth.constant';
 import { NotificationBell } from '@/lib/components/notifications/NotificationBell';
 
 interface TopNavBarProps {
@@ -32,7 +33,7 @@ export default function TopNavBar({ toggleSidebar, user, isCollapsed }: TopNavBa
                 {user?.nickname || user?.username || 'Đang tải...'}
               </span>
               <span className="text-[10px] text-outline uppercase tracking-wider">
-                {user?.level_rank === 1 ? 'Giáo viên' : ((user?.level_rank || 0) >= 5 || user?.level_rank === 0 ? 'Admin' : 'Thành viên')}
+                {getRoleLabelVi(user?.level_rank)}
               </span>
             </div>
             <div className="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center overflow-hidden border border-primary/10">
