@@ -1,19 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, Pencil } from 'lucide-react';
-import { toast } from 'react-toastify';
-import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
-import remarkGfm from 'remark-gfm';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
-import { cleanMathpixData } from '@/lib/utils/math.utils';
-import { classifyQuestionsAction, getTopicsAction, getTagsByCategoryAction } from '@/lib/actions/question.action';
 import { getQuestionByIdAction } from '@/lib/actions/question-list.action';
-import { approveQuestionRequest, rejectQuestionRequest, getRequestsForQuestion } from '@/lib/actions/question-request.action';
+import { approveQuestionRequest, getRequestsForQuestion, rejectQuestionRequest } from '@/lib/actions/question-request.action';
+import { classifyQuestionsAction, getTagsByCategoryAction, getTopicsAction } from '@/lib/actions/question.action';
 import QuestionFixModal from '@/lib/components/common/QuestionFixModal';
-import { typeMeta, statusMeta } from '@/lib/constants/requests.constant';
+import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
+import { statusMeta, typeMeta } from '@/lib/constants/requests.constant';
+import { cleanMathpixData } from '@/lib/utils/math.utils';
+import { Pencil, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 interface Props {
   request: any;
@@ -32,9 +28,9 @@ function fmtDate(v: string | null | undefined): string {
 function MathView({ text }: { text: string }) {
   return (
     <div className="prose prose-slate max-w-none text-sm [&_img]:max-w-full [&_img]:rounded-md">
-      <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}>
+      <SafeMarkdown>
         {cleanMathpixData(text || '')}
-      </ReactMarkdown>
+      </SafeMarkdown>
     </div>
   );
 }

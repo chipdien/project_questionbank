@@ -1,9 +1,8 @@
 'use client';
 
-import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import remarkMath from 'remark-math';
 
 interface BbtColumn {
   x?: string;
@@ -74,7 +73,7 @@ export default function VariationTableRenderer({ dataString }: { dataString: str
   };
 
   return (
-    <div className="w-full my-4 overflow-x-auto select-none rounded bg-white dark:bg-slate-900/50 p-1 no-scrollbar-custom">
+    <div className="w-full my-4 overflow-x-auto select-none rounded bg-white p-1 no-scrollbar-custom">
       <style>{`
         .no-scrollbar-custom::-webkit-scrollbar {
           display: none;
@@ -105,35 +104,35 @@ export default function VariationTableRenderer({ dataString }: { dataString: str
           }
         }
       `}</style>
-      <div 
-        className="grid items-stretch text-center border border-slate-300 dark:border-slate-700 rounded-lg overflow-hidden min-w-[500px]"
+      <div
+        className="grid items-stretch text-center border border-slate-300 rounded-lg overflow-hidden min-w-[500px]"
         style={{
           gridTemplateColumns: `80px repeat(${cols.length}, minmax(40px, 1fr))`,
         }}
       >
         {/* ROW 1: x */}
-        <div className="flex items-center justify-center font-bold bg-slate-50 dark:bg-slate-800/50 border-r border-b border-slate-300 dark:border-slate-700 py-3">
+        <div className="flex items-center justify-center font-bold bg-slate-50 border-r border-b border-slate-300 py-3 text-slate-800">
           {renderMath('x')}
         </div>
         {cols.map((col, idx) => (
-          <div key={`x-${idx}`} className="flex items-center justify-center border-b border-slate-300 dark:border-slate-700 py-3 px-1 text-sm text-slate-700 dark:text-slate-300">
+          <div key={`x-${idx}`} className="flex items-center justify-center border-b border-slate-300 py-3 px-1 text-sm text-slate-800">
             {col.x ? renderMath(col.x) : ''}
           </div>
         ))}
 
         {/* ROW 2: y' */}
-        <div className="flex items-center justify-center font-bold bg-slate-50 dark:bg-slate-800/50 border-r border-b border-slate-300 dark:border-slate-700 py-3">
+        <div className="flex items-center justify-center font-bold bg-slate-50 border-r border-b border-slate-300 py-3 text-slate-800">
           {renderMath('y\'')}
         </div>
         {cols.map((col, idx) => {
           const isPoint = col.x !== undefined;
           return (
-            <div key={`y-prime-${idx}`} className="flex items-stretch justify-center border-b border-slate-300 dark:border-slate-700 py-3 px-1 text-sm">
+            <div key={`y-prime-${idx}`} className="flex items-stretch justify-center border-b border-slate-300 py-3 px-1 text-sm text-slate-800">
               {isPoint ? (
                 col.y_prime === '||' ? (
                   <div className="flex justify-between h-6 mx-auto relative select-none w-1.5 py-0.5">
-                    <div className="w-[1px] h-full bg-slate-400 dark:bg-slate-500"></div>
-                    <div className="w-[1px] h-full bg-slate-400 dark:bg-slate-500 ml-[2px]"></div>
+                    <div className="w-px h-full bg-slate-400"></div>
+                    <div className="w-px h-full bg-slate-400 ml-[2px]"></div>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center w-full h-full">
@@ -142,7 +141,7 @@ export default function VariationTableRenderer({ dataString }: { dataString: str
                   </div>
                 )
               ) : (
-                <span className="font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-center">
+                <span className="font-semibold text-slate-600 flex items-center justify-center">
                   {col.y_prime_sign || ''}
                 </span>
               )}
@@ -151,7 +150,7 @@ export default function VariationTableRenderer({ dataString }: { dataString: str
         })}
 
         {/* ROW 3: y */}
-        <div className="flex items-center justify-center font-bold bg-slate-50 dark:bg-slate-800/50 border-r border-slate-300 dark:border-slate-700 min-h-[140px]">
+        <div className="flex items-center justify-center font-bold bg-slate-50 border-r border-slate-300 min-h-[140px] text-slate-800">
           {renderMath('y')}
         </div>
         {cols.map((col, idx) => {
@@ -188,7 +187,7 @@ export default function VariationTableRenderer({ dataString }: { dataString: str
             if (p2 === 'top/bottom') y2 = '12%';
 
             arrowSvg = (
-              <svg className="w-full h-full text-slate-400 dark:text-slate-600" style={{ minHeight: '100px' }}>
+              <svg className="w-full h-full text-slate-400" style={{ minHeight: '100px' }}>
                 <defs>
                   <marker
                     id={`arrow-${idx}`}
@@ -216,24 +215,24 @@ export default function VariationTableRenderer({ dataString }: { dataString: str
           }
 
           return (
-            <div key={`y-${idx}`} className="relative flex min-h-[140px] h-full">
+            <div key={`y-${idx}`} className="relative flex min-h-[140px] h-full text-slate-800">
               {isPoint ? (
                 <div className={`flex w-full h-full ${posClass} text-sm px-1`}>
                   {col.y_pos === 'bottom/top' || col.y_pos === 'top/bottom' ? (
                     <>
                       {/* Giá trị trái tiệm cận đứng */}
-                      <div className={`flex-1 flex justify-center text-slate-500 text-xs ${col.y_pos === 'bottom/top' ? 'items-end pb-1.5' : 'items-start pt-1.5'}`}>
+                      <div className={`flex-1 flex justify-center text-slate-600 text-xs ${col.y_pos === 'bottom/top' ? 'items-end pb-1.5' : 'items-start pt-1.5'}`}>
                         {renderMath(col.y?.split('/')[0] || '')}
                       </div>
-                      
+
                       {/* Vách đứng nét đôi */}
                       <div className="flex justify-between h-full relative mx-1 py-1 select-none">
-                        <div className="w-[1px] h-full bg-slate-300 dark:bg-slate-700"></div>
-                        <div className="w-[1px] h-full bg-slate-300 dark:bg-slate-700 ml-[2px]"></div>
+                        <div className="w-px h-full bg-slate-300"></div>
+                        <div className="w-px h-full bg-slate-300 ml-[2px]"></div>
                       </div>
-                      
+
                       {/* Giá trị phải tiệm cận đứng */}
-                      <div className={`flex-1 flex justify-center text-slate-500 text-xs ${col.y_pos === 'bottom/top' ? 'items-start pt-1.5' : 'items-end pb-1.5'}`}>
+                      <div className={`flex-1 flex justify-center text-slate-600 text-xs ${col.y_pos === 'bottom/top' ? 'items-start pt-1.5' : 'items-end pb-1.5'}`}>
                         {renderMath(col.y?.split('/')[1] || '')}
                       </div>
                     </>

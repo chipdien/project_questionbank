@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
-import { Block } from './DocumentBuilder';
-import { GripVertical, X, Edit2, Check, Eye } from 'lucide-react';
 import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
+import { Edit2, Eye, GripVertical, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Block } from './DocumentBuilder';
 
-import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 import VditorEditor from '@/lib/components/ui/VditorEditor';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 
 interface BlockEditorProps {
   block: Block;

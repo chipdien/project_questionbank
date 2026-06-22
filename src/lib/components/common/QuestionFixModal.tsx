@@ -1,16 +1,11 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, Loader2, Image, Sparkles, AlertTriangle } from 'lucide-react';
-import VditorEditor from '@/lib/components/ui/VditorEditor';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
-import { cleanMathpixData } from '@/lib/utils/math.utils';
-import { useQuestionEditModal } from './hooks/useQuestionEditModal';
 import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
+import VditorEditor from '@/lib/components/ui/VditorEditor';
+import { cleanMathpixData } from '@/lib/utils/math.utils';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertTriangle, Image, Loader2, Save, Sparkles, X } from 'lucide-react';
+import { useQuestionEditModal } from './hooks/useQuestionEditModal';
 
 /**
  * Modal sửa câu hỏi dành riêng cho luồng xử lý "Báo lỗi".

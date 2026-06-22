@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
 import DocumentBuilder, { DocumentBuilderRef } from '@/app/(main)/documents/components/DocumentBuilder';
 import QuestionLibrary from '@/app/(main)/documents/components/QuestionLibrary';
 import SavedDocumentsLibrary from '@/app/(main)/documents/components/SavedDocumentsLibrary';
-import { Database, History } from 'lucide-react';
-import { toast } from 'react-toastify';
 import Loading from '@/lib/components/ui/Loading';
+import { Database, History } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { toast } from 'react-toastify';
 
 export default function DocumentsPage() {
   const [activeTab, setActiveTab] = useState<'library' | 'history'>('library');
@@ -33,7 +33,7 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden bg-surface-container-low">
+    <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden bg-slate-50">
       {/* Loading Overlay when fetching doc details */}
       {isLoadingDetail && (
         <Loading fullscreen text="Đang tải tài liệu..." size="lg" />
@@ -41,16 +41,16 @@ export default function DocumentsPage() {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left Column: Document Editor */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-surface-container-low relative">
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50 relative">
           <div className="min-h-full">
             <DocumentBuilder ref={builderRef} />
           </div>
         </div>
 
         {/* Right Column: Library & History sidebar */}
-        <div className="hidden lg:flex flex-col w-1/2 max-w-[500px] border-l border-outline-variant/20 no-print bg-surface-container-lowest">
+        <div className="hidden lg:flex flex-col w-1/2 max-w-[500px] border-l border-outline-variant/20 no-print bg-slate-50">
           {/* Tabs Header */}
-          <div className="flex border-b border-outline-variant/10">
+          <div className="flex border-b border-outline-variant/10 bg-slate-100/70">
             <button
               onClick={() => setActiveTab('library')}
               className={`flex-1 flex items-center justify-center gap-2 py-4 text-xs font-bold transition-all relative ${activeTab === 'library'

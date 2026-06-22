@@ -1,13 +1,12 @@
 'use client';
 
-import React from 'react';
-import { useDropzone } from 'react-dropzone';
-import { motion, AnimatePresence } from 'framer-motion';
-import clsx from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { Modal } from '@/lib/components/ui/Modal';
+import clsx from 'clsx';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
-import { useDashboardUploader, UPLOAD_STEPS } from '../hooks/useDashboardUploader';
+import { twMerge } from 'tailwind-merge';
+import { UPLOAD_STEPS, useDashboardUploader } from '../hooks/useDashboardUploader';
 
 function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));

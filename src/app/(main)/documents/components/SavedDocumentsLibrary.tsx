@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { FileText, Loader2, Download, ExternalLink, History, Search } from 'lucide-react';
+import { Download, ExternalLink, FileText, History, Loader2, Search } from 'lucide-react';
 import { useSavedDocumentsLibrary } from '../hooks/useSavedDocumentsLibrary';
 
 interface SavedDocumentsLibraryProps {
@@ -12,9 +11,9 @@ export default function SavedDocumentsLibrary({ onLoadDocument }: SavedDocuments
   const { isLoading, filteredDocs, searchTerm, setSearchTerm, isAdmin } = useSavedDocumentsLibrary();
 
   return (
-    <div className="flex flex-col h-full bg-surface-container-lowest border-l border-outline-variant/30 no-print overflow-hidden">
+    <div className="flex flex-col h-full bg-slate-50 border-l border-outline-variant/30 no-print overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-outline-variant/20 bg-surface-container-low/50">
+      <div className="p-4 border-b border-outline-variant/20 bg-slate-100/70">
         <div className="flex items-center gap-2 mb-4">
           <History className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-bold text-on-surface font-headline">Lịch sử tài liệu</h2>
@@ -96,7 +95,7 @@ export default function SavedDocumentsLibrary({ onLoadDocument }: SavedDocuments
       </div>
 
       {/* Footer Info */}
-      <div className="p-3 border-t border-outline-variant/20 bg-surface-container-low/30 text-center">
+      <div className="p-3 border-t border-outline-variant/20 bg-slate-100/50 text-center">
         <p className="text-[10px] font-bold text-outline opacity-50 uppercase tracking-tighter">
           TỔNG SỐ: {filteredDocs.length} TÀI LIỆU
         </p>

@@ -4,18 +4,18 @@ import { cleanMathpixData } from './math.utils';
 function convertBbtJsonToLatex(text: string): string {
   // Regex to find ```bbt ... ``` blocks
   const bbtRegex = /```bbt\s*([\s\S]*?)\s*```/g;
-  
+
   return text.replace(bbtRegex, (match, jsonStr) => {
     try {
       const data = JSON.parse(jsonStr);
       const cols = data.cols || [];
       if (cols.length === 0) return '';
-      
+
       const colSpec = 'c|' + 'c'.repeat(cols.length);
-      
+
       // Row 1: x
       const rowX = 'x & ' + cols.map((c: any) => c.x !== undefined ? (c.x || ' ') : ' ').join(' & ');
-      
+
       // Row 2: y'
       const rowYPrime = 'y\' & ' + cols.map((c: any) => {
         if (c.x !== undefined) {
@@ -24,7 +24,7 @@ function convertBbtJsonToLatex(text: string): string {
           return c.y_prime_sign || ' ';
         }
       }).join(' & ');
-      
+
       // Row 3: y
       const rowY = 'y & ' + cols.map((c: any) => {
         if (c.x !== undefined) {
@@ -38,8 +38,8 @@ function convertBbtJsonToLatex(text: string): string {
           return ' ';
         }
       }).join(' & ');
-      
-      return `$$\n\\begin{array}{${colSpec}}\n${rowX} \\\\\n\\hline\n${rowYPrime} \\\\\n\\hline\n${rowY}\n\\end{array}\n$$`;
+
+      return `$$\n{\\renewcommand{\\arraystretch}{2}\n\\setlength{\\arraycolsep}{12pt}\n\\begin{array}{${colSpec}}\n${rowX} \\\\\n\\hline\n${rowYPrime} \\\\\n\\hline\n${rowY}\n\\end{array}}\n$$`;
     } catch (err) {
       console.error('Failed to parse BBT JSON in export:', err);
       return `*(Lỗi vẽ bảng biến thiên)*`;
