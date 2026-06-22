@@ -2,11 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { X, Pencil, FolderPlus } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
-import remarkGfm from 'remark-gfm';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
+import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
 import { toast } from 'react-toastify';
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 import { RequestType, getRequestsForQuestion, cancelQuestionRequest } from '@/lib/actions/question-request.action';
@@ -89,9 +85,9 @@ export default function QuestionDetailModal({ question, isAdmin, currentUserId, 
           {tab === 'detail' && (
             <>
               <div className="prose prose-slate max-w-none text-base [&_img]:max-w-full [&_img]:rounded-md [&_img]:my-4 mb-6">
-                <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}>
+                <SafeMarkdown>
                   {cleanMathpixData(getQuestionDisplayContent(q.statement, q.content))}
-                </ReactMarkdown>
+                </SafeMarkdown>
               </div>
 
               {q.options && q.options.length > 0 && (
@@ -103,7 +99,7 @@ export default function QuestionDetailModal({ question, isAdmin, currentUserId, 
                       <div key={opt.id} className={`flex gap-3 p-3 rounded-xl border-2 ${correct ? 'bg-green-50 border-green-500/50' : 'bg-surface-container-low border-outline-variant/20'}`}>
                         <div className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center font-bold text-xs border-2 ${correct ? 'bg-green-100 text-green-700 border-green-500/50' : 'bg-white text-outline border-outline-variant/30'}`}>{label}</div>
                         <div className="pt-0.5 prose prose-slate max-w-none text-sm">
-                          <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}>{cleanMathpixData(opt.content)}</ReactMarkdown>
+                          <SafeMarkdown>{cleanMathpixData(opt.content)}</SafeMarkdown>
                         </div>
                       </div>
                     );

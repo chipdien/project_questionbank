@@ -5,11 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CollectionSaveModal from '@/app/(main)/collection/components/CollectionSaveModal';
 import { Difficulty } from '@/lib/actions/difficulty.action';
 import { Loader2, Plus, Trash2, ChevronLeft, ChevronRight, Search, Bookmark } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
+import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
 import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 import { useQuestionBank, Document, Lesson, Question } from '../hooks/useQuestionBank';
 import { cn } from '@/lib/utils/cn.utils';
@@ -149,15 +145,17 @@ const QuestionItem = React.memo(({
   onRemoveQuestion?: (q: Question, e?: React.MouseEvent) => void;
   onDoubleClick?: (q: Question) => void;
 }) => {
+  const cleanedText = cleanMathpixData(getQuestionDisplayContent(question.statement, question.content));
+  const hasBbt = cleanedText.includes('```bbt');
+
   const statementMarkdown = (
-    <div className={unselectableMarkdownClass}>
-      <ReactMarkdown
-        remarkPlugins={[remarkMath, remarkGfm]}
-        rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-        components={markdownComponents}
-      >
-        {cleanMathpixData(getQuestionDisplayContent(question.statement, question.content))}
-      </ReactMarkdown>
+    <div className={cn(
+      "text-xs text-on-surface prose prose-sm max-w-none [&_p]:my-1 pointer-events-none select-none",
+      hasBbt ? "w-full overflow-x-hidden" : "line-clamp-6"
+    )}>
+      <SafeMarkdown>
+        {cleanedText}
+      </SafeMarkdown>
     </div>
   );
 

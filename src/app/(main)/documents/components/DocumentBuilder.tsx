@@ -1,23 +1,34 @@
 'use client';
 
+import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
+import { useConfirm } from '@/lib/components/providers/ConfirmProvider';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  BookOpen,
+  Calendar,
+  CheckCircle2,
+  FileDown,
+  Globe,
+  GraduationCap,
+  Loader2,
+  Mail,
+  Phone,
+  Plus,
+  Quote,
+  RotateCcw, Settings,
+  User,
+  X,
+} from 'lucide-react';
 import React from 'react';
 import { ReactSortable } from 'react-sortablejs';
-import BlockEditor from './BlockEditor';
-import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
 import {
-  FileDown, Plus, X, RotateCcw, Settings,
-  GraduationCap, Calendar, User, BookOpen, Quote,
-  Loader2, CheckCircle2, Phone, Mail, Globe,
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  useDocumentBuilder,
   formatDateToVietnamese,
+  useDocumentBuilder,
   type Block,
   type BlockType,
   type DocumentMetadata,
 } from '../hooks/useDocumentBuilder';
-import { useConfirm } from '@/lib/components/providers/ConfirmProvider';
+import BlockEditor from './BlockEditor';
 
 // ─── Public types re-exported for parent (page.tsx / etc.) ───────────────────
 export type { Block, BlockType, DocumentMetadata };
@@ -216,7 +227,7 @@ const DocumentBuilder = React.forwardRef<DocumentBuilderRef>((props, ref) => {
       </div>
 
       {/* ── Document Canvas ── */}
-      <div id="pdf-content" className="flex flex-col w-full items-center pt-8 pb-40 bg-white">
+      <div id="pdf-content" className="flex flex-col w-full items-center pt-8 pb-40 bg-slate-50">
         <div className="a4-page document-print-container flex flex-col min-h-[297mm]">
           <PrimaryHeader metadata={metadata} totalPages={0} />
 

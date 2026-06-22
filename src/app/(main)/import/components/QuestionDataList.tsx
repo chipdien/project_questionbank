@@ -6,11 +6,7 @@ import { getTagBadgeClass } from '@/lib/constants/classification.constant';
 import { QuestionDataListProps } from '@/lib/types/import.type';
 import { cleanMathpixData } from '@/lib/utils/math.utils';
 import { CheckSquare, Edit3, Square } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
+import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
 import { useQuestionDataList } from '../hooks/useQuestionDataList';
 
 export default function QuestionDataList({
@@ -158,12 +154,9 @@ export default function QuestionDataList({
 
               {/* Statement rendering with LaTeX markdown */}
               <div className="prose prose-sm max-w-none text-on-surface text-sm font-medium leading-relaxed font-body">
-                <ReactMarkdown
-                  remarkPlugins={[remarkMath, remarkGfm]}
-                  rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                >
+                <SafeMarkdown>
                   {cleanMathpixData(q.statement || q.content || '')}
-                </ReactMarkdown>
+                </SafeMarkdown>
               </div>
 
               {/* Options list if multiple choice */}
@@ -184,12 +177,9 @@ export default function QuestionDataList({
                           {String.fromCharCode(65 + optIdx)}.
                         </span>
                         <div className="flex-1 leading-relaxed">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkMath, remarkGfm]}
-                            rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                          >
+                          <SafeMarkdown>
                             {cleanMathpixData(optContent)}
-                          </ReactMarkdown>
+                          </SafeMarkdown>
                         </div>
                       </div>
                     );

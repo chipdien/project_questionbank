@@ -1,26 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, use } from 'react';
-import { ArrowLeft, ArrowRightLeft, Edit, Save, X, Search, ChevronRight, CheckSquare, Square, RefreshCw, Eye } from 'lucide-react';
-import { toast } from 'react-toastify';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
+import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
+import { ArrowLeft, ArrowRightLeft, CheckSquare, ChevronRight, Edit, RefreshCw, Search, Square, X } from 'lucide-react';
 import Link from 'next/link';
+import React, { use, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
-import { getTopicsAction, fetchTopicQuestionsAction, bulkMoveQuestionsAction } from '@/lib/actions/topics.action';
 import { Topic } from '@/app/(main)/topics/queries/useTopicsQuery';
-import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
+import { bulkMoveQuestionsAction, fetchTopicQuestionsAction, getTopicsAction } from '@/lib/actions/topics.action';
 import QuestionEditModal from '@/lib/components/common/QuestionEditModal';
 import AppBadge from '@/lib/components/ui/AppBadge';
-
-// Shared img renderer: skip images with empty src to prevent React warning
-const markdownComponents = {
-  img: ({ src, alt, ...props }: any) =>
-    src ? <img src={src} alt={alt || ''} {...props} /> : null,
-};
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 
 interface Option {
   id: string;
@@ -299,13 +289,9 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
 
                       {/* Statement text render */}
                       <div className="prose prose-slate max-w-none text-sm font-body text-on-surface [&_img]:max-w-xs [&_img]:rounded-lg [&_img]:my-2 mb-4">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkMath, remarkGfm]}
-                          rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                          components={markdownComponents}
-                        >
+                        <SafeMarkdown>
                           {cleanMathpixData(getQuestionDisplayContent(q.statement, q.content))}
-                        </ReactMarkdown>
+                        </SafeMarkdown>
                       </div>
 
                       {/* Options */}
@@ -326,13 +312,9 @@ export default function TopicQuestionsPage({ params }: { params: Promise<{ id: s
                                 >
                                   <span className="font-bold mr-1">{charLabel}.</span>
                                   <div className="prose prose-slate max-w-none text-xs">
-                                    <ReactMarkdown
-                                      remarkPlugins={[remarkMath, remarkGfm]}
-                                      rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                                      components={markdownComponents}
-                                    >
+                                    <SafeMarkdown>
                                       {cleanMathpixData(opt.content || opt.statement || '')}
-                                    </ReactMarkdown>
+                                    </SafeMarkdown>
                                   </div>
                                 </div>
                               );

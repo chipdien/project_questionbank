@@ -65,3 +65,17 @@ Tài liệu này ghi lại các lỗi kỹ thuật phát hiện được trong q
 - **Status**: Fixed
 
 ---
+
+## [2026-06-21 21:15] - BBT Code Block Inline Markdown Parsing Error
+
+- **Type**: Logic / Integration
+- **Severity**: High
+- **File**: `src/lib/utils/math.utils.ts` & `src/lib/components/common/SafeMarkdown.tsx`
+- **Agent**: eMon (Antigravity)
+- **Root Cause**: Gemini trả về khối mã bảng biến thiên dạng JSON \`\`\`bbt mà không có ký tự xuống dòng trước và sau khối (ví dụ `sau?\`\`\`bbt{"cols":...}\`\`\``). Điều này khiến ReactMarkdown hiểu nhầm khối mã này là inline code thay vì block code, dẫn đến việc không gán class `language-bbt` và không kích hoạt được renderer `VariationTableRenderer`. Thêm vào đó, một số component hiển thị đề bài như `ImportWizard.tsx` và `QuestionDataList.tsx` vẫn sử dụng `ReactMarkdown` thô nên không hỗ trợ render component bảng biến thiên tùy chỉnh.
+- **Error Message**: Hiển thị thô văn bản `?bbt{"cols":...}` trực tiếp lên màn hình mà không render ra giao diện bảng biến thiên đồ họa.
+- **Fix Applied**: 
+  1. Cập nhật `cleanMathpixData` trong [math.utils.ts](file:///e:/project_questionbank/src/lib/utils/math.utils.ts) để tự động chèn ký tự xuống dòng `\n` trước và sau khối code \`\`\`bbt nếu chưa có.
+  2. Thay thế `ReactMarkdown` bằng `SafeMarkdown` trong [ImportWizard.tsx](file:///e:/project_questionbank/src/app/(main)/import/components/ImportWizard.tsx) và [QuestionDataList.tsx](file:///e:/project_questionbank/src/app/(main)/import/components/QuestionDataList.tsx).
+- **Prevention**: Luôn tạo các hàm tiền xử lý định dạng markdown thô cho các cấu trúc đặc biệt trước khi truyền vào thư viện render, và sử dụng component wrapper chung (`SafeMarkdown`) để thống nhất các quy tắc hiển thị trên mọi trang màn hình.
+- **Status**: Fixed

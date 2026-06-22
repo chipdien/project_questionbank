@@ -119,7 +119,43 @@ Chú ý:
 - Nếu là câu hỏi trắc nghiệm, ĐẢM BẢO loại bỏ hoàn toàn các dòng chứa đáp án A/B/C/D ra khỏi phần nội dung đề (statement) và phân tách chúng cho vào mảng options.
 - Lời giải hoặc hướng dẫn (nếu có) phải được bóc tách và đặt vào trường hint.
 - Đảm bảo giữ nguyên các công thức LaTeX hợp lệ (được bao bọc trong $ hoặc $$).
-- TUYỆT ĐỐI GIỮ NGUYÊN mọi cú pháp hình ảnh (ví dụ: ![](...) hoặc thẻ <img>) trong nội dung câu hỏi và đáp án. Không được tự ý xóa bỏ hình ảnh.`;
+- TUYỆT ĐỐI GIỮ NGUYÊN mọi cú pháp hình ảnh (ví dụ: ![](...) hoặc thẻ <img>) trong nội dung câu hỏi và đáp án. Không được tự ý xóa bỏ hình ảnh.
+
+QUY TẮC ĐẶC BIỆT CHO BẢNG BIẾN THIÊN (BBT):
+Nếu trong câu hỏi hoặc lời giải có chứa Bảng biến thiên (thường được biểu diễn dưới dạng bảng Markdown thô hoặc môi trường tabular/array/matrix trong LaTeX), bạn bắt buộc phải chuyển đổi bảng đó sang định dạng JSON đặc biệt được đặt trong khối mã \`\`\`bbt ... \`\`\`.
+
+Cấu trúc JSON trong khối \`\`\`bbt phải tuân thủ schema sau:
+{
+  "cols": [
+    { "x": "giá trị x", "y_prime": "giá trị đạo hàm", "y": "giá trị hàm số", "y_pos": "top" | "bottom" | "middle" | "bottom/top" | "top/bottom" }, // Cột Điểm
+    { "y_prime_sign": "+" | "-" | "0" } // Cột Khoảng (nằm xen kẽ giữa các cột điểm)
+  ]
+}
+
+Ví dụ:
+Đối với bảng biến thiên có:
+- x chạy từ -\\infty đến -1, rồi đến 2, rồi đến +\\infty
+- y' có dấu +, 0, -, ||, +
+- y có các giá trị cực trị tương ứng
+
+Bạn phải sinh ra khối mã sau trong "statement" hoặc "hint":
+\`\`\`bbt
+{
+  "cols": [
+    { "x": "-\\infty", "y_prime": "", "y": "-\\infty", "y_pos": "bottom" },
+    { "y_prime_sign": "+" },
+    { "x": "-1", "y_prime": "0", "y": "3", "y_pos": "top" },
+    { "y_prime_sign": "-" },
+    { "x": "2", "y_prime": "||", "y": "-\\infty/+\\infty", "y_pos": "bottom/top" },
+    { "y_prime_sign": "+" },
+    { "x": "+\\infty", "y_prime": "", "y": "+\\infty", "y_pos": "top" }
+  ]
+}
+\`\`\`
+Lưu ý đặc biệt quan trọng:
+- Bạn TUYỆT ĐỐI không được bỏ sót bất kỳ con số nào xuất hiện ở dòng y trong bảng biến thiên gốc (ví dụ các cực trị như -7, -2, 20...). Mọi điểm cực trị đều phải có giá trị y điền đầy đủ.
+- Ở dòng y', chỉ điền giá trị đạo hàm (như "0", "||") tại các cột Điểm có cực trị thực tế. Tại các cột Điểm đại diện cho vô cực (như -\infty hoặc +\infty), bạn bắt buộc phải để trống trường "y_prime": "" (không được tự ý điền "0" vào đây).
+`;
 
     const answerInstruction = `
 
