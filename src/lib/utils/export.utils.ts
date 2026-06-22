@@ -1,14 +1,60 @@
 import { Block } from '@/app/(main)/documents/components/DocumentBuilder';
 import { cleanMathpixData } from './math.utils';
 
+function convertBbtJsonToLatex(text: string): string {
+  // Regex to find ```bbt ... ``` blocks
+  const bbtRegex = /```bbt\s*([\s\S]*?)\s*```/g;
+
+  return text.replace(bbtRegex, (match, jsonStr) => {
+    try {
+      const data = JSON.parse(jsonStr);
+      const cols = data.cols || [];
+      if (cols.length === 0) return '';
+
+      const colSpec = 'c|' + 'c'.repeat(cols.length);
+
+      // Row 1: x
+      const rowX = 'x & ' + cols.map((c: any) => c.x !== undefined ? (c.x || ' ') : ' ').join(' & ');
+
+      // Row 2: y'
+      const rowYPrime = 'y\' & ' + cols.map((c: any) => {
+        if (c.x !== undefined) {
+          return c.y_prime === '||' ? '\\parallel' : (c.y_prime || '0');
+        } else {
+          return c.y_prime_sign || ' ';
+        }
+      }).join(' & ');
+
+      // Row 3: y
+      const rowY = 'y & ' + cols.map((c: any) => {
+        if (c.x !== undefined) {
+          if (c.y_pos === 'bottom/top' || c.y_pos === 'top/bottom') {
+            return (c.y || '').split('/').join(' \\ \\parallel \\ ');
+          }
+          return c.y || ' ';
+        } else {
+          if (c.y_prime_sign === '+') return '\\nearrow';
+          if (c.y_prime_sign === '-') return '\\searrow';
+          return ' ';
+        }
+      }).join(' & ');
+
+      return `$$\n{\\renewcommand{\\arraystretch}{2}\n\\setlength{\\arraycolsep}{12pt}\n\\begin{array}{${colSpec}}\n${rowX} \\\\\n\\hline\n${rowYPrime} \\\\\n\\hline\n${rowY}\n\\end{array}}\n$$`;
+    } catch (err) {
+      console.error('Failed to parse BBT JSON in export:', err);
+      return `*(Lỗi vẽ bảng biến thiên)*`;
+    }
+  });
+}
+
 /**
  * Hàm hỗ trợ xử lý kí tự toán học cho chuẩn TeX (Pandoc)
  * Pandoc hỗ trợ tốt $...$ và $$...$$, trong khi Mathpix có thể trả về \( \) hoặc \[ \]
  */
 export const normalizeMathForPandoc = (text: string): string => {
   let processed = cleanMathpixData(text);
-  // Đôi khi convert ngược lại để native pandoc md dễ parse (tuỳ chọn)
-  // Thực tế Pandoc có tex_math_dollars và tex_math_single_backslash mặc định.
+  // Convert any JSON variation tables to LaTeX array for Pandoc compatibility
+  processed = convertBbtJsonToLatex(processed);
   return processed;
 };
 

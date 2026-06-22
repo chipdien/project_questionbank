@@ -1,5 +1,5 @@
-import { typeMeta, statusMeta } from '@/lib/constants/requests.constant';
 import Loading from '@/lib/components/ui/Loading';
+import { statusMeta, typeMeta } from '@/lib/constants/requests.constant';
 
 interface Props {
   rows: any[];

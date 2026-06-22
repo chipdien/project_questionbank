@@ -135,26 +135,54 @@ export const cleanMathpixData = (text: string | null | undefined): string => {
     .replace(expiredMarkdownImageRegex, '*(Hình ảnh đã hết hạn)*')
     .replace(expiredHtmlImageRegex, '*(Hình ảnh đã hết hạn)*');
 
-  // 1. Bước quan trọng nhất: Khử double-escape từ database/JSON
-  // Sử dụng regex có điều kiện để chỉ khử dấu \ khi theo sau là chữ cái hoặc ký hiệu lệnh
-  cleaned = cleaned.replace(new RegExp('\\\\\\\\(?=[a-zA-Z' + '|(){}\\[\\]%′\'])', 'g'), '\\');
+  // 1. Trích xuất và bảo vệ các khối bbt để không bị ảnh hưởng bởi regex làm sạch math/LaTeX
+  const bbtBlocks: string[] = [];
+  const bbtRegex = /```bbt\s*([\s\S]*?)\s*```/g;
+  let tempText = cleaned.replace(bbtRegex, (match) => {
+    const placeholder = `__BBT_BLOCK_${bbtBlocks.length}__`;
+    bbtBlocks.push(match);
+    return placeholder;
+  });
 
-  // 2. Xử lý bảng Markdown trước khi xử lý Math (để tránh làm hỏng cấu trúc pipe)
-  cleaned = fixMarkdownTable(cleaned);
+  // 2. Khử double-escape từ database/JSON trên phần văn bản thường
+  tempText = tempText.replace(new RegExp('\\\\\\\\(?=[a-zA-Z' + '|(){}\\[\\]%′\'])', 'g'), '\\');
 
-  cleaned = cleaned
-    // 3. Chuyển đổi Block Math: \[ ... \] hoặc \\ [ ... \\ ] về $$ ... $$
+  // 3. Xử lý bảng Markdown trước khi xử lý Math (để tránh làm hỏng cấu trúc pipe)
+  tempText = fixMarkdownTable(tempText);
+
+  // 4. Xử lý các định dạng Math khác trên văn bản thường
+  tempText = tempText
+    // Chuyển đổi Block Math: \[ ... \] hoặc \\ [ ... \\ ] về $$ ... $$
     .replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, '$$$$$1$$$$')
-    // 4. Chuyển đổi Inline Math: \( ... \) về $ ... $
+    // Chuyển đổi Inline Math: \( ... \) về $ ... $
     .replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, '$$$1$$')
-    // 5. Chuẩn hóa các dấu $$ ... $$ hiện có
+    // Chuẩn hóa các dấu $$ ... $$ hiện có
     .replace(/\$\$\s*([\s\S]*?)\s*\$\$/g, '$$$$$1$$$$')
-    // 6. Thắt chặt dấu $ đơn cho Inline Math 
+    // Thắt chặt dấu $ đơn cho Inline Math 
     .replace(/(?<!\$)\$\s*([^\$\n]+?)\s*\$(?!\$)/g, '$$$1$$')
     .replace(/\r\n/g, '\n')
     .trim();
 
-  return cleaned;
+  // 5. Khôi phục các khối bbt đã được bảo vệ với định dạng xuống dòng và JSON đẹp đẽ
+  bbtBlocks.forEach((blockContent, idx) => {
+    const blockMatch = /```bbt\s*([\s\S]*?)\s*```/.exec(blockContent);
+    if (blockMatch) {
+      const jsonStr = blockMatch[1].trim();
+      let prettyJson = jsonStr;
+      try {
+        // Tự động sửa các dấu gạch chéo ngược LaTeX bị thiếu escape trước khi parse
+        const fixedJsonStr = jsonStr.replace(/\\(?!["\\])/g, '\\\\');
+        const parsed = JSON.parse(fixedJsonStr);
+        prettyJson = JSON.stringify(parsed, null, 2);
+      } catch (e) {
+        // Giữ nguyên JSON gốc nếu parse lỗi
+      }
+      const restored = `\n\`\`\`bbt\n${prettyJson}\n\`\`\`\n`;
+      tempText = tempText.replace(`__BBT_BLOCK_${idx}__`, restored);
+    }
+  });
+
+  return tempText;
 };
 
 /**

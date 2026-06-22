@@ -1,10 +1,6 @@
 'use client';
 
-import ReactMarkdown from 'react-markdown';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
+import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
 
 import AddToCollectionModal from '@/app/(main)/collection/components/AddToCollectionModal';
 import QuestionModal from '@/app/(main)/question-bank/components/QuestionModal';
@@ -125,13 +121,10 @@ export default function QuestionsDataGrid({
                         #{question.id}
                       </td>
                       <td className="px-6 py-4 max-w-md">
-                        <div className="text-sm font-semibold text-on-surface line-clamp-2 leading-relaxed">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkMath, remarkGfm]}
-                            rehypePlugins={[rehypeKatex, rehypeRaw]}
-                          >
+                        <div className={`text-sm font-semibold text-on-surface leading-relaxed ${cleanedText.includes('```bbt') ? 'w-full overflow-x-hidden' : 'line-clamp-2'}`}>
+                          <SafeMarkdown>
                             {cleanedText}
-                          </ReactMarkdown>
+                          </SafeMarkdown>
                         </div>
                       </td>
                       <td className="px-6 py-4">

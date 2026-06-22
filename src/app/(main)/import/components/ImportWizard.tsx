@@ -2,11 +2,7 @@
 
 import { cleanMathpixData } from '@/lib/utils/math.utils';
 import { FileText, X } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
+import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
 
 import { getTagBadgeClass } from '@/lib/constants/classification.constant';
 import { getDifficultyStyles as globalGetDifficultyStyles } from '@/lib/constants/difficulty.constant';
@@ -177,12 +173,9 @@ export default function ImportWizard({
                         )}
                       </div>
                       <div className="prose prose-sm max-w-none text-on-surface text-xs font-medium leading-relaxed line-clamp-3">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkMath, remarkGfm]}
-                          rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                        >
+                        <SafeMarkdown>
                           {cleanMathpixData(q.statement || q.content || '')}
-                        </ReactMarkdown>
+                        </SafeMarkdown>
                       </div>
                     </div>
                   ))}
@@ -318,12 +311,9 @@ export default function ImportWizard({
             <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
               {/* Question Statement */}
               <div className="bg-surface-container-low/30 p-4 rounded-xl border border-outline-variant/10 font-body leading-relaxed text-sm text-on-surface">
-                <ReactMarkdown
-                  remarkPlugins={[remarkMath, remarkGfm]}
-                  rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                >
+                <SafeMarkdown>
                   {cleanMathpixData(activePreviewQuestion.statement || activePreviewQuestion.content || '')}
-                </ReactMarkdown>
+                </SafeMarkdown>
               </div>
 
               {/* Options */}
@@ -348,12 +338,9 @@ export default function ImportWizard({
                             {String.fromCharCode(65 + optIdx)}.
                           </span>
                           <div className="flex-1 leading-relaxed">
-                            <ReactMarkdown
-                              remarkPlugins={[remarkMath, remarkGfm]}
-                              rehypePlugins={[[rehypeKatex, { strict: 'ignore' }], rehypeRaw]}
-                            >
+                            <SafeMarkdown>
                               {cleanMathpixData(optContent)}
-                            </ReactMarkdown>
+                            </SafeMarkdown>
                           </div>
                         </div>
                       );

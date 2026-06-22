@@ -1,17 +1,13 @@
 'use client';
 
-import React from 'react';
-import { Search, Loader2, ChevronLeft, ChevronRight, Bookmark } from 'lucide-react';
+import SafeMarkdown from '@/lib/components/common/SafeMarkdown';
+import { Bookmark, ChevronLeft, ChevronRight, Loader2, Search } from 'lucide-react';
 import { ReactSortable } from 'react-sortablejs';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
 
-import { useQuestionLibrary } from '../hooks/useQuestionLibrary';
-import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
 import AppBadge from '@/lib/components/ui/AppBadge';
+import AppSelect from '@/lib/components/ui/AppSelect';
+import { cleanMathpixData, getQuestionDisplayContent } from '@/lib/utils/math.utils';
+import { useQuestionLibrary } from '../hooks/useQuestionLibrary';
 
 interface QuestionLibraryProps {
   onSelect?: (question: any) => void;
@@ -39,9 +35,9 @@ export default function QuestionLibrary({ onSelect, onSelectMany }: QuestionLibr
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col h-full bg-surface-container-lowest border-l border-outline-variant/30 no-print overflow-hidden">
+    <div className="flex flex-col h-full bg-slate-50 border-l border-outline-variant/30 no-print overflow-hidden">
       {/* Header & Filters */}
-      <div className="p-4 border-b border-outline-variant/20 bg-surface-container-low/50">
+      <div className="p-4 border-b border-outline-variant/20 bg-slate-100/70">
         <div className="flex items-center gap-2 mb-4">
           <Bookmark className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-bold text-on-surface font-headline">Bộ sưu tập câu hỏi</h2>
@@ -49,16 +45,15 @@ export default function QuestionLibrary({ onSelect, onSelectMany }: QuestionLibr
 
         <div className="flex flex-col gap-1">
           <label className="text-[10px] font-bold text-outline uppercase tracking-wider">Chọn bộ sưu tập</label>
-          <select
+          <AppSelect
             value={selectedCollectionId}
             onChange={(e) => setSelectedCollectionId(e.target.value)}
             disabled={isLoadingCollections}
-            className="w-full bg-white border border-outline-variant/50 rounded-lg px-2 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none disabled:opacity-50 disabled:bg-surface-container-low"
           >
             {isLoadingCollections ? (
-              <option>Đang tải bộ sưu tập...</option>
+              <option value="">Đang tải bộ sưu tập...</option>
             ) : collections.length === 0 ? (
-              <option>Chưa có bộ sưu tập nào</option>
+              <option value="">Chưa có bộ sưu tập nào</option>
             ) : (
               collections.map((col) => (
                 <option key={col.id} value={col.id}>
@@ -66,7 +61,7 @@ export default function QuestionLibrary({ onSelect, onSelectMany }: QuestionLibr
                 </option>
               ))
             )}
-          </select>
+          </AppSelect>
         </div>
       </div>
 
@@ -129,15 +124,16 @@ export default function QuestionLibrary({ onSelect, onSelectMany }: QuestionLibr
                   </div>
                 </div>
 
-                <div className="text-xs text-on-surface line-clamp-4 prose prose-sm max-w-none [&_p]:my-1 pointer-events-none">
-                  <ReactMarkdown
-                    key={q.id}
-                    remarkPlugins={[remarkMath, remarkGfm]}
-                    rehypePlugins={[rehypeKatex, rehypeRaw]}
-                  >
-                    {cleanMathpixData(getQuestionDisplayContent(q.statement, q.content))}
-                  </ReactMarkdown>
-                </div>
+                {(() => {
+                  const displayContent = cleanMathpixData(getQuestionDisplayContent(q.statement, q.content));
+                  const hasBBT = displayContent.includes('```bbt');
+                  return (
+                    <div className={`text-xs text-on-surface prose prose-sm max-w-none [&_p]:my-1 pointer-events-none ${hasBBT ? 'overflow-x-hidden' : 'line-clamp-4'
+                      }`}>
+                      <SafeMarkdown>{displayContent}</SafeMarkdown>
+                    </div>
+                  );
+                })()}
               </div>
             ))}
           </ReactSortable>
@@ -169,7 +165,7 @@ export default function QuestionLibrary({ onSelect, onSelectMany }: QuestionLibr
       )}
 
       {/* Pagination */}
-      <div className="p-3 border-t border-outline-variant/20 bg-surface-container-low/30">
+      <div className="p-3 border-t border-outline-variant/20 bg-slate-100/50">
         <div className="flex items-center justify-between gap-2">
           <button
             onClick={() => loadQuestions(page - 1)}
